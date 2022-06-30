@@ -1,0 +1,5 @@
+#{"fraction":true,"graph_seed":875629289,"graph_type":{"SmallWorld":0.1},"lambda_range":{"end":0.25,"start":0.05,"steps":20},"num_networks":1000,"recovery_prob":0.14,"samples_per_lambda":100,"sir_seed":1489264107025,"system_size_range":{"end":1000,"start":200,"steps":3}}
+#lambda time_steps_avg time_steps_var
+200 0.21842105263158207 -0.0000000000000008396061623727746
+600 0.18684210526315967 -0.0000000000000012836953722228372
+1000 0.2078947368421013 0.000000000000001304512053934559

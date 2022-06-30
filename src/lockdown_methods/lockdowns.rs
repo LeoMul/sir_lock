@@ -5,24 +5,36 @@ use rand::*;
 use rand::distributions::*;
 use rand_pcg::Pcg64;
 use net_ensembles::rand::prelude::Distribution;
+use crate::misc_types::*;
 #[derive(Debug, Clone,Serialize, Deserialize,Copy)]
 
 pub enum LockdownType{
     CircuitBreaker,
     None,
-    Random,
+    Random(u64,f64),
+    Targeted,
     Invalid
 
+}
+#[derive(Debug, Clone,Serialize, Deserialize,Copy)]
+pub struct LockdownParameters{
+    pub lock_style: LockdownType,
+    pub release_threshold: f64,
+    pub lock_threshold: f64,
+    pub dynamic_bool: bool,
 }
 
 
 
-pub fn lockdown<InfectionState,A>(lockdowntype:LockdownType,graph:GenericGraph<InfectionState,A>) -> GenericGraph<InfectionState,A> 
-where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
-    match lockdowntype{
+
+pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGraphSIR
+{
+    
+    match lockdownparams.lock_style{
         LockdownType::CircuitBreaker => circuit_breaking_lockdown(graph),
         LockdownType::None => no_lockdown(graph),
-        LockdownType::Random => random_lockdown(graph),
+        LockdownType::Random(seed,prob) => random_lockdown(graph,seed,prob),
+        LockdownType::Targeted => target_infection_clusters(graph, inflist),
         _ => unimplemented!()
     }
 
@@ -31,8 +43,9 @@ where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensemb
 pub fn lockdown_naming_string(lockdowntype:LockdownType) -> String{
     match lockdowntype{
         LockdownType::CircuitBreaker => "CircuitBreaker".to_owned(),
-        LockdownType::Random => "Random".to_owned(),
+        LockdownType::Random(_,_) => "Random".to_owned(),
         LockdownType::None => "None".to_owned(),
+        LockdownType::Targeted => "Targeted".to_owned(),
         _ => unimplemented!()
     }
 
@@ -47,14 +60,14 @@ pub fn circuit_breaking_lockdown<T,A>(mut graph:GenericGraph<T,A>)-> GenericGrap
 
 pub fn no_lockdown<T,A>(graph:GenericGraph<T,A>)-> GenericGraph<T,A> where A: net_ensembles::AdjContainer<T>{graph}
 
-pub fn random_lockdown<InfectionState,A>(graph:GenericGraph<InfectionState,A>)-> GenericGraph<InfectionState,A> 
+pub fn random_lockdown<InfectionState,A>(graph:GenericGraph<InfectionState,A>,seed:u64,prob:f64)-> GenericGraph<InfectionState,A> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     //note to self. add some more enums and structs, eg like running the execute files in main to better capture the parameters of each of the individual lockdowns.__rust_force_expr!;
     let mut clone = graph.clone();
     let pairs = pair_finder(graph);
     let prob_dist= Uniform::new_inclusive(0.0,1.0);
-    let mut rng = Pcg64::seed_from_u64(12312313131231414);
-    let prob = 0.9;
+    let mut rng = Pcg64::seed_from_u64(seed);
+    //let prob = 0.6;
     for pair in pairs{
 
         let i1 = pair[0];
@@ -71,13 +84,62 @@ where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensemb
     clone}
 
 
-pub fn lockdown_target_infections(){
-    //the goal of this will be to target those who are infected, and lockdown the surround clique of individuals. for instance, suppose 
+
+pub fn target_infection_clusters(graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGraphSIR{
+     //the goal of this will be to target those who are infected, and lockdown the surround clique of individuals. for instance, suppose 
     //an infected as three susceptible neighbours. those neighbours have their links removed to their neighbours (not the infected though)
     //this perhaps simulates the close-contact dynamics of the lockdown.
     //some credit is due to Peter Werner for discussing this with me.
+
+    //can't quite get it to work yet.... get duplicates of certain infected when updating the graph in realtime
+    let mut pairs:Vec<Vec<usize>> = Vec::new();
+    let mut locked_down = graph.clone();
+
+    for &ind in inflist{
+
+        for (n_ind,_neigh) in graph.contained_iter_neighbors_with_index(ind).filter(|(_,neigh)|neigh.sus_check()){
+            //This finds all the susceptible neighbours to the infected.
+            for (n_ind_2,_neigh_2) in graph.contained_iter_neighbors_with_index(n_ind){
+                let mut v = vec![n_ind,n_ind_2];
+                v.sort();
+                pairs.push(v);
+
+            }
+        }
+
+    }
+    pairs.sort();
+    pairs.dedup();
+    for pair in pairs{
+        locked_down.remove_edge(pair[0],pair[1]).unwrap();
+    }
+
+
+
+    locked_down
 }
-//remember the remove_edge(index1,index2 ) command!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 pub fn pair_finder<InfectionState,A>(mut graph:GenericGraph<InfectionState,A>)-> Vec<Vec<usize>> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{

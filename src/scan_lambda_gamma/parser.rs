@@ -7,7 +7,7 @@ use{
     crate::json_parsing::*,
     serde::{Serialize, Deserialize},
     serde_json::Value,
-   
+    crate::lockdown_methods::*,
     crate::misc_types::*,
 
 };
@@ -43,6 +43,10 @@ pub struct ScanLambdaGammaParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
+    pub lockdown: LockdownType,
+    pub lock_thresh: f64,
+    pub rel_thresh: f64,
+    pub compare_nolock: bool,
 }
 
 impl Default for ScanLambdaGammaParams{
@@ -62,12 +66,16 @@ impl Default for ScanLambdaGammaParams{
             gamma_range:gamma_range_def,
             system_size: DEFAULT_SYSTEM_SIZE,
             //recovery_prob:DEFAULT_RECOVERY_PROB,
-            graph_type: GraphType::SmallWorld(0.1),
+            graph_type: GraphType::Barabasi(2,10),
             samples_per_step: DEFAULT_SAMPLES_PER_STEP,
             //measure: MeasureType::C,
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
-            sir_seed: DEFAULT_SIR_SEED
+            sir_seed: DEFAULT_SIR_SEED,
+            lockdown:LockdownType::Random(123131315,0.6),
+            lock_thresh:0.1,
+            rel_thresh:0.05,
+            compare_nolock: false
 
         }
     }
@@ -80,10 +88,9 @@ impl ScanLambdaGammaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LS_{}_{}_N{}t{}-{}_{}r{}-{}_{}v{}S_G{}GS{}SS{}{}{}.{}",
+            "ver{}LamGamScan_{}_N{}t{}-{}_{}r{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}.{}",
             crate::VERSION,
             measure.name(),
-            "none", //NO VACCINES
             self.system_size,
             //self.recovery_prob,
             self.lambda_range.start,
@@ -92,12 +99,15 @@ impl ScanLambdaGammaParams{
             self.gamma_range.start,
             self.gamma_range.end,
             self.gamma_range.steps,
-            0, //VACCINES
             self.samples_per_step,
             self.graph_type.name(),
             self.graph_seed,
             self.sir_seed,
             k,
+            lockdown_naming_string(self.lockdown),
+            self.lock_thresh,
+            self.rel_thresh,
+            self.compare_nolock,
             file_ending
 
 

@@ -47,8 +47,8 @@ pub struct CriticalLambdaParams{
 impl Default for CriticalLambdaParams{
     fn default() -> Self{
         let system_size_range_def = UsizeRangeBuilder{
-            start: 2100,
-            end: 3600,
+            start: 200,
+            end: 1000,
             steps: NonZeroUsize::new(3).unwrap()
         };
         let trans_prob_range = F64RangeBuilder{
@@ -61,7 +61,7 @@ impl Default for CriticalLambdaParams{
             recovery_prob: DEFAULT_RECOVERY_PROB,
             lambda_range: trans_prob_range,
             graph_type:GraphType::SmallWorld(0.1),
-            num_networks: 10000,
+            num_networks: 100,
             samples_per_lambda: 1000,
             fraction: true,
             graph_seed:DEFAULT_GRAPH_SEED,

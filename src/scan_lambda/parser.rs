@@ -45,10 +45,9 @@ pub struct ScanLambdaParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
-    pub lockdown: LockdownType,
-    pub lock_thresh: f64,
-    pub rel_thresh: f64,
-    pub compare_nolock: bool,
+    pub lockdown: LockdownParameters,
+    pub complock: LockdownParameters,
+    pub compare: bool,
 }
 
 impl Default for ScanLambdaParams{
@@ -68,10 +67,20 @@ impl Default for ScanLambdaParams{
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            lockdown:LockdownType::Random,
-            lock_thresh:0.1,
-            rel_thresh:0.05,
-            compare_nolock: true,
+            lockdown:LockdownParameters{
+                lock_style: LockdownType::Targeted,
+                dynamic_bool: true,
+                lock_threshold: 0.1,
+                release_threshold: 0.05,
+            },
+            complock:LockdownParameters{
+                lock_style: LockdownType::None,
+                dynamic_bool: false,
+                lock_threshold: 0.1,
+                release_threshold: 0.05,
+            },
+            compare: true,
+            
 
         }
     }
@@ -84,7 +93,7 @@ impl ScanLambdaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LamScan_{}_N{}r{}t{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}.{}",
+            "ver{}LamScan_{}_N{}r{}t{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}{}.{}",
             crate::VERSION,
             self.measure.name(),
             self.system_size,
@@ -97,10 +106,11 @@ impl ScanLambdaParams{
             self.graph_seed,
             self.sir_seed,
             k,
-            lockdown_naming_string(self.lockdown),
-            self.lock_thresh,
-            self.rel_thresh,
-            self.compare_nolock,
+            lockdown_naming_string(self.lockdown.lock_style),
+            self.lockdown.lock_threshold,
+            self.lockdown.release_threshold,
+            lockdown_naming_string(self.complock.lock_style),
+            self.compare,
             file_ending
 
 

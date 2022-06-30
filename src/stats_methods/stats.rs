@@ -175,3 +175,20 @@ pub fn vector_variance(slice: &Vec<u32>, average: f64, frac: Option<f64>) -> f64
 
     var_sum / slice.len() as f64
 }
+
+
+
+pub fn chi_squared_no_errors(yvals:Vec<f64>,fitvals:Vec<f64>) -> f64{
+    let mut sum = 0.;
+    for j in 0..yvals.len(){
+        let diff = yvals[j]-fitvals[j];
+        sum += diff*diff;
+    }
+    return sum
+}
+
+
+pub fn fit_gaussian(xvals:Vec<f64>,yvals:Vec<f64>) -> f64{
+
+    return  0.
+}

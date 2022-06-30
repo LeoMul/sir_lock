@@ -1,0 +1,7 @@
+set t pdf
+set output "plotting_random_c.pdf"
+p "ver0.1.0LamScan_C_N1000r0.14t0-1_500SamStep5000_Graphba3100_GSeed875629289_SS1489264107025_THRk4_LOCKRandom_LT0.1_RT0.05_COMPtrue.dat" u 1:2 w lp t "", "" u 1:4 w lp t " "
+
+set xlabel "{/Symbol l}"
+set ylabel "C"
+set output

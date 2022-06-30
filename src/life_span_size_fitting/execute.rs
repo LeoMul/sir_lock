@@ -79,10 +79,22 @@ fn sim_small_world(param: LifespanSizeFittingParams, json: Value, num_threads:Op
 
 }
 
+
+
+
+
+
+
 pub struct Measured
 {
     pub var_t: MyVariance,
 }
+
+
+
+
+
+
 
 fn write_data_files(data:&[Vec<Measured>],param: &LifespanSizeFittingParams, json: &Value, num_threads:Option<NonZeroUsize>,nvec:Vec<usize>,lambda_vec:Vec<f64>){
     

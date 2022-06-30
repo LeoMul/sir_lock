@@ -20,6 +20,7 @@ pub const DEFAULT_SAMPLES_PER_STEP: u64 = 5000;
 pub const ONE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(1)};
 
 
+pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum GraphType{

@@ -35,15 +35,16 @@ fn sim_barabasi(param:ScanLambdaParams,json:Value,num_threads:Option<NonZeroUsiz
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
 
-    let lock_graph = model.create_locked_down_network(param.lockdown);
+    let lock_graph  = model.create_locked_down_network(param.lockdown);
 
-    let y = scanning_lambda_function(&param, &json, num_threads, &model,&lock_graph);
+    //let y = scanning_lambda_function_dynamic(&param, &json, num_threads, &model);
+    let y = scanning_lambda_function_static(&param, &json, num_threads, &model,param.lockdown,lock_graph);
     let y_clone = y.clone();
     let samples = Samples{
         lamda: lambda_range,
         var: y
     };
-    if !param.compare_nolock{
+    if !param.compare{
         let name = param.name("dat", num_threads);
         println!("Creating: {}", &name);
         let file = File::create(name)
@@ -55,9 +56,13 @@ fn sim_barabasi(param:ScanLambdaParams,json:Value,num_threads:Option<NonZeroUsiz
     }
     else{
         println!("comparing");
+
         let lambda_range:Vec<_> = range.iter().collect();
-        let lock_graph = model.create_locked_down_network(LockdownType::None);
-        let y2 = scanning_lambda_function(&param, &json, num_threads, &model,&lock_graph);
+        let lock_graph = model.create_locked_down_network(param.complock);
+        println!("{}",lock_graph.edge_count());
+        //let y2 = scanning_lambda_function_dynamic(&param, &json, num_threads, &model);
+        let y2 = scanning_lambda_function_static(&param, &json, num_threads, &model,param.complock,lock_graph);
+
         let samples2 = Samples2{
             lamda:lambda_range,
             var: y_clone,
@@ -174,8 +179,8 @@ fn sim_small_world(param: ScanLambdaParams, json: Value, num_threads:Option<NonZ
     samples.write(buf).unwrap()
 
 }
-
-fn scanning_lambda_function(param:&ScanLambdaParams,_json:&Value,num_threads:Option<NonZeroUsize>,model:&SimpleSampleBarabasi,lockgraph:&GenGraphSIR) -> Vec<MyVariance>{
+fn scanning_lambda_function_static(param:&ScanLambdaParams,_json:&Value,num_threads:Option<NonZeroUsize>,model:&SimpleSampleBarabasi,lockparams:LockdownParameters,lockgraph:GenGraphSIR) -> Vec<MyVariance>{
+    //,lockgraph:&GenGraphSIR
     let mut rng = Pcg64::seed_from_u64(param.sir_seed);
 
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
@@ -235,7 +240,7 @@ fn scanning_lambda_function(param:&ScanLambdaParams,_json:&Value,num_threads:Opt
                             //vaccine_list_helper.randomize(vaccine_rng);
                             
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
-                            let res = model.propagate_until_completion_max_with_locks(param.lock_thresh,param.rel_thresh,lockgraph.clone()) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(lockgraph.clone(),lockparams) as u32;
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32
@@ -250,6 +255,13 @@ fn scanning_lambda_function(param:&ScanLambdaParams,_json:&Value,num_threads:Opt
         ).collect();
         y
 }
+
+
+
+
+
+
+
 
 
 

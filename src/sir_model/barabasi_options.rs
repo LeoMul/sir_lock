@@ -3,6 +3,7 @@
 use{
     std::num::*,
     crate::scan_lambda::*,
+    crate::scan_lambda_gamma::*,
     crate::GraphType,
     //crate::scan_lambda_gamma::*,
     //crate::time_graph::*,
@@ -36,6 +37,21 @@ impl BarabasiOptions{
             m,
             source_n,
         }
+    }
+    pub fn from_lambda_gamma_scan_param(param: &ScanLambdaGammaParams) -> Self{
+        let (m,source_n )= match param.graph_type {
+            GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            graph_seed: param.graph_seed,
+            system_size: param.system_size,
+            lambda: param.lambda_range.start,
+            gamma: param.gamma_range.start,
+            m,
+            source_n,
+        }
+
     }
     pub fn from_prop_test_param(param:&PropTestParams) -> Self{
         let (m,source_n )= match param.graph_type {

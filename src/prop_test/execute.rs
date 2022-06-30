@@ -25,8 +25,13 @@ fn sim_barabasi(param:PropTestParams, _json: Value, _num_threads: Option<NonZero
     let barabasi_world = opt.into();
     let mut model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed);
 
-
-    let lock_graph = model.create_locked_down_network(LockdownType::Random);
-    model.propagate_until_completion_max_with_locks(0.1,0.05,lock_graph);
+    let lock = LockdownParameters{
+        lock_style: LockdownType::Targeted,
+        dynamic_bool: true,
+        lock_threshold: 0.1,
+        release_threshold: 0.05
+    };
+    let lock_graph = model.create_locked_down_network(lock);
+    model.propagate_until_completion_max_with_lockdown(lock_graph,lock);
 
 }

@@ -1,0 +1,12 @@
+{
+  "system_size": 200,
+  "recovery_prob": 0.14,
+  "trans_prob": 0.25,
+  "graph_type": {
+    "SmallWorld": 0.1
+  },
+  "samples": 5000,
+  "fraction": true,
+  "graph_seed": 875629289,
+  "sir_seed": 1489264107025
+}

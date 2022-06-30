@@ -230,6 +230,7 @@ impl SimpleSampleBarabasi{
         // now only node 0 is infected!
         self.infected_list.clear();
         self.infected_list.push(index);
+        self.recovered_list.clear();
         
     }
 
@@ -300,35 +301,90 @@ impl SimpleSampleBarabasi{
     
     //maybe think about having the lockeddown graph calculated once and then passed to this function!
 
-    pub fn create_locked_down_network(&mut self, lockdowntype:LockdownType)
+    pub fn create_locked_down_network(&mut self, lockdownparams:LockdownParameters)
     -> GenGraphSIR{
+
+        //this will only work right now during a simulation, not at the beginning because of the current implementation of reset_simple_sample.
         let graph = self.base_model.ensemble.graph().clone();
-        lockdown(lockdowntype,graph)
+        //This transfers the SIR information to the new network also. //doesn't work? need to fix maybe
+        let locked_down_graph = lockdown(lockdownparams,graph,&self.infected_list);
+        
+
+        locked_down_graph
+
+
     }
 
-    pub fn propagate_until_completion_max_with_locks(&mut self,lockdown_threshold:f64,release_threshold:f64,mut post_locked_down_graph:GenGraphSIR) -> usize{
+    pub fn transfer_sir_information(&mut self, mut locked_down_graph:GenGraphSIR) -> GenGraphSIR{
+        //resets and updates the sir informaton of the locked_down_graph
+        for state in locked_down_graph.contained_iter_mut(){
+            *state = InfectionState::Suspectible;
+
+        }
+
+        for index in &self.infected_list{
+            *locked_down_graph.at_mut(*index) = InfectionState::Infected;
+        }
+        for index in &self.recovered_list{
+            *locked_down_graph.at_mut(*index) = InfectionState::Recovered;
+        }
+        locked_down_graph
         
+    }
+
+
+    pub fn propagate_until_completion_max_with_lockdown(&mut self,mut post_locked_down_graph:GenGraphSIR,lockparams:LockdownParameters) -> usize{
+        
+        //THIS IS WHY create_locked_down_network doesnt work rn, as this makes a new position for patient zero each time. And leaves room for duplicates.
         self.reset_simple_sample_sir_simulation();
+
+        //maybe have post_locked_down_graph be part of the sample struct? would allow for easier updating and function passing? who knows
+        //let (mut post_locked_down_graph,stat_bool) = self.create_locked_down_network(locktype);
+
+        //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
+        post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+        //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
+
+        let lockdown_threshold = lockparams.lock_threshold;
+        let release_threshold = lockparams.release_threshold;
+        let dynamic_bool = lockparams.dynamic_bool;
+
         let mut max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
-        
-
-        //println!("Original network {}",self.base_model.ensemble.edge_count());
-
-        
-        //println!("New network {}",post_locked_down_graph.edge_count());
+        let mut lockdown_indicator = false;
         loop{
+            //Interestingly, cloning INSIDE the loop causes issues with double counting of infeceted..
+            debug_assert_eq!(max_infected,post_locked_down_graph.contained_iter().filter(|&state| *state == InfectionState::Infected).count());
+
+
+
             let prob_dist = Uniform::new_inclusive(0.0,1.0);
             let lambda = self.lambda; 
             let inf = self.infected_list.len() as f64/self.n as f64;
-            
-            let mut lockdown_indicator = false;
-
-            if inf > lockdown_threshold{
+            //println!("{}",inf);
+            //println!("{:?}",self.infected_list);
+            if inf > lockdown_threshold && lockdown_indicator == false{
                 lockdown_indicator = true;
+
+                if dynamic_bool{
+                    //If the lockdown type is one which must be updated once the new lockdown is brought in. 
+                    //Otherwise the lockdown is static and the structure is constant throughout the propagation
+                    post_locked_down_graph = self.create_locked_down_network(lockparams);
+                    post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
+                }
+
             }
-            if inf < release_threshold{
+            if inf < release_threshold &&lockdown_indicator == true{
+                //println!("Releasing lockdown: edges {}",self.base_model.ensemble.graph().edge_count());
                 lockdown_indicator = false;
+            }
+
+            let bool_dup_checker = false;
+            if !bool_dup_checker{
+                if contains_duplicates(self.infected_list.clone()){
+                println!("safety dance");
+                }
             }
 
             if !lockdown_indicator{
@@ -341,13 +397,18 @@ impl SimpleSampleBarabasi{
                 
                         if prob < lambda{
                             //* dereferences neighbour
+                            //need to update the corresponding neighbour in the other graph!
                             *neighbour = InfectionState::Infected;
+                            
+                            //This might only be necessary if lockdown is static, as dynamic lockdown will calculate this anyway...
+                            *post_locked_down_graph.at_mut(n_index) = InfectionState::Infected;
                             self.new_infected_list.push(n_index);} }
                 }
 
             }
             else{
                 //println!("locking down");
+                
 
                 for &index in self.infected_list.iter(){
 
@@ -356,7 +417,9 @@ impl SimpleSampleBarabasi{
                 
                         if prob < lambda{
                             //* dereferences neighbour
+                            //need to update the corresponding neighbour in the other graph!
                             *neighbour = InfectionState::Infected;
+                            *self.base_model.ensemble.at_mut(n_index) = InfectionState::Infected;
                             self.new_infected_list.push(n_index);} }
                 }
             }
@@ -367,11 +430,13 @@ impl SimpleSampleBarabasi{
         
                     let removed_index = self.infected_list.swap_remove(i);
                     *self.ensemble.at_mut(removed_index) = InfectionState::Recovered;
+                    *post_locked_down_graph.at_mut(removed_index) = InfectionState::Recovered;
+                    self.recovered_list.push(removed_index);
                         //println!("recovering");
                 }
             }
             self.infected_list.append(&mut self.new_infected_list);
-
+            self.new_infected_list = Vec::new();
 
 
             
@@ -388,6 +453,8 @@ impl SimpleSampleBarabasi{
         max_infected
 
     }
+
+    
 
     pub fn propagate_until_completion_time(&mut self) -> u32{
         self.reset_simple_sample_sir_simulation();
@@ -434,46 +501,18 @@ impl SimpleSampleBarabasi{
         (sus,inf,rec,time)
 
     }
-    pub fn old_stuff(&mut self,lockdowntype:LockdownType,lockdown_threshold:f64)->usize{
-        self.reset_simple_sample_sir_simulation();
-        let max_infected = self.infected_list.len();
-        let prob_dist = Uniform::new_inclusive(0.0,1.0);
 
-        debug_assert_eq!(max_infected,1);
-        let mut pre_locked_down_graph = self.base_model.ensemble.clone();
-    
-        let graph = self.base_model.ensemble.graph();
-        let inf = self.infected_list.len() as f64/self.n as f64;
-        let lambda = self.lambda;
+}
 
-        let mut post_locked_down_graph = lockdown(lockdowntype, graph.clone());
-        for &index in self.infected_list.iter(){
-            debug_assert!(self.new_infected_list.is_empty());
-            if inf < lockdown_threshold{
-                println!("no lockdown");
-                for (n_index,neighbour) in pre_locked_down_graph.contained_iter_neighbors_mut_with_index(index).filter(|(_,neighbour)| neighbour.sus_check()){
-            
-                    let prob = prob_dist.sample(&mut self.rng_type);
-            
-                    if prob < lambda{
-                        //* dereferences neighbour
-                        *neighbour = InfectionState::Infected;
-                        self.new_infected_list.push(n_index);} }
-
-            } else{
-                println!("locking down");
-
-                for (n_index,neighbour) in post_locked_down_graph.contained_iter_neighbors_mut_with_index(index).filter(|(_,neighbour)| neighbour.sus_check()){
-                    let prob = prob_dist.sample(&mut self.rng_type);
-            
-                    if prob < lambda{
-                        //* dereferences neighbour
-                        *neighbour = InfectionState::Infected;
-                        self.new_infected_list.push(n_index);} }
-
+pub fn contains_duplicates(x:Vec<usize>)-> bool{
+    for i in 0..x.len(){
+        for j in 0..x.len(){
+            if i != j{
+                if x[i] == x[j]{
+                    return true
+                }
             }
-            //recoveries are independent of the topology, so this can be done outsie here.
         }
-        max_infected
     }
+    return false
 }
