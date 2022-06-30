@@ -1,0 +1,5 @@
+#{"fraction":true,"graph_seed":875629289,"graph_type":{"SmallWorld":0.1},"lambda_range":{"end":0.25,"start":0.05,"steps":20},"num_networks":10000,"recovery_prob":0.14,"samples_per_lambda":1000,"sir_seed":1489264107025,"system_size_range":{"end":400,"start":200,"steps":3}}
+#n critical_lambda
+200 0.18684210526315792
+300 0.1763157894736842
+400 0.1763157894736842

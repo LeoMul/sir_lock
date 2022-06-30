@@ -342,6 +342,8 @@ impl SimpleSampleBarabasi{
         //let (mut post_locked_down_graph,stat_bool) = self.create_locked_down_network(locktype);
 
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
+
+        //wont need after change made
         post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
@@ -353,7 +355,6 @@ impl SimpleSampleBarabasi{
         debug_assert_eq!(max_infected,1);
         let mut lockdown_indicator = false;
         loop{
-            //Interestingly, cloning INSIDE the loop causes issues with double counting of infeceted..
             debug_assert_eq!(max_infected,post_locked_down_graph.contained_iter().filter(|&state| *state == InfectionState::Infected).count());
 
 
@@ -363,8 +364,12 @@ impl SimpleSampleBarabasi{
             let inf = self.infected_list.len() as f64/self.n as f64;
             //println!("{}",inf);
             //println!("{:?}",self.infected_list);
+
+            //transfer SIR information when lockdown comes in/leaves
+
             if inf > lockdown_threshold && lockdown_indicator == false{
                 lockdown_indicator = true;
+                //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
 
                 if dynamic_bool{
                     //If the lockdown type is one which must be updated once the new lockdown is brought in. 

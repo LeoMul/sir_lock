@@ -48,8 +48,8 @@ impl Default for CriticalLambdaParams{
     fn default() -> Self{
         let system_size_range_def = UsizeRangeBuilder{
             start: 200,
-            end: 1000,
-            steps: NonZeroUsize::new(3).unwrap()
+            end: 3200,
+            steps: NonZeroUsize::new(12).unwrap()
         };
         let trans_prob_range = F64RangeBuilder{
             start: 0.05,
