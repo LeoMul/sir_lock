@@ -1,0 +1,27 @@
+{
+  "system_size_range": [
+    200,
+    400,
+    600,
+    1000,
+    1200,
+    1600,
+    2000,
+    2400,
+    2800,
+    3200
+  ],
+  "recovery_prob": 0.14,
+  "lambda_range": {
+    "start": 0.05,
+    "end": 0.25,
+    "steps": 20
+  },
+  "graph_type": {
+    "SmallWorld": 0.1
+  },
+  "num_networks": 100000,
+  "fraction": true,
+  "graph_seed": 875629289,
+  "sir_seed": 1489264107025
+}

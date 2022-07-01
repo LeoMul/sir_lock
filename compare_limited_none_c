@@ -1,0 +1,8 @@
+set t pdf
+set output "compare_limited_none_c.pdf"
+set key bottom right
+set xlabel "{/Symbol l}"
+set ylabel "C"
+p "ver0.1.0LamScan_C_N500r0.14t0-1_200SamStep5000_Graphba520_GSeed875629289_SS1489264107025_THRk4_LOCKLimitContacts_LT0.1_RT0.05_COMPNonetrue.dat" u 1:2 w lp t "Limited", "" u 1:4 w lp t "None"
+
+set output

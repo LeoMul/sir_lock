@@ -68,7 +68,7 @@ impl Default for ScanLambdaParams{
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown:LockdownParameters{
-                lock_style: LockdownType::Targeted,
+                lock_style: LockdownType::LimitContacts(2),
                 dynamic_bool: true,
                 lock_threshold: 0.1,
                 release_threshold: 0.05,

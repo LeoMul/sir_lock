@@ -307,7 +307,7 @@ impl SimpleSampleBarabasi{
         //this will only work right now during a simulation, not at the beginning because of the current implementation of reset_simple_sample.
         let graph = self.base_model.ensemble.graph().clone();
         //This transfers the SIR information to the new network also. //doesn't work? need to fix maybe
-        let locked_down_graph = lockdown(lockdownparams,graph,&self.infected_list);
+        let locked_down_graph = lockdown(lockdownparams,graph,&self.infected_list,&mut self.rng_type);
         
 
         locked_down_graph

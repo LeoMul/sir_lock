@@ -13,6 +13,7 @@ pub enum LockdownType{
     None,
     Random(u64,f64),
     Targeted,
+    LimitContacts(usize),
     Invalid
 
 }
@@ -28,7 +29,7 @@ pub struct LockdownParameters{
 
 
 
-pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGraphSIR
+pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Vec<usize>, rng:&mut Pcg64) -> GenGraphSIR
 {
     
     match lockdownparams.lock_style{
@@ -36,17 +37,21 @@ pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Ve
         LockdownType::None => no_lockdown(graph),
         LockdownType::Random(seed,prob) => random_lockdown(graph,seed,prob),
         LockdownType::Targeted => target_infection_clusters(graph, inflist),
+        LockdownType::LimitContacts(m) => limit_contacts(graph, m, rng),
         _ => unimplemented!()
     }
 
 
 }
 pub fn lockdown_naming_string(lockdowntype:LockdownType) -> String{
+
+    
     match lockdowntype{
         LockdownType::CircuitBreaker => "CircuitBreaker".to_owned(),
         LockdownType::Random(_,_) => "Random".to_owned(),
         LockdownType::None => "None".to_owned(),
         LockdownType::Targeted => "Targeted".to_owned(),
+        LockdownType::LimitContacts(_) => "LimitContacts".to_owned(),
         _ => unimplemented!()
     }
 
@@ -55,6 +60,36 @@ pub fn lockdown_naming_string(lockdowntype:LockdownType) -> String{
 pub fn circuit_breaking_lockdown<T,A>(mut graph:GenericGraph<T,A>)-> GenericGraph<T,A> where A: net_ensembles::AdjContainer<T>{
     graph.clear_edges();
     
+    graph
+
+}
+
+
+pub fn limit_contacts<InfectionState,A>(mut graph:GenericGraph<InfectionState,A>,max_new_edges:usize, rng:&mut Pcg64)-> GenericGraph<InfectionState,A> 
+where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
+    
+    for j in 0..graph.vertex_count(){
+
+        if graph.degree(j).unwrap() > max_new_edges{
+            let adj = graph.contained_iter_neighbors_mut_with_index(j);
+            let mut vec = Vec::new();
+            for (ind,_neighbour) in adj{
+                vec.push(ind);
+            }
+            
+            while graph.degree(j).unwrap() > max_new_edges{
+                let un = Uniform::new(0,graph.degree(j).unwrap());  
+                let rand_index = un.sample(rng);
+                graph.remove_edge(j,vec[rand_index]).unwrap();
+                vec.remove(rand_index);
+            }
+            
+
+        }
+        
+    }
+
+
     graph
 
 }
@@ -128,27 +163,6 @@ pub fn target_infection_clusters(graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGr
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 pub fn pair_finder<InfectionState,A>(mut graph:GenericGraph<InfectionState,A>)-> Vec<[usize;2]> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     //This function finds all the pairs of indicies connected in the graph. 
@@ -162,14 +176,11 @@ where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensemb
                 vec.push([j,n_index]);
             }
 
-            //new_vec.sort_unstable();
-            //vec.push(new_vec);
+            
         } 
     }
-    //vec.sort_unstable();
-    //vec.dedup();
+
     vec
-    //return iterator maybe, sort dedepu not needed if ordering is taken into account
-    //size 2 slice instead
+    //return iterator maybe
 }
 
