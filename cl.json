@@ -3,19 +3,17 @@
     200,
     400,
     600,
-    1000,
     1200,
     1600,
     2000,
-    2400,
-    2800,
+    2600,
     3200
   ],
   "recovery_prob": 0.14,
   "lambda_range": {
     "start": 0.05,
-    "end": 0.4,
-    "steps": 70
+    "end": 0.25,
+    "steps": 50
   },
   "graph_type": {
     "Barabasi": [
@@ -23,7 +21,7 @@
       10
     ]
   },
-  "num_networks": 100,
+  "num_networks": 100000,
   "fraction": true,
   "graph_seed": 875629289,
   "sir_seed": 1489264107025,

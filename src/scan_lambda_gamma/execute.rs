@@ -2,6 +2,7 @@ use std::{ io::Write};
 
 
 use rayon::iter::{ ParallelIterator};
+use indicatif::ProgressIterator;
 
 
 
@@ -139,7 +140,7 @@ fn sim_small_world(param: ScanLambdaGammaParams, json: Value, num_threads:Option
         sum_c /= (k.get() as u64 *per_threads) as f64 ;
         var_c /= (k.get() as u64 *per_threads)  as f64;
         sum_m /= (k.get() as u64 *per_threads)  as f64;
-        var_c /= (k.get() as u64 *per_threads)  as f64;
+        var_m /= (k.get() as u64 *per_threads)  as f64;
 
         let var_c = var_c - sum_c*sum_c;
         let var_m = var_m - sum_m*sum_m;
@@ -258,15 +259,16 @@ fn sim_barabasi(param: ScanLambdaGammaParams, json: Value, num_threads:Option<No
     };
     
     
+    //let bar = crate::indication_bar(grid_2.len() as u64);
 
-    //let x_y_vec:Vec<_> = grid_2.grid_point2d_iter().collect();
+    let x_y_vec:Vec<_> = grid_2.grid_point2d_iter().collect();
 
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
 
     let mut rng = Pcg64::seed_from_u64(param.sir_seed);
     
-    //let bar = crate::indication_bar( grid_2.grid_point2d_iter().len() as u64);
+    let bar = crate::indication_bar( x_y_vec.len() as u64);
     
 
     let mut container: Vec<_> = (0..k.get()).map(
@@ -362,7 +364,7 @@ fn sim_barabasi(param: ScanLambdaGammaParams, json: Value, num_threads:Option<No
             
         }
 
-    }).collect();
+    }).progress_with(bar).collect();
 
     let map = GridMapF64Generic::from_vec_unchecked(grid_2,data);
    

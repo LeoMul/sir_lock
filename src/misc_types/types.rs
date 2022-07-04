@@ -4,11 +4,11 @@ use{
     std::{
         num::*, 
         
-        
+    
         ops::RangeInclusive,
        
     },
-    
+    crate::stats_methods::*,
     crate::grid::*,
 };
 pub const DEFAULT_SYSTEM_SIZE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(200)};
@@ -65,6 +65,13 @@ impl MeasureType{
         matches!(self, Self::C)
     }
 }
+pub struct Measured
+{
+    pub var_m: MyVariance,
+    pub var_c: MyVariance,
+}
+
+
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct F64RangeBuilder

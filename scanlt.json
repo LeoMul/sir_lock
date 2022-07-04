@@ -1,0 +1,35 @@
+{
+  "system_size": 200,
+  "lambda_range": {
+    "start": 0.0,
+    "end": 1.0,
+    "steps": 20
+  },
+  "lockt_range": {
+    "start": 0.011,
+    "end": 0.2,
+    "steps": 20
+  },
+  "recovery_prob": 0.14,
+  "graph_type": {
+    "Barabasi": [
+      2,
+      10
+    ]
+  },
+  "samples_per_step": 5000,
+  "fraction": true,
+  "graph_seed": 875629289,
+  "sir_seed": 1489264107025,
+  "lockdown": {
+    "lock_style": {
+      "Random": [
+        123131315,
+        0.6
+      ]
+    },
+    "release_threshold": 0.01,
+    "lock_threshold": 0.1,
+    "dynamic_bool": true
+  }
+}

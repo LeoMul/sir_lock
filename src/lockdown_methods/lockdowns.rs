@@ -26,7 +26,16 @@ pub struct LockdownParameters{
     pub dynamic_bool: bool,
 }
 
+impl LockdownParameters{
+    pub fn set_lock_thresh(&mut self,lock_thresh:f64){
+        self.lock_threshold = lock_thresh;
 
+    }
+    pub fn set_rel_thresh(&mut self,rel_thresh:f64){
+        self.release_threshold = rel_thresh;
+
+    }
+}
 
 
 pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Vec<usize>, rng:&mut Pcg64) -> GenGraphSIR

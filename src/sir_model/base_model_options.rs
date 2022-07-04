@@ -82,7 +82,7 @@ impl BaseSwOptions{
         Self{
             rewire_prob,
             graph_seed: param.graph_seed,
-            system_size: NonZeroUsize::new(param.system_size_range.start).unwrap(),
+            system_size: NonZeroUsize::new(param.system_size_range[0]).unwrap(),
             lambda: param.trans_prob_range.start,
             gamma: param.recovery_prob
         }

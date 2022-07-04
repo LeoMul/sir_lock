@@ -213,6 +213,7 @@ fn scanning_lambda_function_static(param:&ScanLambdaParams,_json:&Value,num_thre
                         .zip(lambda_range[ start..].par_iter())
                 }
             );
+    
     let system_size_fraction_bool = if param.fraction{
         Some(param.system_size.get() as f64)
     }else{

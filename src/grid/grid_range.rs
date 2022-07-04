@@ -154,6 +154,10 @@ impl GridRangeF64{
             current: 0
         }
     }
+    pub fn len(&self) -> usize{
+        self.steps_m1.get()
+    }
+
 }
 
 impl Deref for GridRangeF64

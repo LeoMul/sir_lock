@@ -1,29 +1,19 @@
 {
-  "system_size_range": [
-    200,
-    400,
-    600,
-    1000,
-    1200,
-    1600,
-    2000,
-    2400,
-    2800,
-    3200
-  ],
-  "recovery_prob": 0.14,
+  "system_size": 200,
   "lambda_range": {
-    "start": 0.05,
-    "end": 0.4,
-    "steps": 70
+    "start": 0.0,
+    "end": 1.0,
+    "steps": 20
   },
+  "recovery_prob": 0.14,
   "graph_type": {
     "Barabasi": [
       2,
       10
     ]
   },
-  "num_networks": 100,
+  "samples_per_step": 5000,
+  "measure": "C",
   "fraction": true,
   "graph_seed": 875629289,
   "sir_seed": 1489264107025,
@@ -33,6 +23,13 @@
     },
     "release_threshold": 0.05,
     "lock_threshold": 0.1,
+    "dynamic_bool": true
+  },
+  "complock": {
+    "lock_style": "None",
+    "release_threshold": 0.05,
+    "lock_threshold": 0.1,
     "dynamic_bool": false
-  }
+  },
+  "compare": true
 }

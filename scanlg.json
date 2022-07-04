@@ -1,0 +1,29 @@
+{
+  "system_size": 200,
+  "lambda_range": {
+    "start": 0.0,
+    "end": 1.0,
+    "steps": 20
+  },
+  "gamma_range": {
+    "start": 0.01,
+    "end": 1.0,
+    "steps": 20
+  },
+  "graph_type": {
+    "SmallWorld": 0.1
+  },
+  "samples_per_step": 5000,
+  "fraction": true,
+  "graph_seed": 875629289,
+  "sir_seed": 1489264107025,
+  "lockdown": {
+    "Random": [
+      123131315,
+      0.6
+    ]
+  },
+  "lock_thresh": 0.1,
+  "rel_thresh": 0.05,
+  "compare_nolock": false
+}

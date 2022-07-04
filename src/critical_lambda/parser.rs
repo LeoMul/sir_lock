@@ -9,7 +9,7 @@ use{
     serde_json::Value,
    
     crate::misc_types::*,
-
+    crate::lockdown_methods::*,
 };
 
 
@@ -42,10 +42,11 @@ pub struct CriticalLambdaParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
+    pub lockdown: LockdownParameters,
 }
 impl Default for CriticalLambdaParams{
     fn default() -> Self{
-        let system_size_range_def =vec![200,400,600,1000,1200,1600,2000,2400,2800,3200];
+        let system_size_range_def =vec![200,600,1200,4800];
         let trans_prob_range = F64RangeBuilder{
             start: 0.05,
             end:0.25,
@@ -55,11 +56,18 @@ impl Default for CriticalLambdaParams{
             system_size_range: system_size_range_def,
             recovery_prob: DEFAULT_RECOVERY_PROB,
             lambda_range: trans_prob_range,
-            graph_type:GraphType::SmallWorld(0.1),
+            graph_type:GraphType::Barabasi(2,10),
             num_networks: 100000,
             fraction: true,
             graph_seed:DEFAULT_GRAPH_SEED,
-            sir_seed: DEFAULT_SIR_SEED
+            sir_seed: DEFAULT_SIR_SEED,
+            lockdown: LockdownParameters{
+                lock_style: LockdownType::LimitContacts(2),
+                dynamic_bool: false,
+                lock_threshold: 0.1,
+                release_threshold: 0.05,
+            }
+            
         }
     }
 }
@@ -70,7 +78,7 @@ impl CriticalLambdaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}CriticalLam_ThisFileN{}Size{}to{}Lam{}to{}_{}_NumNet{}_GT{}_GS{}_SIRS{}_THR{}.{}",
+            "ver{}CriticalLam_ThisFileN{}Size{}to{}Lam{}to{}_{}_NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
             crate::VERSION,
             particular_n,
             self.system_size_range[0],
@@ -86,6 +94,7 @@ impl CriticalLambdaParams{
             self.graph_seed,
             self.sir_seed,
             k,
+            lockdown_naming_string(self.lockdown.lock_style),
             file_ending
 
 

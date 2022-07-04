@@ -13,6 +13,10 @@ pub struct GridF64{
 }
 
 impl GridF64{
+
+    pub fn len(&self) -> usize{
+        self.x_range.len()*self.y_range.len()
+    }
     pub fn new(
         x_range: GridRangeF64,
         y_range: GridRangeF64

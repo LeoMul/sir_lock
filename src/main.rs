@@ -20,6 +20,7 @@ pub mod critical_lambda;
 pub mod json_parsing;
 pub mod prop_test;
 pub mod lockdown_methods;
+pub mod scan_lambda_lock_thresh;
 //pub mod time_graph;
 pub mod lifespanhist;
 
@@ -35,7 +36,8 @@ fn main() {
         CmdOption::LifeSpan(o) => o.execute(),
         CmdOption::LifespanSizeFitting(o) => o.execute(),
         CmdOption::CriticalLambda(o) => o.execute(),
-        CmdOption::PropTest(o) => o.execute()
+        CmdOption::PropTest(o) => o.execute(),
+        CmdOption::ScanLambdaThresh(o) => o.execute()
     }
     println!("Execution took {}",humantime::format_duration(start_time.elapsed()))
     
@@ -56,10 +58,12 @@ pub fn indication_bar(len: u64) -> ProgressBar
 pub enum CmdOption 
 {
     ScanLambda(scan_lambda::ScanLambda),
+    ScanLambdaThresh(scan_lambda_lock_thresh::ScanLambdaThresh),
     ScanLambdaGamma(scan_lambda_gamma::ScanLambdaGamma),
     LifeSpan(lifespanhist::LifeSpan),
     LifespanSizeFitting(life_span_size_fitting::LifespanSizeFitting),
     CriticalLambda(critical_lambda::CriticalLambda),
-    PropTest(prop_test::PropTest)
+    PropTest(prop_test::PropTest),
+
     
 }
