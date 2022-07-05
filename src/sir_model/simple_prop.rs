@@ -367,7 +367,7 @@ impl SimpleSampleBarabasi{
             //println!("{:?}",self.infected_list);
 
             //transfer SIR information when lockdown comes in/leaves
-
+            //let mut new_locked_down_infected:Vec<usize> = Vec::new();
             if inf > lockdown_threshold && lockdown_indicator == false{
                 lockdown_indicator = true;
                 //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
@@ -377,7 +377,8 @@ impl SimpleSampleBarabasi{
                     //Otherwise the lockdown is static and the structure is constant throughout the propagation
                     post_locked_down_graph = self.create_locked_down_network(lockparams);
                     post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
+
+                    println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
                 }
 
             }
@@ -386,7 +387,7 @@ impl SimpleSampleBarabasi{
                 lockdown_indicator = false;
             }
 
-            let bool_dup_checker = false;
+            let bool_dup_checker = true;
             if !bool_dup_checker{
                 if contains_duplicates(self.infected_list.clone()){
                 println!("safety dance");
@@ -426,6 +427,7 @@ impl SimpleSampleBarabasi{
                             //need to update the corresponding neighbour in the other graph!
                             *neighbour = InfectionState::Infected;
                             *self.base_model.ensemble.at_mut(n_index) = InfectionState::Infected;
+                            
                             self.new_infected_list.push(n_index);} }
                 }
             }

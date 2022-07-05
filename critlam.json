@@ -1,21 +1,12 @@
 {
   "system_size_range": [
-    200,
-    400,
-    600,
-    1000,
-    1200,
-    1600,
-    2000,
-    2400,
-    2800,
-    3200
+    3000
   ],
   "recovery_prob": 0.14,
   "lambda_range": {
     "start": 0.05,
-    "end": 0.4,
-    "steps": 70
+    "end": 0.5,
+    "steps": 50
   },
   "graph_type": {
     "Barabasi": [
@@ -23,7 +14,7 @@
       10
     ]
   },
-  "num_networks": 100,
+  "num_networks": 1000,
   "fraction": true,
   "graph_seed": 875629289,
   "sir_seed": 1489264107025,

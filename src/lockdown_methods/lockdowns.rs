@@ -142,7 +142,7 @@ pub fn target_infection_clusters(graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGr
     //some credit is due to Peter Werner for discussing this with me.
 
     //can't quite get it to work yet.... get duplicates of certain infected when updating the graph in realtime
-    let mut pairs:Vec<Vec<usize>> = Vec::new();
+    let mut pairs:Vec<(usize,usize)> = Vec::new();
     let mut locked_down = graph.clone();
 
     for &ind in inflist{
@@ -152,18 +152,19 @@ pub fn target_infection_clusters(graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGr
 
             //you made a mistake! leave edge between sus and infected.
             for (n_ind_2,_neigh_2) in graph.contained_iter_neighbors_with_index(n_ind).filter(|(_,neigh_2)|neigh_2.sus_check()){
-                let mut v = vec![n_ind,n_ind_2];
-                v.sort();
-                pairs.push(v);
+                
+                if n_ind < n_ind_2{
+                    pairs.push((n_ind,n_ind_2));
+                }
 
             }
         }
 
     }
-    pairs.sort();
+    pairs.sort_unstable();
     pairs.dedup();
     for pair in pairs{
-        locked_down.remove_edge(pair[0],pair[1]).unwrap();
+        locked_down.remove_edge(pair.0,pair.1).unwrap();
     }
 
 

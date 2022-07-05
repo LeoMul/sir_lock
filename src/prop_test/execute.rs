@@ -26,7 +26,7 @@ fn sim_barabasi(param:PropTestParams, _json: Value, _num_threads: Option<NonZero
     let mut model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed);
 
     let lock = LockdownParameters{
-        lock_style: LockdownType::LimitContacts(2),
+        lock_style: LockdownType::Targeted,
         dynamic_bool: true,
         lock_threshold: 0.1,
         release_threshold: 0.05

@@ -46,11 +46,11 @@ pub struct CriticalLambdaParams{
 }
 impl Default for CriticalLambdaParams{
     fn default() -> Self{
-        let system_size_range_def =vec![200,600,1200,4800];
+        let system_size_range_def =vec![3000,400,600,800,1000,1200,1600,2000,2500,200];
         let trans_prob_range = F64RangeBuilder{
             start: 0.05,
             end:0.25,
-            steps: NonZeroUsize::new(200).unwrap() 
+            steps: NonZeroUsize::new(50).unwrap() 
         };
         Self{
             system_size_range: system_size_range_def,
