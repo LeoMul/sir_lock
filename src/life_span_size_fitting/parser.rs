@@ -63,7 +63,7 @@ impl Default for LifespanSizeFittingParams{
             system_size_range: system_size_range_def,
             recovery_prob: DEFAULT_RECOVERY_PROB,
             trans_prob_range: trans_prob_range,
-            graph_type:GraphType::SmallWorld(0.1),
+            graph_type:GraphType::Barabasi(2,10),
             num_networks: 10000,
             fraction: true,
             graph_seed:DEFAULT_GRAPH_SEED,

@@ -1,22 +1,13 @@
 {
   "system_size_range": [
-    3500,
-    400,
-    600,
-    800,
-    1000,
-    1200,
-    1600,
-    2000,
-    2500,
-    3000,
-    200
+    200,
+    400
   ],
   "recovery_prob": 0.14,
-  "lambda_range": {
+  "trans_prob_range": {
     "start": 0.05,
     "end": 0.25,
-    "steps": 50
+    "steps": 20
   },
   "graph_type": {
     "Barabasi": [
@@ -24,7 +15,7 @@
       10
     ]
   },
-  "num_networks": 100000,
+  "num_networks": 10000,
   "fraction": true,
   "graph_seed": 875629289,
   "sir_seed": 1489264107025,
@@ -35,5 +26,6 @@
     "release_threshold": 0.05,
     "lock_threshold": 0.1,
     "dynamic_bool": false
-  }
+  },
+  "lifespanpercent": 0.9
 }
