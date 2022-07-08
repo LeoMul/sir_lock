@@ -46,12 +46,13 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
 
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
-    let mut n_size:Vec<_> = param.system_size_range.iter().map(|n|{*n}).collect();
+    let mut n_size:Vec<_> = param.system_size_range.to_vec();
     let lockparams = param.lockdown;
     println!("{:?}",n_size);
     let lambda_range = param.lambda_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
     println!("Progress will take approx 3-4 times what the bar says");
+    
     let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
         println!("{}",n);
         
@@ -60,14 +61,8 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
         } else{ 1.};
         
 
-        let mut container: Vec<_> = (0..k.get()).map(
-            |_|
-            {
-                //need this to avoid recreating rng several thousand times. this way ony num_thread times.
-                
-                
-            }
-        ).collect();
+        let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
+
         let per_thread = param.num_networks/k.get() as u64;
         
         let bar = crate::indication_bar(per_thread);
@@ -104,13 +99,13 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
         let mut measure_vec:Vec<Measured> = Vec::with_capacity(lambda_vec.len());
         let num = (per_thread*k.get() as u64) as f64;
         let mut copy_vec = Vec::with_capacity(k.get());
-        for i in 0..copy_vec.capacity(){
-            copy_vec.push(collect_columns_sums(&intermediate_data_vecs[i]));
+        for item in intermediate_data_vecs.iter().take(copy_vec.capacity()){
+            copy_vec.push(collect_columns_sums(item));
         }
         for j in 0..measure_vec.capacity(){
             let mut new_tuple = (0.,0.,0.,0.);
-            for i in 0..copy_vec.len(){
-                let x  = &copy_vec[i];
+            for x in &copy_vec{
+                //let x  = &copy_vec[i];
                 new_tuple = add_four_tuples(new_tuple, x[j]);}
 
             let av_c = new_tuple.0/num;
@@ -147,8 +142,8 @@ fn collect_columns_sums(data:&Vec<Vec<(f64,f64)>>)-> Vec<(f64,f64,f64,f64)>{
         let mut var_c = 0.;
         let mut avg_m = 0.;
         let mut var_m = 0.;
-        for i in 0..num_rows{
-            let row_i = &data[i];
+        for item in data.iter().take(num_rows){
+            let row_i = item;
             let c = row_i[j].0;
             let m = row_i[j].1;
             avg_c += c;
@@ -182,7 +177,7 @@ fn sim_small_world(param:CriticalLambdaParams, json: Value, num_threads: Option<
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     //let n_range = param.system_size_range.get_range();
-    let mut n_size:Vec<_> = param.system_size_range.iter().map(|n|{*n}).collect();
+    let mut n_size:Vec<_> = param.system_size_range.to_vec();
     println!("{:?}",n_size);
     let lambda_range = param.lambda_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
@@ -217,7 +212,7 @@ fn sim_small_world(param:CriticalLambdaParams, json: Value, num_threads: Option<
 
             avg_c /= (param.num_networks) as f64;
             var_c /= param.num_networks as f64;
-            var_c = var_c - avg_c*avg_c;
+            var_c -= avg_c*avg_c;
             MyVariance{
                 mean: avg_c,
                 var: var_c

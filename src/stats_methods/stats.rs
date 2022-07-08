@@ -184,7 +184,7 @@ pub fn chi_squared_no_errors(yvals:Vec<f64>,fitvals:Vec<f64>) -> f64{
         let diff = yvals[j]-fitvals[j];
         sum += diff*diff;
     }
-    return sum
+    sum
 }
 
 

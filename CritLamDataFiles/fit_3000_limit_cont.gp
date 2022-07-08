@@ -1,8 +1,8 @@
 set t pdf
 set output "fitting_3000_limit_cont.pdf"
 
-b = 0.05 + (0.05 - 0.25)/(1 + bb^2)
-f(x)=a*exp(-(x-b)**2/(2*c**2))
+
+f(x)=a*exp(-(x-(0.05 + (0.05 - 0.25)/(1 + b^2)))**2/(2*c**2))
 n = 3000*3000
 
 

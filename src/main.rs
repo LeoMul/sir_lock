@@ -23,7 +23,7 @@ pub mod lockdown_methods;
 pub mod scan_lambda_lock_thresh;
 //pub mod time_graph;
 pub mod lifespanhist;
-
+pub mod large_deviations;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 

@@ -66,6 +66,18 @@ impl BarabasiModel{
             .filter(|&v| v.is_or_was_infected())
             .count()
     }
+   // pub fn cluster_size_patient(&self, patient: usize) -> usize
+   // //This is probably not correct. Ask Yannick about this.
+   // {
+   //     self.ensemble
+   //         .graph()
+   //         .bfs_filtered(
+   //             patient,
+   //             |state, _| 
+   //         true).unwrap()
+   //         .count()
+   // }
+    
 }
 
 impl From<BarabasiOptions> for BarabasiModel{

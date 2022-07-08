@@ -3,7 +3,7 @@ use {
     net_ensembles::Node
 };
 
-#[derive(Clone, Debug,PartialEq)]
+#[derive(Clone, Debug,PartialEq,Copy)]
 #[derive(Serialize, Deserialize)]
 pub enum InfectionState{
     Suspectible,

@@ -266,7 +266,7 @@ fn scanning_lambda_function_static(param:&ScanLambdaParams,_json:&Value,num_thre
 
 
 
-fn find_critical_lambda_one_data_set(vec:&Vec<MyVariance>,lambdavals:&Vec<f64>)->f64{
+fn find_critical_lambda_one_data_set(vec:&Vec<MyVariance>,lambdavals:&[f64])->f64{
     let mut var_vec:Vec<f64> = vec![0.;vec.len()];
     for i in 0..vec.len(){
         var_vec[i] = vec[i].var;
@@ -277,7 +277,7 @@ fn find_critical_lambda_one_data_set(vec:&Vec<MyVariance>,lambdavals:&Vec<f64>)-
         .unwrap();
     let index = var_vec.iter().position(|&x| x == *abs_max).unwrap();
 
-    return lambdavals[index]
+    lambdavals[index]
 
 }
 

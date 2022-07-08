@@ -1,6 +1,7 @@
 use net_ensembles::*;
 use serde::{Serialize, Deserialize};
 //use crate::sir_model::sir_states::*;
+use rand::seq::SliceRandom;
 use rand::*;
 use rand::distributions::*;
 use rand_pcg::Pcg64;
@@ -37,6 +38,11 @@ impl LockdownParameters{
     }
 }
 
+#[derive(Debug, Clone,Serialize, Deserialize)]
+pub struct LockdownPairStorage{
+    pub to_be_removed: Vec<[usize;2]>,
+    pub to_be_kept: Vec<[usize;2]>
+}
 
 pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Vec<usize>, rng:&mut Pcg64) -> GenGraphSIR
 {
@@ -52,6 +58,15 @@ pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Ve
 
 
 }
+//reformulating how lockdowns are calculated.
+pub fn create_lock_pairs_lists(lockdownparams:LockdownParameters,graph:&GenGraphSIR) -> LockdownPairStorage{
+    match lockdownparams.lock_style{
+        LockdownType::Random(seed,prob) => create_pair_lists_for_random(graph,seed,prob),
+        _ => unimplemented!()
+    }
+}
+
+
 pub fn lockdown_naming_string(lockdowntype:LockdownType) -> String{
 
     
@@ -65,6 +80,25 @@ pub fn lockdown_naming_string(lockdowntype:LockdownType) -> String{
     }
 
 }
+
+pub fn create_locked_down_network_from_pair_list(pairs:&LockdownPairStorage, graph:&GenGraphSIR) -> GenGraphSIR{
+    //I think the lockdowns will be reformulated to follow this pattern.
+    let pairs_to_be_removed = &pairs.to_be_removed;
+    let mut clone = graph.clone();
+    for pair in pairs_to_be_removed{
+
+        let i1 = pair[0];
+        let i2 = pair[1];
+        //println!("{},{}",i1,i2);
+        clone.remove_edge(i1,i2).unwrap();
+    
+
+    }
+    clone
+    
+}
+
+
 
 pub fn circuit_breaking_lockdown<T,A>(mut graph:GenericGraph<T,A>)-> GenericGraph<T,A> where A: net_ensembles::AdjContainer<T>{
     graph.clear_edges();
@@ -105,32 +139,53 @@ where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensemb
 
 pub fn no_lockdown<T,A>(graph:GenericGraph<T,A>)-> GenericGraph<T,A> where A: net_ensembles::AdjContainer<T>{graph}
 
+
+
+
+
+pub fn create_pair_lists_for_random(graph:&GenGraphSIR,seed:u64,prob:f64)-> LockdownPairStorage{
+    let mut pairs = pair_finder(graph);
+    let amount = (pairs.len()as f64 *prob).ceil() as usize;
+    let mut rng = Pcg64::seed_from_u64(seed);
+    let (shuffled,not_shuffled) = pairs.partial_shuffle(&mut rng, amount);
+
+    //This computation only happens once so happy to have it be done this way,
+    LockdownPairStorage{
+        to_be_removed: shuffled.to_vec(),
+        to_be_kept: not_shuffled.to_vec()
+    }
+
+}
+
+
 pub fn random_lockdown<InfectionState,A>(graph:GenericGraph<InfectionState,A>,seed:u64,prob:f64)-> GenericGraph<InfectionState,A> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     //note to self. add some more enums and structs, eg like running the execute files in main to better capture the parameters of each of the individual lockdowns.__rust_force_expr!;
     
     
     let mut clone = graph.clone();
-    let pairs = pair_finder(graph);
-    let prob_dist= Uniform::new_inclusive(0.0,1.0);
+    let mut pairs = pair_finder(&graph);
+    
+    let amount = (pairs.len()as f64 *prob).ceil() as usize;
+    //let prob_dist= Uniform::new_inclusive(0.0,1.0);
     let mut rng = Pcg64::seed_from_u64(seed);
+    let (rando,_) = pairs.partial_shuffle(&mut rng,amount);
 
-    //let prob = 0.6;
-
-    for pair in pairs{
+    for pair in rando{
 
         let i1 = pair[0];
         let i2 = pair[1];
         //println!("{},{}",i1,i2);
-        let p = prob_dist.sample(&mut rng);
-        if p < prob{
-            clone.remove_edge(i1,i2).unwrap();
-        }
+        clone.remove_edge(i1,i2).unwrap();
+    
 
     }
 
 
-    clone}
+    clone
+    }
+
+
 
 
 
@@ -173,13 +228,13 @@ pub fn target_infection_clusters(graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGr
 }
 
 
-pub fn pair_finder<InfectionState,A>(mut graph:GenericGraph<InfectionState,A>)-> Vec<[usize;2]> 
+pub fn pair_finder<InfectionState,A>(graph:&GenericGraph<InfectionState,A>)-> Vec<[usize;2]> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     //This function finds all the pairs of indicies connected in the graph. 
-
+    let clone = graph;
     let mut vec:Vec<[usize;2]> = Vec::new();
     for j in 0..graph.vertex_count(){
-        let adj = graph.contained_iter_neighbors_mut_with_index(j);
+        let adj = clone.contained_iter_neighbors_with_index(j);
         for (n_index,_neighbor) in adj{
             //let mut new_vec = vec![j,n_index];
             if j < n_index{

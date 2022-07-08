@@ -14,3 +14,9 @@ pub use barabasi::*;
 
 pub mod barabasi_options;
 pub use barabasi_options::*;
+
+pub mod large_dev_model;
+pub use large_dev_model::*;
+
+pub mod offset;
+pub use offset::*;

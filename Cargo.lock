@@ -377,6 +377,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_distr"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32cb0b9bc82b0a0876c2dd994a7e7a2683d3e7390ca40e6886785ef0c7e3ee31"
+dependencies = [
+ "num-traits",
+ "rand",
+]
+
+[[package]]
 name = "rand_pcg"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -483,12 +493,13 @@ dependencies = [
 
 [[package]]
 name = "sir_lock"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "humantime",
  "indicatif",
  "net_ensembles",
  "rand",
+ "rand_distr",
  "rand_pcg",
  "rayon",
  "serde",

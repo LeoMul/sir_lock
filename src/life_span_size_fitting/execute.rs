@@ -37,7 +37,7 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
 
-    let mut n_size:Vec<_> = param.system_size_range.iter().map(|n|{*n}).collect();
+    let mut n_size:Vec<_> = param.system_size_range.to_vec();
     println!("{:?}",n_size);
     let lambda_range = param.trans_prob_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
@@ -54,7 +54,8 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
         let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
 
         let per_thread = param.num_networks/k.get() as u64;
-        
+        let bar = crate::indication_bar(per_thread);
+
         //let bar = crate::indication_bar(per_thread);
 
         //this is a vector of matrices. there is a matrix for each thread, with each row being the lifespan for a particular network spanned over lambda.
@@ -76,19 +77,19 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{
                     model.set_lambda(*lambda);
                     model.reseed_sir_rng(&mut rng);
-                    let t = model.propagate_until_completion_time_with_locks(lockgraph.clone(),lockparams);
-                    t }
+                    model.propagate_until_completion_time_with_locks(lockgraph.clone(),lockparams)
+                    }
                 ).collect(); 
                 data_point_for_each_lambda
-            }).collect();
+            }).progress_with(bar.clone()).collect();
 
             new_vec
             }
             
         ).collect();
 
-       let lifespans = acquire_life_span_data_from_vec_of_matrices(intermediate_data_vecs, param.lifespanpercent);
-        lifespans
+       acquire_life_span_data_from_vec_of_matrices(intermediate_data_vecs, param.lifespanpercent)
+       
     }).collect();
     alternate_writing(param, json, num_threads, data_vec, n_size, lambda_vec);
 
@@ -101,8 +102,8 @@ fn transpose(matrix:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
     let mut new_matrix = Vec::with_capacity(num_cols);
     for j in 0..num_cols{
         let mut new_row = Vec::with_capacity(num_rows);
-        for i in 0..num_rows{
-            let data = &matrix[i];
+        for i in matrix.iter().take(num_rows){
+            let data = &i;
             new_row.push(data[j]);
         }
         new_matrix.push(new_row);
@@ -120,8 +121,8 @@ fn decompose_thread_split_data(mut vecofmatrices:Vec<Vec<Vec<u32>>>) -> Vec<Vec<
     let mut matrix_new = Vec::with_capacity(num_lams);
     for i in 0..num_lams{
         let mut new_row:Vec<u32> = Vec::new();
-        for j in 0..vecofmatrices.len(){
-            let matrix = &vecofmatrices[j];
+        for item in &vecofmatrices{
+            let matrix = item;
             new_row.extend(&matrix[i]);
         }
         matrix_new.push(new_row);
@@ -133,8 +134,8 @@ fn acquire_life_span_data_from_vec_of_matrices(vecofmatrices:Vec<Vec<Vec<u32>>>,
     let combined_data = decompose_thread_split_data(vecofmatrices);
 
     let mut lifespans = Vec::new();
-    for i in 0..combined_data.len(){
-        let row = &combined_data[i];
+    for item in &combined_data{
+        let row = item;
         let mut new_row = row.clone();
         new_row.sort_unstable();
         let percent_life_span = acquire_percent_life_span(&new_row,fraction);
@@ -153,12 +154,11 @@ fn _sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Opti
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
 
-    let mut n_size:Vec<_> = param.system_size_range.iter().map(|n|{*n}).collect();
+    let mut n_size:Vec<_> = param.system_size_range.to_vec();
     println!("{:?}",n_size);
     let lambda_range = param.trans_prob_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
     let lockparams = param.lockdown;
-    let rng = Pcg64::seed_from_u64(param.sir_seed);
 
 
     let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
@@ -173,14 +173,15 @@ fn _sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Opti
                 |_|
                 {
                     //need this to avoid recreating rng several thousand times. this way ony num_thread times.
-                    rng.clone()
+                    //rng.clone()
                     
                 }
             ).collect();
 
             //this is the vector of lifespans for the given (N,lambda)
-            let mut time_vec:Vec<_> = container.par_iter_mut().flat_map(|mut r|{
-                
+            let mut time_vec:Vec<_> = container.par_iter_mut().flat_map(|_|{
+                let mut rng = Pcg64::seed_from_u64(param.sir_seed);
+
                 let iterator = 0..per_thread;
 
                 let vec_temp:Vec<_> = iterator.map(|_|{
@@ -190,9 +191,9 @@ fn _sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Opti
                     let lockgraph = model.create_locked_down_network(lockparams);
 
                     model.set_lambda(*lambda);
-                    model.reseed_sir_rng(&mut r);
-                    let t = model.propagate_until_completion_time_with_locks(lockgraph,lockparams) as u32;
-                    t
+                    model.reseed_sir_rng(&mut rng);
+                    model.propagate_until_completion_time_with_locks(lockgraph,lockparams) as u32
+                    
 
                 }).collect();
                 vec_temp
@@ -201,8 +202,8 @@ fn _sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Opti
             //sort time_vec, so we can easily histogram it.
             time_vec.sort_unstable();
             //let hist = convert_sorted_to_hist(&time_vec);
-            let percent_life_span = acquire_percent_life_span(&time_vec,param.lifespanpercent);
-            percent_life_span
+            acquire_percent_life_span(&time_vec,param.lifespanpercent)
+        
         }).progress_with(bar).collect();
         n_lambdaspanned
 
@@ -223,7 +224,7 @@ fn _sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Opti
 
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
 
-    let mut n_size:Vec<_> = param.system_size_range.iter().map(|n|{*n}).collect();
+    let mut n_size:Vec<_> = param.system_size_range.to_vec();
     println!("{:?}",n_size);
     let lambda_range = param.trans_prob_range.get_range();
     let mut lambda_vec:Vec<_> = lambda_range.iter().collect();

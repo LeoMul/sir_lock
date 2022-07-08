@@ -157,6 +157,9 @@ impl GridRangeF64{
     pub fn len(&self) -> usize{
         self.steps_m1.get()
     }
+    pub fn is_empty(&self) -> bool{
+        self.len() == 0
+    }
 
 }
 

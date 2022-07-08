@@ -32,6 +32,6 @@ fn sim_barabasi(param:PropTestParams, _json: Value, _num_threads: Option<NonZero
         release_threshold: 0.05
     };
     let lock_graph = model.create_locked_down_network(lock);
-    model.propagate_until_completion_max_with_lockdown(lock_graph,lock);
+    model.propagate_until_completion_max_with_lockdown_new(lock_graph,lock);
 
 }

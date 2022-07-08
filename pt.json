@@ -1,5 +1,5 @@
 {
-  "system_size": 200,
+  "system_size": 2000,
   "lambda": 0.9,
   "recovery_prob": 0.14,
   "graph_type": {

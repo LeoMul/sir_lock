@@ -1,6 +1,6 @@
 [package]
 name = "sir_lock"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -15,4 +15,5 @@ indicatif = {version = "0.15", features = ["improved_unicode", "rayon"]}
 serde_json = "1.0"
 structopt = "^0.3.21"
 humantime = "^2.1"
+rand_distr = "0.4.3"
 #sampling = "0.1.1"
