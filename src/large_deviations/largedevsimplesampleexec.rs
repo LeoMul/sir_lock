@@ -12,6 +12,7 @@ use{
     //crate::simple_sample::execute::hist_to_file
 };
 use std::{fs::File, io::BufWriter};
+use std::{ io::Write};
 
 
 pub fn typical_event_sampling(opts: SimpleSampleCMDopts)
@@ -21,7 +22,7 @@ pub fn typical_event_sampling(opts: SimpleSampleCMDopts)
 
     let (m,n) = match &param.graph_type {
         GraphType::Barabasi(p,m) => (*p,*m),
-        GraphType::Invalid => unimplemented!()
+       _ =>unimplemented!()
     };
 
     let base_options = BarabasiOptions{
