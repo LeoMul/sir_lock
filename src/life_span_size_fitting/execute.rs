@@ -13,7 +13,7 @@ use{
     rayon::iter::{ParallelIterator},
 
 };
-
+use rand::Rng;
 use{
     
     rand_pcg::Pcg64,
@@ -42,7 +42,8 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
     let lambda_range = param.trans_prob_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
     let lockparams = param.lockdown;
-
+    let mut sir_rng_2 = Pcg64::seed_from_u64(param.sir_seed);
+    let mut graph_rng = Pcg64::seed_from_u64(param.graph_seed);
 
 
     let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
@@ -51,25 +52,36 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
         
         
 
-        let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
+        //let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
 
         let per_thread = param.num_networks/k.get() as u64;
         let bar = crate::indication_bar(per_thread);
-
+        let mut rngs: Vec<_> = (0..k.get())
+        .map(
+            |_| 
+                {
+                    
+                        (Pcg64::from_rng(&mut sir_rng_2).unwrap(),
+                        Pcg64::from_rng(&mut graph_rng).unwrap())
+                    
+                }
+            )
+        .collect();
         //let bar = crate::indication_bar(per_thread);
 
         //this is a vector of matrices. there is a matrix for each thread, with each row being the lifespan for a particular network spanned over lambda.
         // 
-        let intermediate_data_vecs: Vec<_> = container.par_iter_mut().map(|_|{
+        let intermediate_data_vecs: Vec<_> = rngs.par_iter_mut().map(|(rng,graph_rng)|{
             //let mut new_vec:Vec<_> = Vec::with_capacity(per_thread as usize);
-            let mut rng = Pcg64::seed_from_u64(param.sir_seed);
+            //let mut rng = Pcg64::seed_from_u64(param.sir_seed);
 
             let iter = (0..per_thread).into_iter().map(|_|{});
-            
+            let mut rng = rng;
 
             //new_vec has num_networks 
             let new_vec:Vec<Vec<u32>> = iter.map(|_|{
-                let opt = BarabasiOptions::from_life_span_fiting_params(&param,NonZeroUsize::new(*n).unwrap());
+                let new_graph_seed = graph_rng.gen::<u64>();
+                let opt = BarabasiOptions::from_life_span_fiting_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
                 let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed);
                 let lockgraph = model.create_locked_down_network(lockparams);
@@ -149,75 +161,9 @@ fn acquire_life_span_data_from_vec_of_matrices(vecofmatrices:Vec<Vec<Vec<u32>>>,
 
 
 
-fn _sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Option<NonZeroUsize>){
-
-    let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
-    rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
-
-    let mut n_size:Vec<_> = param.system_size_range.to_vec();
-    println!("{:?}",n_size);
-    let lambda_range = param.trans_prob_range.get_range();
-    let lambda_vec:Vec<_> = lambda_range.iter().collect();
-    let lockparams = param.lockdown;
 
 
-    let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
-        println!("{}",n);
-        let bar = crate::indication_bar(lambda_vec.len() as u64);
-
-        let n_lambdaspanned:Vec<_> = lambda_vec.iter().map(|lambda|{
-
-            let per_thread = param.num_networks/k.get() as u64;
-
-            let mut container: Vec<_> = (0..k.get()).map(
-                |_|
-                {
-                    //need this to avoid recreating rng several thousand times. this way ony num_thread times.
-                    //rng.clone()
-                    
-                }
-            ).collect();
-
-            //this is the vector of lifespans for the given (N,lambda)
-            let mut time_vec:Vec<_> = container.par_iter_mut().flat_map(|_|{
-                let mut rng = Pcg64::seed_from_u64(param.sir_seed);
-
-                let iterator = 0..per_thread;
-
-                let vec_temp:Vec<_> = iterator.map(|_|{
-                    let opt = BarabasiOptions::from_life_span_fiting_params(&param,NonZeroUsize::new(*n).unwrap());
-                    let small_world = opt.into();
-                    let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed);
-                    let lockgraph = model.create_locked_down_network(lockparams);
-
-                    model.set_lambda(*lambda);
-                    model.reseed_sir_rng(&mut rng);
-                    model.propagate_until_completion_time_with_locks(lockgraph,lockparams) as u32
-                    
-
-                }).collect();
-                vec_temp
-
-                }).collect();
-            //sort time_vec, so we can easily histogram it.
-            time_vec.sort_unstable();
-            //let hist = convert_sorted_to_hist(&time_vec);
-            acquire_percent_life_span(&time_vec,param.lifespanpercent)
-        
-        }).progress_with(bar).collect();
-        n_lambdaspanned
-
-
-
-    }).collect();
-
-
-    alternate_writing(param, json, num_threads, data_vec, n_size, lambda_vec);}
-
-
-
-
-    fn sim_small_world(param: LifespanSizeFittingParams, json: Value, num_threads:Option<NonZeroUsize>){
+fn sim_small_world(param: LifespanSizeFittingParams, json: Value, num_threads:Option<NonZeroUsize>){
 
     //this is retired. see barabasi for proper function.
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());

@@ -7,7 +7,7 @@ use{
 use std::{ io::Write};
 use indicatif::*;
 use rayon::iter::{ParallelIterator, IntoParallelRefIterator};
-
+use rand::Rng;
 use{
     crate::{GraphType, sir_model::*},
     std::{ fs::File, io::BufWriter},
@@ -52,7 +52,8 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
     let lambda_range = param.lambda_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
     println!("Progress will take approx 3-4 times what the bar says");
-    
+    let mut sir_rng_2 = Pcg64::seed_from_u64(param.sir_seed);
+    let mut graph_rng = Pcg64::seed_from_u64(param.graph_seed);
     let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
         println!("{}",n);
         
@@ -61,23 +62,37 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
         } else{ 1.};
         
 
-        let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
+        //let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
+
+        let mut rngs: Vec<_> = (0..k.get())
+        .map(
+            |_| 
+                {
+                    
+                        (Pcg64::from_rng(&mut sir_rng_2).unwrap(),
+                        Pcg64::from_rng(&mut graph_rng).unwrap())
+                    
+                }
+            )
+        .collect();
+
 
         let per_thread = param.num_networks/k.get() as u64;
         
         let bar = crate::indication_bar(per_thread);
 
         //this is a vector of vectors. let let the elements of this vector be rows. for the measurements we want, we require summing over the columns.
-        let intermediate_data_vecs: Vec<_> = container.par_iter_mut().map(|_|{
+        let intermediate_data_vecs: Vec<_> = rngs.par_iter_mut().map(|(r,graph_rng)|{
             //let mut new_vec:Vec<_> = Vec::with_capacity(per_thread as usize);
-            let mut rng = Pcg64::seed_from_u64(param.sir_seed);
+            let mut rng = r;
 
             let iter = (0..per_thread).into_iter().map(|_|{});
             
 
 
             let new_vec = iter.map(|_|{
-                let opt = BarabasiOptions::from_critical_lambda_params(&param,NonZeroUsize::new(*n).unwrap());
+                let new_graph_seed = graph_rng.gen::<u64>();
+                let opt = BarabasiOptions::from_critical_lambda_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
                 let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed);
                 let lockgraph = model.create_locked_down_network(lockparams);
@@ -87,6 +102,7 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
                     model.reseed_sir_rng(&mut rng);
                     let m = model.propagate_until_completion_max_with_lockdown(lockgraph.clone(),lockparams) as f64/divisor;
                     let c = model.calculate_ever_infected() as f64/divisor;
+                    //println!("{},{},{},{},{}",c,m,lambda,model.ensemble.graph().edge_count(),new_graph_seed);
                     (c,m)
 
                 }).collect(); data_point_for_each_lambda}).progress_with(bar.clone()).collect();

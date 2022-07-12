@@ -85,13 +85,13 @@ impl BarabasiOptions{
         }
 
     }
-    pub fn from_critical_lambda_params(param: &CriticalLambdaParams,system_size_new:NonZeroUsize) -> Self{
+    pub fn from_critical_lambda_params(param: &CriticalLambdaParams,system_size_new:NonZeroUsize,graph_seed:u64) -> Self{
         let (m,source_n )= match param.graph_type {
             GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
             _ => panic!("Invalid graph type")
         };
         Self{
-            graph_seed: param.graph_seed,
+            graph_seed,
             system_size: system_size_new,
             lambda: param.lambda_range.start,
             gamma: param.recovery_prob,
@@ -100,13 +100,13 @@ impl BarabasiOptions{
         }
 
     }
-    pub fn from_life_span_fiting_params(param: &LifespanSizeFittingParams,system_size_new:NonZeroUsize) -> Self{
+    pub fn from_life_span_fiting_params(param: &LifespanSizeFittingParams,system_size_new:NonZeroUsize,graph_seed:u64) -> Self{
         let (m,source_n )= match param.graph_type {
             GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
             _ => panic!("Invalid graph type")
         };
         Self{
-            graph_seed: param.graph_seed,
+            graph_seed,
             system_size: system_size_new,
             lambda: param.trans_prob_range.start,
             gamma: param.recovery_prob,
