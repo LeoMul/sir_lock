@@ -9,9 +9,9 @@
   },
   "graph_seed": 875629289,
   "sir_seed": 1489264107025,
-  "lambda": 0.1763,
+  "lambda": 0.05,
   "large_deviation_param": {
-    "time_steps": 100,
+    "time_steps": 250,
     "markov_seed": 782063498562509862
   },
   "lockdown": {

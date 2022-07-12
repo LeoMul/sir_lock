@@ -79,7 +79,7 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
 
         let per_thread = param.num_networks/k.get() as u64;
         
-        let bar = crate::indication_bar(per_thread);
+        let bar = crate::indication_bar(param.num_networks);
 
         //this is a vector of vectors. let let the elements of this vector be rows. for the measurements we want, we require summing over the columns.
         let intermediate_data_vecs: Vec<_> = rngs.par_iter_mut().map(|(r,graph_rng)|{

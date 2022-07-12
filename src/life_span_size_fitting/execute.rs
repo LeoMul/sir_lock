@@ -55,7 +55,7 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
         //let mut container: Vec<_> = (0..k.get()).map(|_|{}).collect();
 
         let per_thread = param.num_networks/k.get() as u64;
-        let bar = crate::indication_bar(per_thread);
+        let bar = crate::indication_bar(param.num_networks);
         let mut rngs: Vec<_> = (0..k.get())
         .map(
             |_| 
