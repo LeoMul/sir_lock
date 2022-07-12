@@ -8,8 +8,8 @@ use crate::lockdown_methods::*;
 use super::*;
 use net_ensembles::WithGraph;
 //pub type Generic = net_ensembles::GenericGraph<sir_model::sir_states::InfectionState,net_ensembles::graph::NodeContainer::sir_model::sir_states::InfectionState>;
-
-pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
+//use crate::misc_types::*;
+//pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 
 #[derive(Clone)]
 pub struct SimpleSample{

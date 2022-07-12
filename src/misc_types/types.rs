@@ -28,7 +28,7 @@ pub const DEFAULT_SAMPLES_SIMPLE_SAMPLE: usize = 10000;
 
 
 
-pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
+//pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum GraphType{

@@ -8,11 +8,8 @@ use{
     crate::lockdown_methods::*,
 };
 
-pub const DEFAULT_F_THRESHOLD: f64 = 0.0000001;
-pub const DEFAULT_LAMBDA: f64 = 0.4;
-pub const DEFAULT_MARKOV_SEED: u64 = 782063498562509862;
-pub const DEFAULT_SWEEP_SIZE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(2222)};
-pub const DEFAULT_MARKOV_STEP_SIZE: usize = 100;
+
+
 
 #[derive(StructOpt, Debug, Clone)]
 /// Continue a Large deviation simulation!
@@ -62,34 +59,34 @@ impl BALDContinueCmdOpts
             }
         };
 
-        unimplemented!()
-        /*crate::large_deviations::load_high_degree_rewl(
+        
+        crate::large_deviations::load_high_degree_rewl(
             opts, 
             instant, 
             self.no_save
-        )*/
+        )
 
     }
 
 }
 pub struct BALDLdOpts
 {
-    energy: MeasureType,
-    allowed_seconds: u64,
-    quick_name:  Box<dyn Fn (Option<usize>, &str, LargeDeviationMode) -> String>,
-    value: Vec<serde_json::Value>,
-    no_save: bool
+    pub energy: MeasureType,
+    pub allowed_seconds: u64,
+    pub quick_name:  Box<dyn Fn (Option<usize>, &str, LargeDeviationMode) -> String>,
+    pub value: Vec<serde_json::Value>,
+    pub no_save: bool
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BALDContinueOpts
 {
 
-    file_name: String,
-    seconds: Option<NonZeroU64>,
-    minutes: Option<NonZeroU64>,
-    days: Option<NonZeroU64>,
-    hours: Option<NonZeroU64>,
-    change_step_size: Option<NonZeroUsize>
+    pub file_name: String,
+    pub seconds: Option<NonZeroU64>,
+    pub minutes: Option<NonZeroU64>,
+    pub days: Option<NonZeroU64>,
+    pub hours: Option<NonZeroU64>,
+    pub change_step_size: Option<NonZeroUsize>
 }
 impl Default for BALDContinueOpts
 {
@@ -105,7 +102,31 @@ impl Default for BALDContinueOpts
         }
     }
 }
+#[inline]
+fn get_or_0(val: Option<NonZeroU64>) -> u64
+{
+    match val {
+        None => 0,
+        Some(v) => v.get()
+    }
+}
 
+impl BALDContinueOpts
+{
+    pub fn seconds(&self) -> u64
+    {
+        let seconds = ((get_or_0(self.days) * 24
+            + get_or_0(self.hours) )* 60
+            + get_or_0(self.minutes)) * 60
+            + get_or_0(self.seconds);
+
+        if seconds == 0 {
+            eprintln!("Error, you have to specify a time for the simulation. Time has to be at least 1 second");
+            panic!("Insufficient time!");
+        }
+        seconds
+    }
+}
 
 #[derive(StructOpt, Debug, Clone)]
 /// Large deviation REWL using high degree vaccination 

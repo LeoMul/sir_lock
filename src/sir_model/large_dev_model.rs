@@ -16,28 +16,28 @@ use {
 
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
-const PATIENT_MOVE: f64 = 0.03;
+const PATIENT_MOVE: f64 = 0.02;
 
+
+#[derive(Serialize, Deserialize)]
 pub struct LockdownMarkovMove{
-    pair_to_be_removed: [usize;2],
-    removed_index: usize,
-    pair_to_be_restored: [usize;2],
-    restored_index: usize
+    lockdown_index: usize,
+    not_lockdown_index: usize
 }
 
 
 
 use net_ensembles::GraphIteratorsMut;
 
-const LOCKDOWN_CHANGE: f64 = 0.95;
+const LOCKDOWN_CHANGE: f64 = 0.01;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BALargeDeviation
 {
     base_model: BarabasiModel,
     lock_graph: GenGraphSIR,
-    removed_pairs: Vec<[usize;2]>,
-    remaining_pairs: Vec<[usize;2]>,
+    not_lockdown_pairs: Vec<[usize;2]>,
+    lockdown_pairs: Vec<[usize;2]>,
     lockdownparams:LockdownParameters,
     transmission_rand_vec: Vec<f64>,
     recovery_rand_vec: Vec<f64>,
@@ -101,8 +101,8 @@ impl BALargeDeviation
 
         let lock_graph =create_locked_down_network_from_pair_list(&pairs_struct, base_model.ensemble.graph());
 
-        let removed_pairs = pairs_struct.to_be_removed;
-        let remaining_pairs = pairs_struct.to_be_kept;
+        let not_lockdown_pairs = pairs_struct.to_be_removed;
+        let lockdown_pairs = pairs_struct.to_be_kept;
 
 
         let system_size = NonZeroUsize::new(base_model.ensemble.graph().vertex_count())
@@ -132,8 +132,8 @@ impl BALargeDeviation
             one_minus_lambda: 1.0 - base_model.lambda,
             base_model,
             lock_graph,
-            removed_pairs,
-            remaining_pairs,
+            not_lockdown_pairs,
+            lockdown_pairs,
             lockdownparams:lockdown,
             markov_rng,
             time_steps: param.time_steps,
@@ -526,10 +526,12 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
         let which = uniform.sample(&mut self.markov_rng);
 
         if which <= ROTATE_LEFT {
+            //println!("rotating left");
             self.offset.plus_1();
             steps.push(MarkovStep::RotateLeft);
         } else if which <= ROTATE_RIGHT
         {
+            //println!("rotating r");
             self.offset.minus_1();
             steps.push(MarkovStep::RotateRight);
         } else if which <= PATIENT_MOVE//maybe make this high, big degrees in BA
@@ -609,8 +611,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
 
 
 
-
-
+#[derive(Serialize, Deserialize)]
 pub enum MarkovStepWithLocks{
     BaseMarkovStep(MarkovStep),
     LockdownStep(LockdownMarkovMove) 
@@ -668,8 +669,8 @@ impl BALargeDeviationWithLocks
         let pairs_struct = create_lock_pairs_lists(self.lockdown, self.base_model.ensemble.graph());
         
         self.lock_graph = create_locked_down_network_from_pair_list(&pairs_struct, self.base_model.ensemble.graph());
-        self.remaining_pairs = pairs_struct.to_be_kept;
-        self.removed_pairs = pairs_struct.to_be_removed;
+        self.lockdown_pairs = pairs_struct.to_be_kept;
+        self.not_lockdown_pairs = pairs_struct.to_be_removed;
     }
 
     pub fn randomise_monte_carlo(&mut self,rng: &mut Pcg64){
@@ -712,40 +713,33 @@ impl BALargeDeviationWithLocks
 
     pub fn find_replace_edge_for_random_lock(&mut self) -> LockdownMarkovMove{
 
-        let uniform = Uniform::new(0,self.removed_pairs.len());
-        let restored_index = uniform.sample(&mut self.markov_rng);
-        let pair_to_be_restored = self.removed_pairs[restored_index];
+        let uniform = Uniform::new(0,self.not_lockdown_pairs.len());
+        let not_lockdown_index = uniform.sample(&mut self.markov_rng);
+        //let pair_to_be_restored = self.not_lockdown_pairs[not_lockdown_index];
 
-        let uniform = Uniform::new(0,self.remaining_pairs.len());
-        let removed_index = uniform.sample(&mut self.markov_rng);
-        let pair_to_be_removed = self.remaining_pairs[removed_index];
+        let uniform = Uniform::new(0,self.lockdown_pairs.len());
+        let lockdown_index = uniform.sample(&mut self.markov_rng);
+        //let pair_to_be_removed = self.lockdown_pairs[lockdown_index];
 
         
         LockdownMarkovMove{
-            pair_to_be_removed,
-            removed_index,
-            pair_to_be_restored,
-            restored_index
+            lockdown_index,
+            not_lockdown_index
         }
 
     
     }
     pub fn change_edge(&mut self, lockmarkovmove:&LockdownMarkovMove){
 
-        self.removed_pairs.swap_remove(lockmarkovmove.restored_index);
-        self.removed_pairs.push(lockmarkovmove.pair_to_be_removed);
-        self.remaining_pairs.swap_remove(lockmarkovmove.removed_index);
-        self.removed_pairs.push(lockmarkovmove.pair_to_be_restored);
+        let b = &mut self.ld_model.lockdown_pairs[lockmarkovmove.lockdown_index];
+        let a = &mut self.ld_model.not_lockdown_pairs[lockmarkovmove.not_lockdown_index];
 
+        let lockgraph = &mut self.ld_model.lock_graph;
+        lockgraph.remove_edge(b[0],b[1]).unwrap();
+        lockgraph.add_edge(a[0],a[1]).unwrap();
 
-
-        let mut lockgraph = self.lock_graph.clone();
-        let rem = lockmarkovmove.pair_to_be_removed;
-        let rep = lockmarkovmove.pair_to_be_restored;
-        lockgraph.remove_edge(rem[0],rem[1]).unwrap();
-        lockgraph.add_edge(rep[0],rep[1]).unwrap();
-        self.lock_graph = lockgraph;
-
+       
+        std::mem::swap(a, b);
     }
 
 
@@ -792,6 +786,7 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
             MarkovStepWithLocks::LockdownStep(to_step) => {
                 //
                 //possibly have a match in here to the appropriate undo of the lockdown step corresponding to the correct lockdown.
+                //the method of doing swap in the 
                 self.change_edge(to_step)
                 //self.high_degree_helper.swap_order(to_step.0, to_step.1)
             }
@@ -811,10 +806,13 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
             //println!("lockdown markov move");
             //let rng  = &mut self.markov_rng;
             let ld_step = self.find_lockdown_markovmove();
+            self.change_edge(&ld_step);
             steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
+            
     
             
         } else {
+            //println!("not lockdown markov move");
             self.ld_model.m_steps(count, &mut self.markov_workaround);
 
             steps.extend(
@@ -828,3 +826,75 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use crate::misc_types::*;
+    //use crate::large_deviations::*;
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn markov_test() {
+
+        let param = LargeDeviationParam {
+            time_steps: ONE,
+            markov_seed: DEFAULT_MARKOV_SEED,
+        };
+
+        let lockparams = LockdownParameters{
+            lock_style: LockdownType::Random(191905810985091580,0.6),
+            dynamic_bool: false,
+            lock_threshold: 0.1,
+            release_threshold: 0.05
+        };
+
+        let base_options = BarabasiOptions{
+            graph_seed: DEFAULT_GRAPH_SEED,
+            lambda: DEFAULT_LAMBDA,
+            gamma: DEFAULT_RECOVERY_PROB,
+            system_size: DEFAULT_SYSTEM_SIZE,
+            m:2,
+            source_n:10}; 
+    
+        let ba:BarabasiModel = base_options.into();
+        let ld  = BALargeDeviation::new(ba,param,lockparams);
+
+        let mut test_model = BALargeDeviationWithLocks::new(ld);
+        
+        //let markov = Randomize::default();
+
+        let num_steps = 1000;
+        for _i in 0..10000
+        {   
+            let energy = test_model.ld_energy_m();
+            let mut markov_vec = Vec::new();
+
+            
+            test_model.m_steps(num_steps, &mut markov_vec);
+            //assert_eq!(num_steps,markov_vec.len());
+            
+                
+            
+            //println!("{}",markov_vec.len());
+
+            test_model.undo_steps_quiet(&markov_vec);
+            //println!("{energy}");
+            /*markov_vec.reverse();
+            for step in &mut markov_vec
+                {
+                    test_model.undo_step(&step)
+                }
+                
+        */
+            let energy_2 = test_model.ld_energy_m();
+
+            assert_eq!(energy,energy_2)
+
+    
+        }
+
+    }
+
+    
+}

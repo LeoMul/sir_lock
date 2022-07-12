@@ -6,7 +6,7 @@ use rand::*;
 use rand::distributions::*;
 use rand_pcg::Pcg64;
 use net_ensembles::rand::prelude::Distribution;
-use crate::misc_types::*;
+//use crate::misc_types::*;
 #[derive(Debug, Clone,Serialize, Deserialize,Copy)]
 
 pub enum LockdownType{
@@ -18,6 +18,7 @@ pub enum LockdownType{
     Invalid
 
 }
+pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 
 #[derive(Debug, Clone,Serialize, Deserialize,Copy)]
 pub struct LockdownParameters{

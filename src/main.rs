@@ -41,7 +41,9 @@ fn main() {
         CmdOption::PropTest(o) => o.execute(),
         CmdOption::ScanLambdaThresh(o) => o.execute(),
         CmdOption::LargeDevSimpleSample(o) => o.execute(),
-        CmdOption::SimpleSample(o) => o.execute()
+        CmdOption::SimpleSample(o) => o.execute(),
+        CmdOption::LargeDeviationsLD(o) => o.execute(start_time),
+        CmdOption::LargeDeviationsLDContinue(o) => o.execute(start_time),
 
     }
     println!("Execution took {}",humantime::format_duration(start_time.elapsed()))
@@ -70,7 +72,9 @@ pub enum CmdOption
     CriticalLambda(critical_lambda::CriticalLambda),
     PropTest(prop_test::PropTest),
     LargeDevSimpleSample(large_deviations::SimpleSampleCMDopts),
-    SimpleSample(simple_sampling::SimpleSample)
+    SimpleSample(simple_sampling::SimpleSample),
+    LargeDeviationsLD(large_deviations::BALDOptsLD),
+    LargeDeviationsLDContinue(large_deviations::BALDContinueCmdOpts)
 
     
 }
