@@ -1,0 +1,36 @@
+{
+  "system_size": 200,
+  "recovery_prob": 0.14,
+  "graph_type": {
+    "Barabasi": [
+      2,
+      10
+    ]
+  },
+  "graph_seed": 875629289,
+  "sir_seed": 1489264107025,
+  "lambda": 0.9,
+  "large_deviation_param": {
+    "time_steps": 150,
+    "markov_seed": 782063498562509862
+  },
+  "lockdown": {
+    "lock_style": {
+      "Random": [
+        12151515,
+        0.6
+      ]
+    },
+    "release_threshold": 0.05,
+    "lock_threshold": 0.1,
+    "dynamic_bool": true
+  },
+  "energy": "C",
+  "samples": 1000000,
+  "randomize": {
+    "Markov": {
+      "step_size": 1000,
+      "every": 10
+    }
+  }
+}

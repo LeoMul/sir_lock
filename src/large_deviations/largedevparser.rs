@@ -268,7 +268,7 @@ impl Default for BALDLDparam
             },
             lockdownparams: LockdownParameters{
                 lock_style: LockdownType::Random(191905810985091580,0.6),
-                dynamic_bool: true,
+                dynamic_bool: false,
                 lock_threshold: 0.1,
                 release_threshold: 0.05
             },

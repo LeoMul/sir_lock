@@ -181,8 +181,7 @@ pub struct SimpleSampleBarabasi{
     infected_list: Vec<usize>,
     new_infected_list:Vec<usize>,
     rng_type: Pcg64,
-    recovered_list:Vec<usize>,
-    suspectible_list:Vec<usize>
+    
 }
 impl Deref for SimpleSampleBarabasi
 {
@@ -213,8 +212,7 @@ impl SimpleSampleBarabasi{
             infected_list:Vec::new(),
             new_infected_list:Vec::new(),
             rng_type,
-            recovered_list:Vec::new(),
-            suspectible_list:Vec::new()};
+            };
         res.reset_simple_sample_sir_simulation();
         res
     }
@@ -230,7 +228,7 @@ impl SimpleSampleBarabasi{
         // now only node 0 is infected!
         self.infected_list.clear();
         self.infected_list.push(index);
-        self.recovered_list.clear();
+        //self.recovered_list.clear();
         
     }
 
@@ -317,20 +315,17 @@ impl SimpleSampleBarabasi{
 
     pub fn transfer_sir_information(&mut self, mut locked_down_graph:GenGraphSIR) -> GenGraphSIR{
         //resets and updates the sir informaton of the locked_down_graph
-        for state in locked_down_graph.contained_iter_mut(){
-            *state = InfectionState::Suspectible;
+        
 
-        }
+        self.ensemble.graph().contained_iter().zip(locked_down_graph.contained_iter_mut()).for_each(
+            |(old,new)|{ *new = *old}
+        );
 
-        for index in &self.infected_list{
-            *locked_down_graph.at_mut(*index) = InfectionState::Infected;
-        }
-        for index in &self.recovered_list{
-            *locked_down_graph.at_mut(*index) = InfectionState::Recovered;
-        }
         locked_down_graph
         
     }
+    
+
     pub fn iterate_once_with_locks(&mut self, post_locked_down_graph:&mut GenGraphSIR,lockdown_indicator:bool){
         let prob_dist = Uniform::new_inclusive(0.0,1.0);
         let lambda = self.lambda; 
@@ -379,7 +374,7 @@ impl SimpleSampleBarabasi{
                 let removed_index = self.infected_list.swap_remove(i);
                 *self.ensemble.at_mut(removed_index) = InfectionState::Recovered;
                 *post_locked_down_graph.at_mut(removed_index) = InfectionState::Recovered;
-                self.recovered_list.push(removed_index);
+                //self.recovered_list.push(removed_index);
                     //println!("recovering");
             }
         }
@@ -433,7 +428,7 @@ impl SimpleSampleBarabasi{
                     post_locked_down_graph = self.create_locked_down_network(lockparams);
                     post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
 
-                    println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
+                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
                 }
 
             }
@@ -494,7 +489,7 @@ impl SimpleSampleBarabasi{
                     let removed_index = self.infected_list.swap_remove(i);
                     *self.ensemble.at_mut(removed_index) = InfectionState::Recovered;
                     *post_locked_down_graph.at_mut(removed_index) = InfectionState::Recovered;
-                    self.recovered_list.push(removed_index);
+                    //self.recovered_list.push(removed_index);
                         //println!("recovering");
                 }
             }
@@ -530,7 +525,7 @@ impl SimpleSampleBarabasi{
 
         //wont need after change made
         post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-        println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
+        //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
@@ -548,7 +543,7 @@ impl SimpleSampleBarabasi{
             //let prob_dist = Uniform::new_inclusive(0.0,1.0);
             //let lambda = self.lambda; 
             let inf = self.infected_list.len() as f64/self.n as f64;
-            println!("{}",inf);
+            //println!("{}",inf);
             //println!("{:?}",self.infected_list);
 
             //transfer SIR information when lockdown comes in/leaves
@@ -563,7 +558,7 @@ impl SimpleSampleBarabasi{
                     post_locked_down_graph = self.create_locked_down_network(lockparams);
                     post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
 
-                    println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
+                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
                 }
 
             }
@@ -572,8 +567,8 @@ impl SimpleSampleBarabasi{
                 lockdown_indicator = false;
             }
 
-            let bool_dup_checker = true;
-            if !bool_dup_checker &&contains_duplicates(self.infected_list.clone()){
+            let bool_dup_checker = false;
+            if bool_dup_checker &&contains_duplicates(self.infected_list.clone()){
                 
                 println!("safety dance");
                 
@@ -687,7 +682,7 @@ impl SimpleSampleBarabasi{
                     let removed_index = self.infected_list.swap_remove(i);
                     *self.ensemble.at_mut(removed_index) = InfectionState::Recovered;
                     *post_locked_down_graph.at_mut(removed_index) = InfectionState::Recovered;
-                    self.recovered_list.push(removed_index);
+                    //self.recovered_list.push(removed_index);
                         //println!("recovering");
                 }
             }
@@ -712,37 +707,7 @@ impl SimpleSampleBarabasi{
     
     }
 
-    pub fn produce_time_data(&mut self) -> (Vec<usize>,Vec<usize>,Vec<usize>,usize){
-        self.reset_simple_sample_sir_simulation();
-        let mut rec:Vec<usize> = Vec::new();
-        let mut sus:Vec<usize> = Vec::new();
-        let mut inf:Vec<usize> = Vec::new();
-        //let time:Vec<usize> = Vec::new();
-        rec.push(self.recovered_list.len());
-        sus.push(self.suspectible_list.len());
-        inf.push(self.infected_list.len());
-        let mut time:usize = 0;
-        
-        loop{
-            time += 1;
-            self.propagate_one_time_step();
-            rec.push(self.recovered_list.len());
-            sus.push(self.suspectible_list.len());
-            inf.push(self.infected_list.len());
-            if self.infected_list.is_empty(){
-                break;
-            }
-            
-            
-            
-
-        }
-
-
-
-        (sus,inf,rec,time)
-
-    }
+    
 
 }
 

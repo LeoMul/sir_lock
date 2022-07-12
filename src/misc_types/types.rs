@@ -20,11 +20,10 @@ pub const DEFAULT_SAMPLES_PER_STEP: u64 = 5000;
 pub const ONE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(1)};
 
 pub const DEFAULT_F_THRESHOLD: f64 = 0.0000001;
-pub const DEFAULT_LAMBDA: f64 = 0.4;
+pub const DEFAULT_LAMBDA: f64 = 0.1763;
 pub const DEFAULT_MARKOV_SEED: u64 = 782063498562509862;
 pub const DEFAULT_SWEEP_SIZE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(2222)};
 pub const DEFAULT_MARKOV_STEP_SIZE: usize = 100;
-pub const DEFAULT_VACCINE_DOSES: usize = 10;
 pub const DEFAULT_SAMPLES_SIMPLE_SAMPLE: usize = 10000;
 
 

@@ -1,6 +1,6 @@
 {
-  "system_size": 2000,
-  "lambda": 0.9,
+  "system_size": 200,
+  "lambda": 0.99,
   "recovery_prob": 0.14,
   "graph_type": {
     "Barabasi": [

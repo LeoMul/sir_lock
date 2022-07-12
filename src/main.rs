@@ -24,6 +24,8 @@ pub mod scan_lambda_lock_thresh;
 //pub mod time_graph;
 pub mod lifespanhist;
 pub mod large_deviations;
+pub mod simple_sampling;
+
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -37,7 +39,10 @@ fn main() {
         CmdOption::LifespanSizeFitting(o) => o.execute(),
         CmdOption::CriticalLambda(o) => o.execute(),
         CmdOption::PropTest(o) => o.execute(),
-        CmdOption::ScanLambdaThresh(o) => o.execute()
+        CmdOption::ScanLambdaThresh(o) => o.execute(),
+        CmdOption::LargeDevSimpleSample(o) => o.execute(),
+        CmdOption::SimpleSample(o) => o.execute()
+
     }
     println!("Execution took {}",humantime::format_duration(start_time.elapsed()))
     
@@ -64,6 +69,8 @@ pub enum CmdOption
     LifespanSizeFitting(life_span_size_fitting::LifespanSizeFitting),
     CriticalLambda(critical_lambda::CriticalLambda),
     PropTest(prop_test::PropTest),
+    LargeDevSimpleSample(large_deviations::SimpleSampleCMDopts),
+    SimpleSample(simple_sampling::SimpleSample)
 
     
 }

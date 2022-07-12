@@ -12,6 +12,7 @@ use{
     crate::prop_test::*,
     crate::scan_lambda_lock_thresh::*,
     crate::critical_lambda::*,
+    crate::simple_sampling::*,
 };
 
 pub struct BarabasiOptions{
@@ -113,6 +114,21 @@ impl BarabasiOptions{
             source_n,
         }
 
+    }
+    pub fn from_simple_sample(param: &SimpleSampleParam) -> Self
+    {
+        let (m,source_n) = match param.graph_type {
+            GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            graph_seed: param.graph_seed,
+            system_size: param.system_size,
+            lambda: param.lambda,
+            gamma: param.recovery_prob,
+            m,
+            source_n
+        }
     }
 
 

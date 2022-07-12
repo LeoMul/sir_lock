@@ -29,7 +29,7 @@ pub struct LockdownMarkovMove{
 
 use net_ensembles::GraphIteratorsMut;
 
-const LOCKDOWN_CHANGE: f64 = 0.20;
+const LOCKDOWN_CHANGE: f64 = 0.95;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BALargeDeviation
@@ -90,7 +90,6 @@ impl BALargeDeviation
     pub fn new(base_model: BarabasiModel, param: LargeDeviationParam,lockdown:LockdownParameters) -> Self
     {
 
-        //right now, using two different dangerous neighbour lists. Perhaps it is better to use only one.
 
         //do I need the lockdown parameters here also? yes
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph());
@@ -162,7 +161,7 @@ impl BALargeDeviation
     //Change this to use lockdown indicator. Only one implementation.
     pub fn create_dangerous_neighbours_trans_sir(&mut self,lockdown_indicator:bool){
 
-        let n = self.system_size.get();
+        //let n = self.system_size.get();
         self.dangerous_neighbor_count.iter_mut().for_each(|item| *item = 0);
         //let graph = self.base_model.ensemble.graph();
 
@@ -179,9 +178,8 @@ impl BALargeDeviation
             );
 
 
-            for index in 0..n{
-                let contained_mut = unsafe{self.base_model.ensemble.graph().get_contained_unchecked(index)};
-                if !contained_mut.inf_check(){
+            for (index,contained) in self.base_model.ensemble.graph().contained_iter().enumerate(){
+                if !contained.inf_check(){
                     continue;
                 }
                 else{
@@ -198,6 +196,7 @@ impl BALargeDeviation
                 }
 
             }
+            
         }
         else{
             self.base_model.ensemble.contained_iter()
@@ -211,9 +210,9 @@ impl BALargeDeviation
             );
 
 
-            for index in 0..n{
-                let contained_mut = unsafe{self.lock_graph.get_contained_unchecked(index)};
-                if !contained_mut.inf_check(){
+            for (index,contained) in self.lock_graph.contained_iter().enumerate(){
+                //let contained_mut = unsafe{self.lock_graph.get_contained_unchecked(index)};
+                if !contained.inf_check(){
                     continue;
                 }
                 else{
@@ -233,13 +232,12 @@ impl BALargeDeviation
 
         }
     }
-    pub fn create_dangerous_neighbours_from_lock(&mut self){
-        unimplemented!()
-    }
+   
 
 
 
     pub fn ld_iterate_once(&mut self,lockdown_indicator:bool){
+
         let new_infected = &mut self.new_infected;
         debug_assert!(new_infected.is_empty());
 
@@ -263,6 +261,7 @@ impl BALargeDeviation
             }
         }
         } else{
+            //mark for changing. dont need if 
             for (index,&count) in iter_danger{
                 if count > 0{
                     debug_assert!(self.lock_graph.at(index).sus_check());
@@ -291,18 +290,20 @@ impl BALargeDeviation
                 if self.recovery_rand_vec[self.offset.lookup_index(index)] < gamma {
                     *contained_mut = InfectionState::Recovered;
                     self.currently_infected_count -= 1;
-                }
-                let contained_index_iter = graph
-                    .contained_iter_neighbors_with_index(index);
+
+                    let contained_index_iter = graph
+                        .contained_iter_neighbors_with_index(index);
                 
                     for (j, contained) in contained_index_iter
                     {
                         // only susceptible nodes are relevant later
-                            if contained.sus_check(){
-                            // keep track of neighbors of infected nodes
-                            self.dangerous_neighbor_count[j] -= 1;
+                         if contained.sus_check(){
+                         // keep track of neighbors of infected nodes
+                         self.dangerous_neighbor_count[j] -= 1;
                             }
-                    }    
+                    }
+                }
+                    
             }
 
         }
@@ -316,18 +317,19 @@ impl BALargeDeviation
                 if self.recovery_rand_vec[self.offset.lookup_index(index)] < gamma {
                     *contained_mut = InfectionState::Recovered;
                     self.currently_infected_count -= 1;
-                }
-                let contained_index_iter = self.lock_graph
-                    .contained_iter_neighbors_with_index(index);
+                    let contained_index_iter = self.lock_graph
+                        .contained_iter_neighbors_with_index(index);
                 
                     for (j, contained) in contained_index_iter
                     {
                         // only susceptible nodes are relevant later
-                            if contained.sus_check(){
+                        if contained.sus_check(){
                             // keep track of neighbors of infected nodes
                             self.dangerous_neighbor_count[j] -= 1;
-                            }
-                    }    
+                        }
+                    }
+                }
+                    
             }
         }
 
@@ -395,12 +397,15 @@ impl BALargeDeviation
         for i in 0..self.time_steps.get(){
             self.offset.set_time(i);
             let inf = self.currently_infected_count as f64 /self.system_size.get() as f64;
+            //println!("inf {}",inf);
             if inf > lockdown_threshold && !lockdown_indicator{
                 lockdown_indicator = true;
+                //println!("lock");
                 self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
             }
             if inf < release_threshold && lockdown_indicator{
                 lockdown_indicator = false;
+                //println!("rel");
                 self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
 
             }
@@ -658,13 +663,19 @@ impl BALargeDeviationWithLocks
         self.ld_model.ld_iterate() //this gives M
     }
     
-    
+    pub fn random_lockdown_monte_carlo(&mut self){
+        //I guess to randomie the montecarlo for the random lockdown.. we just have to redraw the edges to be removed?
+        let pairs_struct = create_lock_pairs_lists(self.lockdown, self.base_model.ensemble.graph());
+        
+        self.lock_graph = create_locked_down_network_from_pair_list(&pairs_struct, self.base_model.ensemble.graph());
+        self.remaining_pairs = pairs_struct.to_be_kept;
+        self.removed_pairs = pairs_struct.to_be_removed;
+    }
 
     pub fn randomise_monte_carlo(&mut self,rng: &mut Pcg64){
 
-        //need to do something with lockdowns here
         match self.lockdown.lock_style{
-            LockdownType::Random(_,_) => random_lockdown_monte_carlo(),
+            LockdownType::Random(_,_) => self.random_lockdown_monte_carlo(),
             _ => unimplemented!()
         };
 
@@ -795,9 +806,9 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
         let which = uniform.sample(&mut self.markov_rng);
 
 
-        //first we orient ourselves with the random lockdown.
         if which <= LOCKDOWN_CHANGE
-        {
+        {   
+            //println!("lockdown markov move");
             //let rng  = &mut self.markov_rng;
             let ld_step = self.find_lockdown_markovmove();
             steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
@@ -817,6 +828,3 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
     }
 }
 
-pub fn random_lockdown_monte_carlo(){
-    unimplemented!()
-}

@@ -60,7 +60,7 @@ impl SimpleSampleldParam
         };
 
         format!(
-            "{}_N{}_{rand}_trans{}_gamma{}_time{}S{}_order_rand_1.dat",
+            "{}_LargeDevSimSamN{}_{rand}_trans{}_gamma{}_time{}S{}_order_rand_1.dat",
             crate::VERSION,
             self.system_size,
             self.lambda,

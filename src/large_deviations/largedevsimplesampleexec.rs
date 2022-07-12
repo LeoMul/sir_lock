@@ -111,7 +111,7 @@ pub fn hist_to_file(hist: &HistU32Fast, file_name: String, json: &Value)
         );
 }
 
-pub fn norm_hist(hist: &HistU32Fast) -> Vec<f64>
+pub fn norm_hist_log(hist: &HistU32Fast) -> Vec<f64>
 {
     let mut density: Vec<_> = hist.hist()
         .iter()
@@ -125,6 +125,19 @@ pub fn norm_hist(hist: &HistU32Fast) -> Vec<f64>
         .for_each(|v| *v -= sub);
     density
 }
+
+pub fn norm_hist(hist: &HistU32Fast) -> Vec<f64>
+{
+    let density: usize = hist.hist().iter().sum();
+    let density = density as f64;    
+    //subtract_max(density.as_mut_slice());
+    //let int = integrate_log(density.as_slice(), hist.hist().len());
+    //let sub = int.log10();
+    hist.hist().iter()
+        .map(|v| *v as f64 /density).collect()
+    
+}
+
 pub fn subtract_max(slice: &mut[f64])
 {
     let mut max = std::f64::NEG_INFINITY;
