@@ -12,6 +12,7 @@ use{
 
 };
 #[derive(Debug, StructOpt, Clone)]
+///Perform a scan over Lambda and the Lockdown threshold. One network.
 pub struct ScanLambdaThresh{
     #[structopt(long)]
     json: Option<String>,

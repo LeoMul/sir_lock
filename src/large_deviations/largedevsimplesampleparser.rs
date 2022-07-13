@@ -11,6 +11,7 @@ use{
 };
 
 #[derive(StructOpt, Debug, Clone)]
+///Do some simple sampling, but with markov moves/montecarlo
 pub struct SimpleSampleCMDopts
 {
     /// Specify the json file with the options

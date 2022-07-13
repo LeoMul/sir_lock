@@ -421,6 +421,45 @@ impl BALargeDeviation
         self.unfinished_simulations_counter += 1;
         max_infected
     }
+    pub fn ld_iterate_printing(&mut self,writer: &mut SirWriter)
+    {   
+        let lockdown_threshold = self.lockdownparams.lock_threshold;
+        let release_threshold = self.lockdownparams.release_threshold;
+
+        //let mut max_infected = self.currently_infected_count;
+        let mut lockdown_indicator = false;
+
+        writer.write_current(self.ensemble().graph())
+            .unwrap();
+        
+        for i in 0..self.time_steps.get(){ 
+            self.offset.set_time(i);
+            let inf = self.currently_infected_count as f64 /self.system_size.get() as f64;
+            //println!("inf {}",inf);
+            if inf > lockdown_threshold && !lockdown_indicator{
+                lockdown_indicator = true;
+                //println!("lock");
+                self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
+            }
+            if inf < release_threshold && lockdown_indicator{
+                lockdown_indicator = false;
+                //println!("rel");
+                self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
+
+            }
+
+
+            self.ld_iterate_once(lockdown_indicator);
+            
+            writer.write_current(self.ensemble().graph())
+                .unwrap();
+
+            if self.currently_infected_count == 0 {
+                break;
+            }
+        }
+        writer.write_line().unwrap();
+    }
     pub fn reset_ld_sir_simulation(&mut self){
         let p0 = self.patient_zero;
         self.infect_patient(p0);
@@ -663,7 +702,14 @@ impl BALargeDeviationWithLocks
     pub fn ld_energy_m(&mut self) -> u32{
         self.ld_model.ld_iterate() //this gives M
     }
-    
+    pub fn ld_energy_m_and_print(&mut self, writer: &mut SirWriter)
+    {
+        //list should already be calculated!
+        // That means that the following function should short-circut
+        
+        self.ld_model.ld_iterate_printing(writer);
+
+    }
     pub fn random_lockdown_monte_carlo(&mut self){
         //I guess to randomie the montecarlo for the random lockdown.. we just have to redraw the edges to be removed?
         let pairs_struct = create_lock_pairs_lists(self.lockdown, self.base_model.ensemble.graph());

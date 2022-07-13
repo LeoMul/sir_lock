@@ -15,6 +15,7 @@ use{
 
 
 #[derive(Debug, StructOpt, Clone)]
+///Perform a scan over Lambda. One network used.
 pub struct ScanLambda{
     #[structopt(long)]
     json: Option<String>,

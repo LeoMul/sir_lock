@@ -13,6 +13,7 @@ use{
 
 
 #[derive(Debug, StructOpt, Clone)]
+///Check a single propagation is working
 pub struct PropTest{
     #[structopt(long)]
     json: Option<String>,

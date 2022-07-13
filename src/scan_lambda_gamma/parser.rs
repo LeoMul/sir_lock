@@ -12,6 +12,7 @@ use{
 
 };
 #[derive(Debug, StructOpt, Clone)]
+///3D Plot, Lambda, Gamma
 pub struct ScanLambdaGamma{
     #[structopt(long)]
     json: Option<String>,

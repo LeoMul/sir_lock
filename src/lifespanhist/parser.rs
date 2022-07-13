@@ -13,6 +13,7 @@ use{
 };
 
 #[derive(Debug, StructOpt, Clone)]
+///Find the histogram and cumulative dist of disease lifespans
 pub struct LifeSpan{
     #[structopt(long)]
     json: Option<String>,

@@ -13,6 +13,7 @@ use{
 
 };
 #[derive(Debug, StructOpt, Clone)]
+///Scan over lambda &system size to find max lifespans!
 pub struct LifespanSizeFitting{
     #[structopt(long)]
     json: Option<String>,
@@ -69,12 +70,12 @@ impl Default for LifespanSizeFittingParams{
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::LimitContacts(2),
+                lock_style: LockdownType::Random(2151515153,0.6),
                 dynamic_bool: false,
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },
-            lifespanpercent: 0.9,
+            lifespanpercent: 0.98,
         }
     }
 }

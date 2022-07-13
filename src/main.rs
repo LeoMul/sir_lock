@@ -35,7 +35,7 @@ fn main() {
     match opt{
         CmdOption::ScanLambda(o) => o.execute(),
         CmdOption::ScanLambdaGamma(o) => o.execute(), 
-        CmdOption::LifeSpan(o) => o.execute(),
+        CmdOption::LifeSpanHist(o) => o.execute(),
         CmdOption::LifespanSizeFitting(o) => o.execute(),
         CmdOption::CriticalLambda(o) => o.execute(),
         CmdOption::PropTest(o) => o.execute(),
@@ -44,6 +44,7 @@ fn main() {
         CmdOption::SimpleSample(o) => o.execute(),
         CmdOption::LargeDeviationsLD(o) => o.execute(start_time),
         CmdOption::LargeDeviationsLDContinue(o) => o.execute(start_time),
+        CmdOption::REESLd(o) => o.execute(start_time)
 
     }
     println!("Execution took {}",humantime::format_duration(start_time.elapsed()))
@@ -67,14 +68,16 @@ pub enum CmdOption
     ScanLambda(scan_lambda::ScanLambda),
     ScanLambdaThresh(scan_lambda_lock_thresh::ScanLambdaThresh),
     ScanLambdaGamma(scan_lambda_gamma::ScanLambdaGamma),
-    LifeSpan(lifespanhist::LifeSpan),
+    LifeSpanHist(lifespanhist::LifeSpan),
     LifespanSizeFitting(life_span_size_fitting::LifespanSizeFitting),
     CriticalLambda(critical_lambda::CriticalLambda),
     PropTest(prop_test::PropTest),
     LargeDevSimpleSample(large_deviations::SimpleSampleCMDopts),
     SimpleSample(simple_sampling::SimpleSample),
     LargeDeviationsLD(large_deviations::BALDOptsLD),
-    LargeDeviationsLDContinue(large_deviations::BALDContinueCmdOpts)
+    LargeDeviationsLDContinue(large_deviations::BALDContinueCmdOpts),
+    REESLd(large_deviations::ReesOpts)
+
 
     
 }

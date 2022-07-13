@@ -14,6 +14,7 @@ use{
 
 
 #[derive(Debug, StructOpt, Clone)]
+/// Do a scan over system sizes and lambda's. Then fit for crit lam!
 pub struct CriticalLambda{
     #[structopt(long)]
     json: Option<String>,
@@ -62,7 +63,7 @@ impl Default for CriticalLambdaParams{
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::LimitContacts(2),
+                lock_style: LockdownType::Random(151515151656,0.6),
                 dynamic_bool: false,
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
