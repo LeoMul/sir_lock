@@ -447,3 +447,42 @@ impl HistogramCreator
         hists
     }
 }
+
+pub fn calc_m(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            model.ld_model.energy = model.ld_energy_m();
+            model.ld_model.energy 
+        })
+}
+
+pub fn calc_c(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            model.ld_energy_m();
+            model.ld_model.energy = model.calculate_ever_infected() as u32;
+            model.ld_model.energy 
+        })
+}
+
+pub fn energy_function_returner(measure_type:MeasureType) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
+
+
+
+    match measure_type{
+        MeasureType::C => calc_c,
+        MeasureType::M => {
+            calc_m
+        }
+    }
+    
+
+}

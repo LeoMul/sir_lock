@@ -80,21 +80,7 @@ pub fn execute_large_dev(opt: BALDOptsLD, instant: std::time::Instant){
 
     println!("Start greedy build");
 
-    let energy = |model: &mut BALargeDeviationWithLocks|
-    {
-        let measure = model.ld_energy_m();
-        Some(
-            match param.energy{
-                MeasureType::M => measure,
-                MeasureType::C => {
-                    let c = model.calculate_ever_infected() as u32;
-                    println!("{c}");
-                    c
-
-                }
-            }
-        )
-    };
+    let energy = energy_function_returner(param.energy);
 
     let rewl = rewl_builder.greedy_build(energy);
     let duration = format_duration(instant.elapsed());
@@ -139,16 +125,7 @@ pub fn execute_high_degree_helper(mut rewl: Rewl<BALargeDeviationWithLocks, Pcg6
     instant: std::time::Instant,
     opts: BALDLdOpts){
 
-    let energy = |model: &mut BALargeDeviationWithLocks|
-    {
-        let measure = model.ld_energy_m();
-        Some(
-            match opts.energy{
-                MeasureType::M => measure,
-                MeasureType::C => model.calculate_ever_infected() as u32
-            }
-        )
-    };
+    let energy = energy_function_returner(opts.energy);
 
     rewl.simulate_while(energy, |_| instant.elapsed().as_secs() < opts.allowed_seconds);
 

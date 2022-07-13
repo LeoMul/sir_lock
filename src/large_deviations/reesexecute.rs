@@ -9,7 +9,7 @@ use{
     crate::sir_model::*,
     serde_json::Value,
     super::*,
-    crate::MeasureType,
+
 };
 
 pub fn execute_entropic_sampling(opt: ReesOpts, start_time: Instant)
@@ -41,16 +41,7 @@ pub fn execute_entropic_sampling(opt: ReesOpts, start_time: Instant)
     let old_param: BALDLDparam = serde_json::from_value(old_jsons[0].clone())
         .expect("Unable to parse old json");
 
-    let energy = |model: &mut BALargeDeviationWithLocks|
-    {
-        let measure = model.ld_energy_m();
-        Some(
-            match old_param.energy{
-                MeasureType::M => measure,
-                MeasureType::C => model.calculate_ever_infected() as u32
-            }
-        )
-    };
+    let energy = energy_function_returner(old_param.energy);
 
     let writer: Vec<_> = rewl.hists()
         .iter()

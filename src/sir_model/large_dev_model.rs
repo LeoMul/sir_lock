@@ -16,7 +16,8 @@ use {
 
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
-const PATIENT_MOVE: f64 = 0.02;
+const PATIENT_MOVE: f64 = 0.1;
+const LOCKDOWN_CHANGE: f64 = 0.01;
 
 
 #[derive(Serialize, Deserialize)]
@@ -29,7 +30,6 @@ pub struct LockdownMarkovMove{
 
 use net_ensembles::GraphIteratorsMut;
 
-const LOCKDOWN_CHANGE: f64 = 0.01;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BALargeDeviation
@@ -40,12 +40,14 @@ pub struct BALargeDeviation
     lockdown_pairs: Vec<[usize;2]>,
     lockdownparams:LockdownParameters,
     transmission_rand_vec: Vec<f64>,
+    pub markov_changed: bool,
     recovery_rand_vec: Vec<f64>,
     time_steps: NonZeroUsize,
     unfinished_simulations_counter: u64,
     total_simulations_counter: u64,
     markov_rng: Pcg64,
     offset: Offset,
+    pub energy: u32,
     // temporary storage, allocated here so that 
     // I do not need to allocate it again and again
     new_infected: Vec<usize>,
@@ -134,10 +136,12 @@ impl BALargeDeviation
             lock_graph,
             not_lockdown_pairs,
             lockdown_pairs,
+            markov_changed: true,
             lockdownparams:lockdown,
             markov_rng,
             time_steps: param.time_steps,
             offset,
+            energy: u32::MAX,
             transmission_rand_vec,
             recovery_rand_vec,
             unfinished_simulations_counter: 0,
@@ -441,7 +445,7 @@ impl BALargeDeviation
                 //println!("lock");
                 self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
             }
-            if inf < release_threshold && lockdown_indicator{
+            else if inf < release_threshold && lockdown_indicator{
                 lockdown_indicator = false;
                 //println!("rel");
                 self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
@@ -451,10 +455,24 @@ impl BALargeDeviation
 
             self.ld_iterate_once(lockdown_indicator);
             
+
+
+
             writer.write_current(self.ensemble().graph())
                 .unwrap();
 
             if self.currently_infected_count == 0 {
+                if lockdown_indicator{
+                    self.lock_graph.contained_iter()
+                        .zip(
+                            self.base_model.ensemble.contained_iter_mut()
+                        ).for_each(
+                            |(old,new)|
+                            {
+                                *new= *old
+                            }
+                        );
+                }
                 break;
             }
         }
@@ -558,7 +576,8 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
     }
 
     fn m_steps(&mut self, count: usize, steps: &mut Vec<MarkovStep>)
-    {
+    {   
+        //self.patient_move_boolean = false;
         steps.clear();
 
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
@@ -596,6 +615,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                 }
                 old = new_prob;
             }
+            self.markov_changed = false;
             self.hist_patient_zero.increment_quiet(self.patient_zero);
             steps.push(MarkovStep::MovePatientZero(self.patient_zero));
         }
@@ -665,7 +685,7 @@ impl From<MarkovStep> for MarkovStepWithLocks{
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BALargeDeviationWithLocks
 {
-    ld_model: BALargeDeviation,
+    pub ld_model: BALargeDeviation,
     markov_workaround: Vec<MarkovStep>,
     lockdown: LockdownParameters,
 }
@@ -699,9 +719,13 @@ impl BALargeDeviationWithLocks
             let p0 = self.patient_zero;
             self.ld_model.infect_patient(p0);
         }
+
+
     pub fn ld_energy_m(&mut self) -> u32{
         self.ld_model.ld_iterate() //this gives M
     }
+
+
     pub fn ld_energy_m_and_print(&mut self, writer: &mut SirWriter)
     {
         //list should already be calculated!
@@ -840,7 +864,9 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
     }
 
     fn m_steps(&mut self, count: usize, steps: &mut Vec<MarkovStepWithLocks>)
-    {
+    {   
+        self.ld_model.markov_changed = true;
+
         steps.clear();
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
 
