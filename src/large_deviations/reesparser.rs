@@ -19,7 +19,7 @@ use {
 };
 
 #[derive(StructOpt, Debug, Clone)]
-/// Replica exchange entropic sampling for high degree
+/// Replica exchange entropic sampling for lockdowns
 pub struct ReesOpts
 {
     /// Specify the save file of REWL
