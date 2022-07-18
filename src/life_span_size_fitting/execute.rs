@@ -46,7 +46,7 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
     let mut graph_rng = Pcg64::seed_from_u64(param.graph_seed);
 
 
-    let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
+    let _data_vec:Vec<_> = n_size.iter_mut().map(|n|{
         println!("{}",n);
         
         
@@ -100,10 +100,10 @@ fn sim_barabasi_new(param: LifespanSizeFittingParams, json: Value, num_threads:O
             
         ).collect();
 
-       acquire_life_span_data_from_vec_of_matrices(intermediate_data_vecs, param.lifespanpercent)
-       
+       let x = acquire_life_span_data_from_vec_of_matrices(intermediate_data_vecs, param.lifespanpercent);
+       alternate_writing(&param, &json, num_threads, x, *n, &lambda_vec);
+
     }).collect();
-    alternate_writing(param, json, num_threads, data_vec, n_size, lambda_vec);
 
 }
 
@@ -238,7 +238,32 @@ pub struct Measured
     pub var_t: MyVariance,
 }
 
-fn alternate_writing(param:LifespanSizeFittingParams,json:Value,num_threads: Option<NonZeroUsize>,data_master:Vec<Vec<u32>>,n_list:Vec<usize>,lambda:Vec<f64>){
+
+fn alternate_writing(param:&LifespanSizeFittingParams,json:&Value,num_threads: Option<NonZeroUsize>,data_master:Vec<u32>,n:usize,lambda:&Vec<f64>){
+    
+    
+        let name = param.name("dat", num_threads,n);
+        println!("creating: {name}");
+        let file = File::create(name).expect("unable to create file");
+        let mut buf = BufWriter::new(file);
+        write!(buf, "#").unwrap();
+        serde_json::to_writer(&mut buf, &json).unwrap();
+        writeln!(buf).unwrap();
+        // let data_vec = &data[n];
+        writeln!(buf, "#lambda percentlifespan").unwrap();
+        let data = &data_master;
+        for k in 0..data.len(){
+            
+            writeln!(buf,"{} {}",lambda[k],data[k]).unwrap();
+        }
+
+    
+    
+    
+
+}
+
+fn _alternate_writing_old(param:LifespanSizeFittingParams,json:Value,num_threads: Option<NonZeroUsize>,data_master:Vec<Vec<u32>>,n_list:Vec<usize>,lambda:Vec<f64>){
     
     for j in 0..n_list.len(){
         let name = param.name("dat", num_threads,n_list[j]);
