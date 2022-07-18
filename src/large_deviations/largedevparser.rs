@@ -129,7 +129,7 @@ impl BALDContinueOpts
 }
 
 #[derive(StructOpt, Debug, Clone)]
-/// Large deviation REWL using high degree vaccination 
+/// Large deviation REWL using lockdowns!
 pub struct BALDOptsLD
 {
     /// Specify the json file with the options
