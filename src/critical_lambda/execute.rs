@@ -51,10 +51,10 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
     println!("{:?}",n_size);
     let lambda_range = param.lambda_range.get_range();
     let lambda_vec:Vec<_> = lambda_range.iter().collect();
-    println!("Progress will take approx 3-4 times what the bar says");
+    //println!("Progress will take approx 3-4 times what the bar says");
     let mut sir_rng_2 = Pcg64::seed_from_u64(param.sir_seed);
     let mut graph_rng = Pcg64::seed_from_u64(param.graph_seed);
-    let data_vec:Vec<_> = n_size.iter_mut().map(|n|{
+    let _data_vec:Vec<_> = n_size.iter_mut().map(|n|{
         println!("{}",n);
         
         let divisor = if param.fraction{
@@ -141,10 +141,13 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
             });
             //println!("{}",av_c);
             }
+    
+    writing(param.clone(),json.clone(),num_threads,&measure_vec,*n,lambda_vec.clone());
     measure_vec
-
-    }).collect();
-    alternate_writing(param, json, num_threads, data_vec,n_size,lambda_vec);
+    }
+    
+    ).collect();
+    //alternate_writing(param, json, num_threads, data_vec,n_size,lambda_vec);
 
 }
 
@@ -259,8 +262,24 @@ fn _find_critical_lambda_one_data_set(vec:Vec<MyVariance>,lambdavals:&[f64])->f6
 }
 
 
-
-fn alternate_writing(param:CriticalLambdaParams,json:Value,num_threads: Option<NonZeroUsize>,data_master:Vec<Vec<Measured>>,n_list:Vec<usize>,lambda:Vec<f64>){
+fn writing(param:CriticalLambdaParams,json:Value,num_threads: Option<NonZeroUsize>,data:&Vec<Measured>,n:usize,lambda:Vec<f64>){
+    let name = param.name("dat", num_threads,n);
+    println!("creating: {name}");
+    let file = File::create(name).expect("unable to create file");
+    let mut buf = BufWriter::new(file);
+    write!(buf, "#").unwrap();
+    serde_json::to_writer(&mut buf, &json).unwrap();
+    writeln!(buf).unwrap();
+    // let data_vec = &data[n];
+    writeln!(buf, "#lambda c var_c  m var_m").unwrap();
+    //let data = &data_master[j];
+    for k in 0..data.len(){
+        
+        writeln!(buf,"{} {} {} {} {}",lambda[k],data[k].var_c.mean,data[k].var_c.var,data[k].var_m.mean,data[k].var_m.var).unwrap();
+    }
+    
+}
+fn _alternate_writing(param:CriticalLambdaParams,json:Value,num_threads: Option<NonZeroUsize>,data_master:Vec<Vec<Measured>>,n_list:Vec<usize>,lambda:Vec<f64>){
     
     for j in 0..n_list.len(){
         let name = param.name("dat", num_threads,n_list[j]);
@@ -283,6 +302,9 @@ fn alternate_writing(param:CriticalLambdaParams,json:Value,num_threads: Option<N
     
 
 }
+
+
+
 
 
 fn alternate_writing_old(param:CriticalLambdaParams,json:Value,num_threads: Option<NonZeroUsize>,data_master:Vec<Vec<MyVariance>>,n_list:Vec<usize>,lambda:Vec<f64>){

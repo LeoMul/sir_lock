@@ -112,7 +112,10 @@ pub fn circuit_breaking_lockdown<T,A>(mut graph:GenericGraph<T,A>)-> GenericGrap
 pub fn limit_contacts<InfectionState,A>(mut graph:GenericGraph<InfectionState,A>,max_new_edges:usize, rng:&mut Pcg64)-> GenericGraph<InfectionState,A> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     
-    for j in 0..graph.vertex_count(){
+    let mut index_list:Vec<usize> = (0..graph.vertex_count()).collect();
+    index_list.shuffle(rng);
+
+    for j in index_list{
 
         if graph.degree(j).unwrap() > max_new_edges{
             let adj = graph.contained_iter_neighbors_mut_with_index(j);

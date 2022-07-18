@@ -125,7 +125,7 @@ pub fn deserialize_from_file(filename: &str) -> (BALDRewl, Vec<String>)
     let res: Result<
         (
             BALDRewl, 
-            String
+            Vec<String>
         ), _> =  bincode::deserialize_from(reader);
 
         match res
@@ -133,7 +133,7 @@ pub fn deserialize_from_file(filename: &str) -> (BALDRewl, Vec<String>)
             Ok((rewl, json_string)) => {
                 (
                     rewl,
-                    vec![json_string]
+                    json_string
                 )
             },
             _ => 

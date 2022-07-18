@@ -16,7 +16,7 @@ use {
 
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
-const PATIENT_MOVE: f64 = 0.1;
+const PATIENT_MOVE: f64 = 0.05;
 const LOCKDOWN_CHANGE: f64 = 0.01;
 
 
@@ -799,6 +799,22 @@ impl BALargeDeviationWithLocks
 
     
     }
+    pub fn find_replace_edge_for_limiting_lock(&mut self) -> LockdownMarkovMove{
+        //not yet implemented.
+        let lockdown_index = 0;
+        let not_lockdown_index = 0;
+        let uniform = Uniform::new(0,self.system_size.get());
+        let _node_to_be_changed = uniform.sample(&mut self.markov_rng);
+        
+
+        LockdownMarkovMove{
+            lockdown_index,
+            not_lockdown_index
+        }
+    }
+
+
+
     pub fn change_edge(&mut self, lockmarkovmove:&LockdownMarkovMove){
 
         let b = &mut self.ld_model.lockdown_pairs[lockmarkovmove.lockdown_index];

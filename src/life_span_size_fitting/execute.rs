@@ -126,9 +126,11 @@ fn transpose(matrix:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
 }
 fn decompose_thread_split_data(mut vecofmatrices:Vec<Vec<Vec<u32>>>) -> Vec<Vec<u32>>{
     let length = vecofmatrices.len();
+    
     for i in 0..length{
         vecofmatrices[i] = transpose(&vecofmatrices[i])
     }
+
     let num_lams = vecofmatrices[0].len();
     let mut matrix_new = Vec::with_capacity(num_lams);
     for i in 0..num_lams{

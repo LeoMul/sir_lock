@@ -224,7 +224,7 @@ impl BALDLDparam
         };
 
         format!(
-            "v{}_{}_LDHD_N{}r{}t{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}.{end}",
+            "v{}_{}_LDHD_N{}r{}t{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}.{end}",
             crate::VERSION,
             mode.name(),
             self.system_size,
@@ -235,6 +235,7 @@ impl BALDLDparam
             self.lockdownparams.lock_threshold,
             self.graph_type.name(),
             self.graph_seed,
+            self.step_size,
             self.sir_seed
         )
     }

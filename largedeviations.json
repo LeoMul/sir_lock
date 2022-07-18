@@ -10,9 +10,9 @@
   "graph_seed": 875629289,
   "sir_seed": 1489264107025,
   "f_threshold": 1e-7,
-  "lambda": 0.1763,
+  "lambda": 0.4,
   "large_deviation_param": {
-    "time_steps": 100,
+    "time_steps": 1000,
     "markov_seed": 782063498562509862
   },
   "lockdownparams": {
@@ -23,24 +23,24 @@
       ]
     },
     "release_threshold": 0.05,
-    "lock_threshold": 1.1,
+    "lock_threshold": 0.1,
     "dynamic_bool": false
   },
   "histograms": {
     "Automatic": {
       "start": null,
       "end_inlcusive": null,
-      "num_intervals": 2,
-      "overlap": 2,
+      "num_intervals": 4,
+      "overlap": 10,
       "greedy_search_steps": null
     }
   },
   "sweep_size": 2222,
-  "step_size": 1000,
+  "step_size": 100,
   "walkers_per_interval": 1,
   "energy": "C",
   "seconds": 0,
-  "minutes": 2,
+  "minutes": 10,
   "hours": 0,
   "days": 0,
   "times_continued": null

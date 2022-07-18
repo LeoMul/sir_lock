@@ -9,7 +9,7 @@ use {
     net_ensembles::rand::SeedableRng,
     humantime::format_duration,
     std::fs::File,
-    std::io::{BufWriter, Write, BufReader},
+    std::io::{BufWriter, Write},
     net_ensembles::sampling::Rewl,
     crate::misc_types::*,
     //bincode::*
@@ -86,7 +86,7 @@ pub fn execute_large_dev(opt: BALDOptsLD, instant: std::time::Instant){
     let duration = format_duration(instant.elapsed());
     println!("Finished greedy build after {duration}");
     
-    println!("{}",rewl.walkers().len());
+    //println!("{}",rewl.walkers().len());
     let allowed = param.allowed_seconds();
     let e = param.energy;
     let name_fn = move |interval: Option<usize>, end: &str, mode: LargeDeviationMode|
@@ -235,39 +235,9 @@ pub fn execute_high_degree_helper(mut rewl: Rewl<BALargeDeviationWithLocks, Pcg6
 
 pub fn load_high_degree_rewl(opts: BALDContinueOpts, instant: std::time::Instant, no_save: bool){
     let allowed_seconds = opts.seconds();
-    let file = File::open(&opts.file_name).expect("unable to open save file");
-    let reader = BufReader::new(file);
 
-    type HdRewl = Rewl<BALargeDeviationWithLocks, Pcg64, HistogramFast<u32>, u32, MarkovStepWithLocks, ()>;
+    let (mut rewl, mut json_string) = deserialize_from_file(&opts.file_name);
 
-    let (mut rewl, mut json_string): (
-        HdRewl, 
-        Vec<String>
-    ) = 
-    {
-        let res: Result<
-        (
-            HdRewl, 
-            String
-        ), _> =  bincode::deserialize_from(reader);
-
-        match res
-        {
-            Ok((rewl, json_string)) => {
-                (
-                    rewl,
-                    vec![json_string]
-                )
-            },
-            _ => 
-            {
-                let file = File::open(&opts.file_name).expect("unable to open save file");
-                let reader = BufReader::new(file);
-                bincode::deserialize_from(reader).expect("unable to parse bincode file")
-            }
-        }
-
-    };
 
 
 
