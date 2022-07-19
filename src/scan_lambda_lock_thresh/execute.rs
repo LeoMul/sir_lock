@@ -82,6 +82,7 @@ pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Opti
             //model.set_gamma(pair.y);
             model.set_lambda(pair.x);
             lockparams.set_lock_thresh(pair.y);
+            lockparams.set_rel_thresh(pair.y/2.);
             //let t = lockparams.lock_threshold;
             //println!("{}",t);
             let mut sum_m_pt = 0.;

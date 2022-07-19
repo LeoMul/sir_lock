@@ -58,7 +58,7 @@ pub fn execute_entropic_sampling(opt: ReesOpts, start_time: Instant)
                 let ever = walker.step_count() / opt.print_count;
 
                 if ever == 0 {
-                    panic!("Ever == 0! Abbort");
+                    panic!("Ever == 0! Abort");
                 }
 
                 let mut writer = SirWriter::new(&name, index);

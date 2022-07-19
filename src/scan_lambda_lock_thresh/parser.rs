@@ -85,7 +85,7 @@ impl ScanLambdaThreshParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_RT{}.{}",
+            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}.{}",
             crate::VERSION,
             measure.name(),
             self.system_size,
@@ -103,9 +103,7 @@ impl ScanLambdaThreshParams{
             self.sir_seed,
             k,
             lockdown_naming_string(self.lockdown.lock_style),
-            
-            self.lockdown.release_threshold,
-            file_ending
+                    file_ending
 
 
         )
