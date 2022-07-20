@@ -103,14 +103,14 @@ impl BaseSwOptions{
 
     }
 
-    pub fn from_critical_lambda_params(param:&CriticalLambdaParams,system_size_new:NonZeroUsize) -> Self{
+    pub fn from_critical_lambda_params(param:&CriticalLambdaParams,system_size_new:NonZeroUsize,new_graph_seed:u64) -> Self{
         let rewire_prob = match param.graph_type {
             GraphType::SmallWorld(rewire) => rewire,
             _ => panic!("Invalid graph type")
         };
         Self{
             rewire_prob,
-            graph_seed: param.graph_seed,
+            graph_seed: new_graph_seed,
             system_size: system_size_new,
             lambda: param.lambda_range.start,
             gamma: param.recovery_prob

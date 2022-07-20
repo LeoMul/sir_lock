@@ -18,7 +18,20 @@ pub enum LockdownType{
     Invalid
 
 }
+
+#[derive(Debug, Clone,Serialize, Deserialize,Copy)]
+
+pub enum GraphToBeLockedDownType{
+    SmallWorldToBeLockedDown,
+    OtherToBeLockedDown,
+    Invalid}
+
+
 pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
+pub type SwSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::sw_graph::SwContainer<crate::sir_model::sir_states::InfectionState>>;
+
+
+
 
 #[derive(Debug, Clone,Serialize, Deserialize,Copy)]
 pub struct LockdownParameters{
@@ -45,20 +58,23 @@ pub struct LockdownPairStorage{
     pub to_be_kept: Vec<[usize;2]>
 }
 
-pub fn lockdown(lockdownparams: LockdownParameters,graph:GenGraphSIR,inflist:&Vec<usize>, rng:&mut Pcg64) -> GenGraphSIR
-{
-    
+
+
+pub fn lockdown<InfectionState,A>(lockdownparams: LockdownParameters,graph:GenericGraph<InfectionState,A>, rng:&mut Pcg64) 
+-> GenericGraph<InfectionState,A> where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     match lockdownparams.lock_style{
         LockdownType::CircuitBreaker => circuit_breaking_lockdown(graph),
         LockdownType::None => no_lockdown(graph),
         LockdownType::Random(seed,prob) => random_lockdown(graph,seed,prob),
-        LockdownType::Targeted => target_infection_clusters(graph, inflist),
+        //LockdownType::Targeted => target_infection_clusters(&graph, inflist),
         LockdownType::LimitContacts(m) => limit_contacts(graph, m, rng),
         _ => unimplemented!()
     }
 
-
 }
+
+
+
 //reformulating how lockdowns are calculated.
 pub fn create_lock_pairs_lists(lockdownparams:LockdownParameters,graph:&GenGraphSIR) -> LockdownPairStorage{
     match lockdownparams.lock_style{
@@ -162,8 +178,8 @@ pub fn create_pair_lists_for_random(graph:&GenGraphSIR,seed:u64,prob:f64)-> Lock
 }
 
 
-pub fn random_lockdown<InfectionState,A>(graph:GenericGraph<InfectionState,A>,seed:u64,prob:f64)-> GenericGraph<InfectionState,A> 
-where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
+pub fn random_lockdown<T,A>(graph:GenericGraph<T,A>,seed:u64,prob:f64)-> GenericGraph<T,A> 
+where A: net_ensembles::AdjContainer<T>, T: net_ensembles::Node, A: std::clone::Clone{
     //note to self. add some more enums and structs, eg like running the execute files in main to better capture the parameters of each of the individual lockdowns.__rust_force_expr!;
     
     
@@ -189,49 +205,48 @@ where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensemb
     clone
     }
 
-
-
-
-
-pub fn target_infection_clusters(graph:GenGraphSIR,inflist:&Vec<usize>) -> GenGraphSIR{
-
-     //the goal of this will be to target those who are infected, and lockdown the surround clique of individuals. for instance, suppose 
-    //an infected as three susceptible neighbours. those neighbours have their links removed to their neighbours (not the infected though)
-    //this perhaps simulates the close-contact dynamics of the lockdown.
-    //some credit is due to Peter Werner for discussing this with me.
-
-    //can't quite get it to work yet.... get duplicates of certain infected when updating the graph in realtime
-    let mut pairs:Vec<(usize,usize)> = Vec::new();
-    let mut locked_down = graph.clone();
-
-    for &ind in inflist{
-
-        for (n_ind,_neigh) in graph.contained_iter_neighbors_with_index(ind).filter(|(_,neigh)|neigh.sus_check()){
-            //This finds all the susceptible neighbours to the infected.
-
-            //you made a mistake! leave edge between sus and infected.
-            for (n_ind_2,_neigh_2) in graph.contained_iter_neighbors_with_index(n_ind).filter(|(_,neigh_2)|neigh_2.sus_check()){
-                
-                if n_ind < n_ind_2{
-                    pairs.push((n_ind,n_ind_2));
-                }
-
-            }
-        }
-
-    }
-    pairs.sort_unstable();
-    pairs.dedup();
-    for pair in pairs{
-        locked_down.remove_edge(pair.0,pair.1).unwrap();
-    }
-
-
-
-    locked_down
-}
-
-
+//pub type Temp = crate::sir_model::sir_states::InfectionState;
+//
+//pub fn target_infection_clusters<Temp,A>(graph:&GenericGraph<Temp,A>,inflist:&Vec<usize>) -> GenericGraph<Temp,A>
+//where A: net_ensembles::AdjContainer<Temp>, Temp: net_ensembles::Node, A: std::clone::Clone{
+//
+//     //the goal of this will be to target those who are infected, and lockdown the surround clique of individuals. for instance, suppose 
+//    //an infected as three susceptible neighbours. those neighbours have their links removed to their neighbours (not the infected though)
+//    //this perhaps simulates the close-contact dynamics of the lockdown.
+//    //some credit is due to Peter Werner for discussing this with me.
+//
+//    //can't quite get it to work yet.... get duplicates of certain infected when updating the graph in realtime
+//    let mut pairs:Vec<(usize,usize)> = Vec::new();
+//    let mut locked_down = graph.clone();
+//
+//    for &ind in inflist{
+//
+//        for (n_ind,_neigh) in graph.contained_iter_neighbors_with_index(ind).filter(|(_,neigh)|neigh.sus_check()){
+//            //This finds all the susceptible neighbours to the infected.
+//
+//            //you made a mistake! leave edge between sus and infected.
+//            for (n_ind_2,_neigh_2) in graph.contained_iter_neighbors_with_index(n_ind).filter(|(_,neigh_2)|neigh_2.sus_check()){
+//                
+//                if n_ind < n_ind_2{
+//                    pairs.push((n_ind,n_ind_2));
+//                }
+//
+//            }
+//        }
+//
+//    }
+//    pairs.sort_unstable();
+//    pairs.dedup();
+//    for pair in pairs{
+//        locked_down.remove_edge(pair.0,pair.1).unwrap();
+//    }
+//
+//
+//
+//    locked_down
+//}
+//
+//
 pub fn pair_finder<InfectionState,A>(graph:&GenericGraph<InfectionState,A>)-> Vec<[usize;2]> 
 where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
     //This function finds all the pairs of indicies connected in the graph. 

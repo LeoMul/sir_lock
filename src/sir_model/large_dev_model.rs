@@ -396,6 +396,7 @@ impl BALargeDeviation
         let release_threshold = self.lockdownparams.release_threshold;
 
         let mut max_infected = self.currently_infected_count;
+        
         let mut lockdown_indicator = false;
 
         for i in 0..self.time_steps.get(){
@@ -427,16 +428,19 @@ impl BALargeDeviation
     }
     pub fn ld_iterate_printing(&mut self,writer: &mut SirWriter)
     {   
+        self.reset_ld_sir_simulation();
         let lockdown_threshold = self.lockdownparams.lock_threshold;
         let release_threshold = self.lockdownparams.release_threshold;
-
+        let x = self.base_model.ensemble.graph().contained_iter().filter(|state| state.inf_check()).count();
+        assert_eq!(x,1);
         //let mut max_infected = self.currently_infected_count;
         let mut lockdown_indicator = false;
 
         writer.write_current(self.ensemble().graph())
             .unwrap();
         
-        for i in 0..self.time_steps.get(){ 
+        for i in 0..self.time_steps.get(){
+
             self.offset.set_time(i);
             let inf = self.currently_infected_count as f64 /self.system_size.get() as f64;
             //println!("inf {}",inf);
@@ -457,7 +461,7 @@ impl BALargeDeviation
             
 
 
-
+            //println!("{i}");
             writer.write_current(self.ensemble().graph())
                 .unwrap();
 
