@@ -13,7 +13,7 @@ use net_ensembles::WithGraph;
 
 #[derive(Clone)]
 pub struct SimpleSampleSW{
-    base_model: BaseSWModel,
+    base_model: SWModel,
     infected_list: Vec<usize>,
     new_infected_list:Vec<usize>,
     rng_type: Pcg64,
@@ -23,7 +23,7 @@ pub struct SimpleSampleSW{
 //deref and deref mut solve some problems of things being references/mutable. 
 impl Deref for SimpleSampleSW
 {
-    type Target = BaseSWModel;
+    type Target = SWModel;
     fn deref(&self) -> &Self::Target {
         &self.base_model
     }
@@ -41,7 +41,7 @@ impl SimpleSampleSW{
         self.rng_type = Pcg64::from_rng(rng).unwrap();
     }
     pub fn from_base(
-        base_model: BaseSWModel,
+        base_model: SWModel,
         sir_sample_seed: u64
     ) -> Self
     {
@@ -59,8 +59,28 @@ impl SimpleSampleSW{
 
     /// Note: vaccine list should not contain patiend zero or any of 
     /// its neighbors. This is not checked here.
-    pub fn reset_simple_sample_sir_simulation(&mut self)
+    pub fn reset_simple_sample_sir_simulation_many_p0(&mut self)
     {  
+        self.infected_list.clear();
+        let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());
+
+        while self.infected_list.len() < 5{
+            let index = un.sample(&mut self.rng_type);
+            if self.infected_list.iter().find(|i| **i == index).is_none(){
+                self.infect_patient(index);
+        
+            // now only node 0 is infected!
+            
+            self.infected_list.push(index);
+
+            }
+            
+
+        } 
+        
+        
+    }
+    pub fn reset_simple_sample_sir_simulation(&mut self){  
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());  
         let index = un.sample(&mut self.rng_type);
         self.infect_patient(index);
@@ -68,6 +88,8 @@ impl SimpleSampleSW{
         // now only node 0 is infected!
         self.infected_list.clear();
         self.infected_list.push(index);
+        //self.recovered_list.clear();
+        
         
     }
 
@@ -266,6 +288,7 @@ impl SimpleSampleSW{
             if inf > lockdown_threshold && !lockdown_indicator{
                 lockdown_indicator = true;
                 //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+                //println!("Engaging lockdown: edges {}",post_locked_down_graph.edge_count());
 
             }
             if inf < release_threshold &&lockdown_indicator{
@@ -273,12 +296,12 @@ impl SimpleSampleSW{
                 lockdown_indicator = false;
             }
 
-            let bool_dup_checker = false;
-            if bool_dup_checker &&contains_duplicates(self.infected_list.clone()){
-                
-                println!("safety dance");
-                
-            }
+            //let bool_dup_checker = false;
+            //if bool_dup_checker &&contains_duplicates(self.infected_list.clone()){
+            //    
+            //    println!("safety dance");
+            //    
+            //}
 
             self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
             max_infected = max_infected.max(self.infected_list.len());
@@ -418,9 +441,30 @@ impl SimpleSampleBarabasi{
         self.infected_list.push(index);
         //self.recovered_list.clear();
         
+        
     }
 
-    
+    pub fn reset_simple_sample_sir_simulation_many_p0(&mut self)
+    {  
+        self.infected_list.clear();
+        let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());
+
+        while self.infected_list.len() < 5{
+            let index = un.sample(&mut self.rng_type);
+            if self.infected_list.iter().find(|i| **i == index).is_none(){
+                self.infect_patient(index);
+        
+            // now only node 0 is infected!
+            
+            self.infected_list.push(index);
+
+            }
+            
+
+        } 
+        
+        
+    }
     
     
 

@@ -4,7 +4,6 @@ use{
     structopt::StructOpt,
     std::num::*,
     super::*,
-    crate::sir_model::*,
     crate::{GraphType, MeasureType},
     serde::{Serialize, Deserialize},
     crate::lockdown_methods::*,

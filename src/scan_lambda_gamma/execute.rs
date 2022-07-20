@@ -19,7 +19,7 @@ use{
    
 };
 
-use crate:: sir_model::base_model_options::BaseSwOptions;
+use crate:: sir_model::small_world_options::SWOptions;
 use crate::misc_types::*;
 pub fn run_simulation(param:ScanLambdaGammaParams, json: Value, num_threads: Option<NonZeroUsize>){
     match param.graph_type{
@@ -31,7 +31,7 @@ pub fn run_simulation(param:ScanLambdaGammaParams, json: Value, num_threads: Opt
 }
 
 fn sim_small_world(param: ScanLambdaGammaParams, json: Value, num_threads:Option<NonZeroUsize>){
-    let opt = BaseSwOptions::from_lambda_gamma_scan_param(&param);
+    let opt = SWOptions::from_lambda_gamma_scan_param(&param);
     let small_world = opt.into();
     let model = SimpleSampleSW::from_base(small_world, param.sir_seed);
 

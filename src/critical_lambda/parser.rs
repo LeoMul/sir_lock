@@ -64,7 +64,6 @@ impl Default for CriticalLambdaParams{
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
                 lock_style: LockdownType::Random(151515151656,0.6),
-                dynamic_bool: false,
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             }

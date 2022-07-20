@@ -161,7 +161,7 @@ fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZ
 
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
-    let mut n_size:Vec<_> = param.system_size_range.to_vec();
+    let n_size:Vec<_> = param.system_size_range.to_vec();
     let lockparams = param.lockdown;
     println!("{:?}",n_size);
     let lambda_range = param.lambda_range.get_range();
@@ -169,7 +169,7 @@ fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZ
     //println!("Progress will take approx 3-4 times what the bar says");
     let mut sir_rng_2 = Pcg64::seed_from_u64(param.sir_seed);
     let mut graph_rng = Pcg64::seed_from_u64(param.graph_seed);
-    let _data_vec:Vec<_> = n_size.iter_mut().map(|n|{
+    let _data_vec:Vec<_> = n_size.iter().map(|n|{
         println!("{}",n);
         
         let divisor = if param.fraction{
@@ -207,9 +207,9 @@ fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZ
 
             let new_vec = iter.map(|_|{
                 let new_graph_seed = graph_rng.gen::<u64>();
-                let opt = BaseSwOptions::from_critical_lambda_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
+                let opt = SWOptions::from_critical_lambda_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSample::from_base(small_world, param.sir_seed);
+                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed);
                 let lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{

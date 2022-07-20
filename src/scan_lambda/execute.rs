@@ -84,7 +84,7 @@ fn sim_barabasi(param:ScanLambdaParams,json:Value,num_threads:Option<NonZeroUsiz
 }
 
 fn sim_small_world(param: ScanLambdaParams, json: Value, num_threads:Option<NonZeroUsize>){
-    let opt = BaseSwOptions::from_lambda_scan_param(&param);
+    let opt = SWOptions::from_lambda_scan_param(&param);
     let small_world = opt.into();
     let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed);
     let locked_down_graph = model.create_locked_down_network(param.lockdown);
@@ -146,7 +146,7 @@ fn sim_small_world(param: ScanLambdaParams, json: Value, num_threads:Option<NonZ
                 //let vaccine_list_helper = &mut inner.2;
 
                 model.set_lambda(lambda);
-
+                //println!("{lambda}");
                 let vals: Vec<_> = (0..param.samples_per_step)
                     .map(
                         |_|
@@ -155,7 +155,7 @@ fn sim_small_world(param: ScanLambdaParams, json: Value, num_threads:Option<NonZ
                             
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
                             let res = model.propagate_until_completion_max_with_lockdown(locked_down_graph.clone(),param.lockdown) as u32;
-                            println!("locked down {}",locked_down_graph.edge_count());
+                            //println!("locked down {}",locked_down_graph.edge_count());
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32

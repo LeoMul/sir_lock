@@ -21,7 +21,7 @@ use{
     rayon::prelude::*,
 };
 
-use crate:: sir_model::base_model_options::BaseSwOptions;
+use crate:: sir_model::small_world_options::SWOptions;
 
 pub fn run_simulation(param:LifespanSizeFittingParams, json: Value, num_threads: Option<NonZeroUsize>){
     match param.graph_type{
@@ -154,9 +154,9 @@ fn sim_small_world(param: LifespanSizeFittingParams, json: Value, num_threads:Op
             //new_vec has num_networks 
             let new_vec:Vec<Vec<u32>> = iter.map(|_|{
                 let new_graph_seed = graph_rng.gen::<u64>();
-                let opt = BaseSwOptions::from_lifespan_size_fitting_param(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
+                let opt = SWOptions::from_lifespan_size_fitting_param(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSample::from_base(small_world, param.sir_seed);
+                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed);
                 let lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{

@@ -5,6 +5,7 @@ use{
     serde_json::Value,
     std::{num::*},
     crate::lockdown_methods::*,
+    crate::misc_types::*,
 
 };
 
@@ -18,16 +19,15 @@ pub fn run_simulation(param:PropTestParams, json: Value, num_threads: Option<Non
 
 }
 
-fn sim_small_world(_param:PropTestParams, _json: Value, _num_threads: Option<NonZeroUsize>){}
+fn sim_barabasi(_param:PropTestParams, _json: Value, _num_threads: Option<NonZeroUsize>){}
 
-fn sim_barabasi(param:PropTestParams, _json: Value, _num_threads: Option<NonZeroUsize>){
-    let opt = BarabasiOptions::from_prop_test_param(&param);
+fn sim_small_world(param:PropTestParams, _json: Value, _num_threads: Option<NonZeroUsize>){
+    let opt = SWOptions::from_prop_test_param(&param);
     let barabasi_world = opt.into();
-    let mut model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed);
+    let mut model = SimpleSampleSW::from_base(barabasi_world, param.sir_seed);
 
     let lock = LockdownParameters{
-        lock_style: LockdownType::Targeted,
-        dynamic_bool: true,
+        lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_SEED,DEFAULT_RANDOM_LOCKDOWN_FRAC),
         lock_threshold: 0.1,
         release_threshold: 0.05
     };

@@ -53,7 +53,7 @@ impl Default for PropTestParams{
             lambda:0.1763,
             system_size: DEFAULT_SYSTEM_SIZE,
             recovery_prob:DEFAULT_RECOVERY_PROB,
-            graph_type: GraphType::Barabasi(2,10),
+            graph_type: GraphType::SmallWorld(0.1),
             samples_per_step: DEFAULT_SAMPLES_PER_STEP,
             measure: MeasureType::C,
             fraction: true,

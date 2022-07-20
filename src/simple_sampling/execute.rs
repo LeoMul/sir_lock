@@ -19,6 +19,7 @@ pub fn execute_sir(
 {
     match param.graph_type{
         GraphType::Barabasi(_,_) => execute_ba(param, json, num_threads),
+        GraphType::SmallWorld(_) => execute_sw(param, json, num_threads),
         _ => unimplemented!()
     }
 }
@@ -106,7 +107,7 @@ pub fn execute_ba(param: SimpleSampleParam,json: Value,num_threads: Option<NonZe
 }
 
 pub fn execute_sw(param: SimpleSampleParam,json: Value,num_threads: Option<NonZeroUsize>){
-    let opt = BaseSwOptions::from_simple_sample(&param);
+    let opt = SWOptions::from_simple_sample(&param);
     let ba = opt.into();
     let model = SimpleSampleSW::from_base(ba,param.sir_seed);
 

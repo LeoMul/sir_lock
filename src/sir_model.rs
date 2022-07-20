@@ -1,10 +1,10 @@
 pub mod sir_states;
 pub use sir_states::*;
-pub mod base_model;
-pub use base_model::*;
+pub mod small_world;
+pub use small_world::*;
 
-pub mod base_model_options;
-pub use base_model_options::*;
+pub mod small_world_options;
+pub use small_world_options::*;
 
 pub mod simple_prop;
 pub use simple_prop::*;
@@ -15,8 +15,11 @@ pub use barabasi::*;
 pub mod barabasi_options;
 pub use barabasi_options::*;
 
-pub mod large_dev_model;
-pub use large_dev_model::*;
+pub mod large_dev_model_ba;
+pub use large_dev_model_ba::*;
+
+pub mod large_dev_model_sw;
+pub use large_dev_model_sw::*;
 
 pub mod offset;
 pub use offset::*;

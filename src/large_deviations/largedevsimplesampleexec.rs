@@ -15,15 +15,81 @@ use std::{fs::File, io::BufWriter};
 use std::{ io::Write};
 
 
-pub fn typical_event_sampling(opts: SimpleSampleCMDopts)
-{
+pub fn typical_event_sampling(opts: SimpleSampleCMDopts){
     let (param, value): (SimpleSampleldParam, _) = parse(opts.json.as_ref());
+    match param.graph_type{
+        GraphType::SmallWorld(r) => sim_small_world(r,param,value),
+        GraphType::Barabasi(m,n) => sim_barabasi(m,n,param,value),
+        _ => unimplemented!()
+    }
+}
+pub fn sim_small_world(rewire_prob:f64,param:SimpleSampleldParam,value:Value){
+    
 
-
-    let (m,n) = match &param.graph_type {
-        GraphType::Barabasi(p,m) => (*p,*m),
-       _ =>unimplemented!()
+    let base_options = SWOptions{
+        graph_seed: param.graph_seed,
+        lambda: param.lambda,
+        gamma: param.recovery_prob,
+        system_size: param.system_size,
+        rewire_prob
     };
+
+    let base_sw: SWModel = base_options.into();
+
+    let model = SWLargeDeviation::new(base_sw, param.large_deviation_param, param.lockdown);
+
+    let mut ld_model = SWLargeDeviationWithLocks::new(model);
+
+    let system_size = param.system_size.get() as u32; 
+    let mut hist = HistU32Fast::new_inclusive(1, system_size)
+        .unwrap();
+
+    let mut rng = Pcg64::seed_from_u64(param.large_deviation_param.markov_seed);
+
+    //let mut vaccine_rng = Pcg64::seed_from_u64(4896709264107025);
+    let mut markov_vec = Vec::new();
+
+    let bar = crate::indication_bar(param.samples as u64);
+    for i in 0..param.samples
+    {
+        match param.randomize{
+            Randomize::Random => ld_model.randomise_monte_carlo(&mut rng),
+            Randomize::Markov(markov) => {
+                for _ in 0..markov.every.get()
+                {
+                    ld_model.m_steps(markov.step_size.get(), &mut markov_vec);
+                }
+            }
+        }
+        
+
+        let mut energy = ld_model.ld_energy_m();
+
+        if matches!(param.energy, crate::misc_types::MeasureType::C)
+        {
+            energy = ld_model.calculate_ever_infected() as u32;
+        }
+
+        hist.increment(energy)
+            .unwrap();
+
+        if i % 1000 == 0 
+        {
+            bar.inc(1000);
+        }
+    }
+    bar.finish_and_clear();
+
+    let name = param.quick_name();
+
+    hist_to_file(&hist, name, &value);
+
+    println!("unfinished: {}", ld_model.unfinished_counter())
+}
+
+
+pub fn sim_barabasi(m:usize,n:usize,param:SimpleSampleldParam,value:Value){
+    
 
     let base_options = BarabasiOptions{
         graph_seed: param.graph_seed,
