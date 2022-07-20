@@ -73,7 +73,7 @@ pub enum CmdOption
     CriticalLambda(critical_lambda::CriticalLambda),
     PropTest(prop_test::PropTest),
     LargeDevSimpleSample(large_deviations::SimpleSampleCMDopts),
-    SimpleSample(simple_sampling::SimpleSample),
+    SimpleSample(simple_sampling::SimpleSampleScan),
     LargeDeviationsLD(large_deviations::BALDOptsLD),
     LargeDeviationsLDContinue(large_deviations::BALDContinueCmdOpts),
     REESLd(large_deviations::ReesOpts)

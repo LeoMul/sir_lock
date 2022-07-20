@@ -12,7 +12,7 @@ use net_ensembles::WithGraph;
 //pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 
 #[derive(Clone)]
-pub struct SimpleSample{
+pub struct SimpleSampleSW{
     base_model: BaseSWModel,
     infected_list: Vec<usize>,
     new_infected_list:Vec<usize>,
@@ -21,7 +21,7 @@ pub struct SimpleSample{
     suspectible_list:Vec<usize>
 }
 //deref and deref mut solve some problems of things being references/mutable. 
-impl Deref for SimpleSample
+impl Deref for SimpleSampleSW
 {
     type Target = BaseSWModel;
     fn deref(&self) -> &Self::Target {
@@ -29,13 +29,13 @@ impl Deref for SimpleSample
     }
 }
 
-impl DerefMut for SimpleSample{
+impl DerefMut for SimpleSampleSW{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.base_model
     }
 }
 
-impl SimpleSample{
+impl SimpleSampleSW{
     pub fn reseed_sir_rng(&mut self, rng: &mut Pcg64)
     { //reseeding rng
         self.rng_type = Pcg64::from_rng(rng).unwrap();
@@ -147,7 +147,7 @@ impl SimpleSample{
         //this will only work right now during a simulation, not at the beginning because of the current implementation of reset_simple_sample.
         let graph = self.base_model.ensemble.graph().clone();
         //This transfers the SIR information to the new network also. //doesn't work? need to fix maybe
-        lockdown(lockdownparams,graph,&mut self.rng_type)
+        lockdown(lockdownparams,graph)
         
 
         
@@ -246,7 +246,6 @@ impl SimpleSample{
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
-        let dynamic_bool = lockparams.dynamic_bool;
 
         let mut max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
@@ -267,15 +266,6 @@ impl SimpleSample{
             if inf > lockdown_threshold && !lockdown_indicator{
                 lockdown_indicator = true;
                 //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-
-                if dynamic_bool{
-                    //If the lockdown type is one which must be updated once the new lockdown is brought in. 
-                    //Otherwise the lockdown is static and the structure is constant throughout the propagation
-                    post_locked_down_graph = self.create_locked_down_network(lockparams);
-                    post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-
-                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
-                }
 
             }
             if inf < release_threshold &&lockdown_indicator{
@@ -313,7 +303,6 @@ impl SimpleSample{
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
-        let dynamic_bool = lockparams.dynamic_bool;
         let mut lockdown_indicator = false;
         //let prob_dist = Uniform::new_inclusive(0.0,1.0);
         //let lambda = self.lambda; 
@@ -322,15 +311,7 @@ impl SimpleSample{
             let inf = self.infected_list.len() as f64/self.n as f64;
             if inf > lockdown_threshold && !lockdown_indicator{
                 lockdown_indicator = true;
-                //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
 
-                if dynamic_bool{
-                    //If the lockdown type is one which must be updated once the new lockdown is brought in. 
-                    //Otherwise the lockdown is static and the structure is constant throughout the propagation
-                    post_locked_down_graph = self.create_locked_down_network(lockparams);
-                    post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
-                }
 
             }
             if inf < release_threshold &&lockdown_indicator{
@@ -512,7 +493,7 @@ impl SimpleSampleBarabasi{
         //this will only work right now during a simulation, not at the beginning because of the current implementation of reset_simple_sample.
         let graph = self.base_model.ensemble.graph().clone();
         //This transfers the SIR information to the new network also. //doesn't work? need to fix maybe
-        lockdown(lockdownparams,graph,&mut self.rng_type)
+        lockdown(lockdownparams,graph)
         
 
         
@@ -611,7 +592,7 @@ impl SimpleSampleBarabasi{
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
-        let dynamic_bool = lockparams.dynamic_bool;
+        
 
         let mut max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
@@ -633,14 +614,7 @@ impl SimpleSampleBarabasi{
                 lockdown_indicator = true;
                 //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
 
-                if dynamic_bool{
-                    //If the lockdown type is one which must be updated once the new lockdown is brought in. 
-                    //Otherwise the lockdown is static and the structure is constant throughout the propagation
-                    post_locked_down_graph = self.create_locked_down_network(lockparams);
-                    post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
 
-                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
-                }
 
             }
             if inf < release_threshold &&lockdown_indicator{
@@ -678,7 +652,6 @@ impl SimpleSampleBarabasi{
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
-        let dynamic_bool = lockparams.dynamic_bool;
         let mut lockdown_indicator = false;
         //let prob_dist = Uniform::new_inclusive(0.0,1.0);
         //let lambda = self.lambda; 
@@ -688,14 +661,6 @@ impl SimpleSampleBarabasi{
             if inf > lockdown_threshold && !lockdown_indicator{
                 lockdown_indicator = true;
                 //post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-
-                if dynamic_bool{
-                    //If the lockdown type is one which must be updated once the new lockdown is brought in. 
-                    //Otherwise the lockdown is static and the structure is constant throughout the propagation
-                    post_locked_down_graph = self.create_locked_down_network(lockparams);
-                    post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
-                    //println!("Locking down: new edges {}",post_locked_down_graph.edge_count());
-                }
 
             }
             if inf < release_threshold &&lockdown_indicator{

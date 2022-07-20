@@ -116,7 +116,6 @@ impl Default for SimpleSampleldParam
             },
             lockdown: LockdownParameters{
                 lock_style: LockdownType::Random(12151515,0.6),
-                dynamic_bool: true,
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },

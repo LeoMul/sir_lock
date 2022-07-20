@@ -94,8 +94,8 @@ impl BALargeDeviation
 
 
         //do I need the lockdown parameters here also? yes
+        //let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph());
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph());
-
         
 
 
@@ -936,7 +936,6 @@ mod tests {
 
         let lockparams = LockdownParameters{
             lock_style: LockdownType::Random(191905810985091580,0.6),
-            dynamic_bool: false,
             lock_threshold: 0.1,
             release_threshold: 0.05
         };

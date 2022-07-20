@@ -10,7 +10,7 @@ use{
 
 #[derive(Debug, StructOpt, Clone)]
 /// Do a simple sampling simulation and get P(M) and P(C)
-pub struct SimpleSample
+pub struct SimpleSampleScan
 {
     /// Specify the json file with the options
     /// If not given, an example json will be printed
@@ -22,7 +22,7 @@ pub struct SimpleSample
     num_threads: Option<NonZeroUsize>
 }
 
-impl SimpleSample {
+impl SimpleSampleScan {
     pub fn parse(&self) -> (SimpleSampleParam, Value)
     {
         parse(self.json.as_ref())

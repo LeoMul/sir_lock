@@ -11,7 +11,7 @@ use{
 
 use net_ensembles::sampling::histogram::*;
 
-pub fn acquire_sorted_data(model:SimpleSample,k:NonZeroUsize,sir_seed:u64,samples:u64)-> Vec<u32> {
+pub fn acquire_sorted_data(model:SimpleSampleSW,k:NonZeroUsize,sir_seed:u64,samples:u64)-> Vec<u32> {
 
     
 

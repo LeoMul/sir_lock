@@ -86,7 +86,7 @@ fn sim_barabasi(param:ScanLambdaParams,json:Value,num_threads:Option<NonZeroUsiz
 fn sim_small_world(param: ScanLambdaParams, json: Value, num_threads:Option<NonZeroUsize>){
     let opt = BaseSwOptions::from_lambda_scan_param(&param);
     let small_world = opt.into();
-    let mut model = SimpleSample::from_base(small_world, param.sir_seed);
+    let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed);
     let locked_down_graph = model.create_locked_down_network(param.lockdown);
     let range = param.lambda_range.get_range();
     let lambda_range:Vec<_> = range.iter().collect();

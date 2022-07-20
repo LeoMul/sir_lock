@@ -33,7 +33,7 @@ pub fn run_simulation(param:ScanLambdaGammaParams, json: Value, num_threads: Opt
 fn sim_small_world(param: ScanLambdaGammaParams, json: Value, num_threads:Option<NonZeroUsize>){
     let opt = BaseSwOptions::from_lambda_gamma_scan_param(&param);
     let small_world = opt.into();
-    let model = SimpleSample::from_base(small_world, param.sir_seed);
+    let model = SimpleSampleSW::from_base(small_world, param.sir_seed);
 
     //let range_lam = param.lambda_range.get_range();
     //let range_gam = param.gamma_range.get_range();

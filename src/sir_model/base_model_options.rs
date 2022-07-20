@@ -6,7 +6,8 @@ use{
     //crate::time_graph::*,
     crate::lifespanhist::*,
     crate::life_span_size_fitting::*,
-    crate::critical_lambda::*
+    crate::critical_lambda::*,
+    crate::simple_sampling::*,
 };
 
 pub struct BaseSwOptions{
@@ -74,15 +75,15 @@ impl BaseSwOptions{
         }
 
     }
-    pub fn from_lifespan_size_fitting_param(param: &LifespanSizeFittingParams) -> Self{
+    pub fn from_lifespan_size_fitting_param(param: &LifespanSizeFittingParams,system_size_new:NonZeroUsize,new_graph_seed:u64) -> Self{
         let rewire_prob = match param.graph_type {
             GraphType::SmallWorld(rewire) => rewire,
             _ => panic!("Invalid graph type")
         };
         Self{
             rewire_prob,
-            graph_seed: param.graph_seed,
-            system_size: NonZeroUsize::new(param.system_size_range[0]).unwrap(),
+            graph_seed: new_graph_seed,
+            system_size: system_size_new,
             lambda: param.trans_prob_range.start,
             gamma: param.recovery_prob
         }
@@ -116,6 +117,20 @@ impl BaseSwOptions{
             gamma: param.recovery_prob
         }
 
+    }
+    pub fn from_simple_sample(param: &SimpleSampleParam) -> Self
+    {
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            graph_seed: param.graph_seed,
+            system_size: param.system_size,
+            lambda: param.lambda,
+            gamma: param.recovery_prob,
+            rewire_prob,
+        }
     }
     
 }
