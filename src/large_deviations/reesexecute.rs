@@ -38,7 +38,7 @@ pub fn execute_entropic_sampling(opt: ReesOpts, start_time: Instant)
             }
         ).collect();
 
-    let old_param: BALDLDparam = serde_json::from_value(old_jsons[0].clone())
+    let old_param: LDLDparam = serde_json::from_value(old_jsons[0].clone())
         .expect("Unable to parse old json");
 
     let energy = energy_function_returner(old_param.energy);

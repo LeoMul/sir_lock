@@ -13,7 +13,7 @@ use{
 
 #[derive(StructOpt, Debug, Clone)]
 /// Continue a Large deviation simulation!
-pub struct BALDContinueCmdOpts
+pub struct LDContinueCmdOpts
 {
     /// Json file containing options.
     /// If not given it will print an example file instead
@@ -29,7 +29,7 @@ pub struct BALDContinueCmdOpts
     pub no_save: bool,
 }
 
-impl BALDContinueCmdOpts
+impl LDContinueCmdOpts
 {
 
     pub fn execute(&self, instant: std::time::Instant)
@@ -42,10 +42,10 @@ impl BALDContinueCmdOpts
                 .unwrap();
         }
 
-        let opts: BALDContinueOpts = match self.json.as_ref()
+        let opts: LDContinueOpts = match self.json.as_ref()
         {
             None => {
-                let def = BALDContinueOpts::default();
+                let def = LDContinueOpts::default();
                 serde_json::to_writer_pretty(
                     std::io::stdout(), 
                     &def
@@ -69,7 +69,7 @@ impl BALDContinueCmdOpts
     }
 
 }
-pub struct BALDLdOpts
+pub struct LDLdOpts
 {
     pub energy: MeasureType,
     pub allowed_seconds: u64,
@@ -78,7 +78,7 @@ pub struct BALDLdOpts
     pub no_save: bool
 }
 #[derive(Clone, Serialize, Deserialize)]
-pub struct BALDContinueOpts
+pub struct LDContinueOpts
 {
 
     pub file_name: String,
@@ -88,7 +88,7 @@ pub struct BALDContinueOpts
     pub hours: Option<NonZeroU64>,
     pub change_step_size: Option<NonZeroUsize>
 }
-impl Default for BALDContinueOpts
+impl Default for LDContinueOpts
 {
     fn default() -> Self
     {
@@ -111,7 +111,7 @@ fn get_or_0(val: Option<NonZeroU64>) -> u64
     }
 }
 
-impl BALDContinueOpts
+impl LDContinueOpts
 {
     pub fn seconds(&self) -> u64
     {
@@ -130,7 +130,7 @@ impl BALDContinueOpts
 
 #[derive(StructOpt, Debug, Clone)]
 /// Large deviation REWL using lockdowns!
-pub struct BALDOptsLD
+pub struct LDOptsLD
 {
     /// Specify the json file with the options
     /// If not given, an example json will be printed
@@ -150,11 +150,11 @@ pub struct BALDOptsLD
     pub no_save: bool,
 }
 
-impl BALDOptsLD{
+impl LDOptsLD{
     pub fn execute(self, instant: std::time::Instant)
     {
         if self.example2{
-            let o = BALDLDparam::example2();
+            let o = LDLDparam::example2();
             let _ = serde_json::to_writer_pretty(
                 std::io::stdout(),
                 &o
@@ -166,7 +166,7 @@ impl BALDOptsLD{
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct BALDLDparam
+pub struct LDLDparam
 {
     pub system_size: NonZeroUsize,
     pub recovery_prob: f64,
@@ -205,7 +205,7 @@ impl LargeDeviationMode
     }
 }
 
-impl BALDLDparam
+impl LDLDparam
 {
     pub fn quick_name(&self, interval: Option<usize>, end: &str, mode: LargeDeviationMode) -> String
     {
@@ -271,7 +271,7 @@ impl BALDLDparam
     }
 }
 
-impl Default for BALDLDparam
+impl Default for LDLDparam
 {
     fn default() -> Self
     {

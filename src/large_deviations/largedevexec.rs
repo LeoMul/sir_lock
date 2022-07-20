@@ -16,7 +16,7 @@ use {
 };
 
 
-pub fn execute_large_dev(opt: BALDOptsLD, instant: std::time::Instant){
+pub fn execute_large_dev(opt: LDOptsLD, instant: std::time::Instant){
     //Initialising number of threads
     if let Some(num) = opt.num_threads
     {
@@ -26,7 +26,7 @@ pub fn execute_large_dev(opt: BALDOptsLD, instant: std::time::Instant){
             .unwrap();
     }
 
-    let (param, value): (BALDLDparam, _) = parse(opt.json.as_ref());
+    let (param, value): (LDLDparam, _) = parse(opt.json.as_ref());
 
     let (m,n) = match &param.graph_type {
         GraphType::Barabasi(m,n) => (*m,*n),
@@ -94,7 +94,7 @@ pub fn execute_large_dev(opt: BALDOptsLD, instant: std::time::Instant){
         param.quick_name(interval, end, mode)
     };
 
-    let opts = BALDLdOpts{
+    let opts = LDLdOpts{
         quick_name: Box::new(name_fn),
         allowed_seconds: allowed,
         energy: e,
@@ -123,7 +123,7 @@ fn print_min_max_intervalsize(hists: &[HistogramFast<u32>]){
 
 pub fn execute_high_degree_helper(mut rewl: Rewl<BALargeDeviationWithLocks, Pcg64, HistogramFast<u32>, u32, MarkovStepWithLocks, ()>, 
     instant: std::time::Instant,
-    opts: BALDLdOpts){
+    opts: LDLdOpts){
 
     let energy = energy_function_returner(opts.energy);
 
@@ -233,7 +233,7 @@ pub fn execute_high_degree_helper(mut rewl: Rewl<BALargeDeviationWithLocks, Pcg6
     }
 }
 
-pub fn load_high_degree_rewl(opts: BALDContinueOpts, instant: std::time::Instant, no_save: bool){
+pub fn load_high_degree_rewl(opts: LDContinueOpts, instant: std::time::Instant, no_save: bool){
     let allowed_seconds = opts.seconds();
 
     let (mut rewl, mut json_string) = deserialize_from_file(&opts.file_name);
