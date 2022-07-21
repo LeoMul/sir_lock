@@ -31,7 +31,7 @@ pub fn run_simulation(param:ScanLambdaThreshParams, json: Value, num_threads: Op
 pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
     let opt = BarabasiOptions::from_lambda_thresh_param(&param);
     let barabasi_world = opt.into();
-    let mut model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed);
+    let mut model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed,param.initial_infected);
 
     //let range_lam = param.lambda_range.get_range();
     //let range_gam = param.gamma_range.get_range();
@@ -238,7 +238,7 @@ pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Opti
 pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
     let opt = SWOptions::from_lambda_thresh_param(&param);
     let sw = opt.into();
-    let mut model = SimpleSampleSW::from_base(sw, param.sir_seed);
+    let mut model = SimpleSampleSW::from_base(sw, param.sir_seed,param.initial_infected);
 
     //let range_lam = param.lambda_range.get_range();
     //let range_gam = param.gamma_range.get_range();

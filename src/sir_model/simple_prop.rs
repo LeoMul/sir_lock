@@ -17,6 +17,7 @@ pub struct SimpleSampleSW{
     infected_list: Vec<usize>,
     new_infected_list:Vec<usize>,
     rng_type: Pcg64,
+    initial_infected:usize,
     recovered_list:Vec<usize>,
     suspectible_list:Vec<usize>
 }
@@ -42,7 +43,7 @@ impl SimpleSampleSW{
     }
     pub fn from_base(
         base_model: SWModel,
-        sir_sample_seed: u64
+        sir_sample_seed: u64, initial_infected:usize
     ) -> Self
     {
         let rng_type = Pcg64::seed_from_u64(sir_sample_seed);
@@ -51,6 +52,7 @@ impl SimpleSampleSW{
             infected_list:Vec::new(),
             new_infected_list:Vec::new(),
             rng_type,
+            initial_infected,
             recovered_list:Vec::new(),
             suspectible_list:Vec::new()};
         res.reset_simple_sample_sir_simulation();
@@ -59,12 +61,12 @@ impl SimpleSampleSW{
 
     /// Note: vaccine list should not contain patiend zero or any of 
     /// its neighbors. This is not checked here.
-    pub fn reset_simple_sample_sir_simulation_many_p0(&mut self)
+    pub fn reset_simple_sample_sir_simulation(&mut self)
     {  
         self.infected_list.clear();
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());
 
-        while self.infected_list.len() < 5{
+        while self.infected_list.len() < self.initial_infected{
             let index = un.sample(&mut self.rng_type);
             if self.infected_list.iter().find(|i| **i == index).is_none(){
                 self.infect_patient(index);
@@ -80,7 +82,7 @@ impl SimpleSampleSW{
         
         
     }
-    pub fn reset_simple_sample_sir_simulation(&mut self){  
+    pub fn reset_simple_sample_sir_simulation_legacy(&mut self){  
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());  
         let index = un.sample(&mut self.rng_type);
         self.infect_patient(index);
@@ -280,7 +282,7 @@ impl SimpleSampleSW{
             //let prob_dist = Uniform::new_inclusive(0.0,1.0);
             //let lambda = self.lambda; 
             let inf = self.infected_list.len() as f64/self.n as f64;
-            //println!("{}",inf);
+            println!("{}",inf);
             //println!("{:?}",self.infected_list);
 
             //transfer SIR information when lockdown comes in/leaves
@@ -393,6 +395,7 @@ pub struct SimpleSampleBarabasi{
     infected_list: Vec<usize>,
     new_infected_list:Vec<usize>,
     rng_type: Pcg64,
+    initial_infected:usize
     
 }
 impl Deref for SimpleSampleBarabasi
@@ -415,7 +418,7 @@ impl SimpleSampleBarabasi{
     }
     pub fn from_base(
         base_model: BarabasiModel,
-        sir_sample_seed: u64
+        sir_sample_seed: u64, initial_infected:usize
     ) -> Self
     {
         let rng_type = Pcg64::seed_from_u64(sir_sample_seed);
@@ -424,6 +427,7 @@ impl SimpleSampleBarabasi{
             infected_list:Vec::new(),
             new_infected_list:Vec::new(),
             rng_type,
+            initial_infected
             };
         res.reset_simple_sample_sir_simulation();
         res
@@ -431,7 +435,7 @@ impl SimpleSampleBarabasi{
 
     /// Note: vaccine list should not contain patiend zero or any of 
     /// its neighbors. This is not checked here.
-    pub fn reset_simple_sample_sir_simulation(&mut self){  
+    pub fn reset_simple_sample_sir_simulation_legacy(&mut self){  
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());  
         let index = un.sample(&mut self.rng_type);
         self.infect_patient(index);
@@ -444,12 +448,12 @@ impl SimpleSampleBarabasi{
         
     }
 
-    pub fn reset_simple_sample_sir_simulation_many_p0(&mut self)
+    pub fn reset_simple_sample_sir_simulation(&mut self)
     {  
         self.infected_list.clear();
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());
 
-        while self.infected_list.len() < 5{
+        while self.infected_list.len() < self.initial_infected{
             let index = un.sample(&mut self.rng_type);
             if self.infected_list.iter().find(|i| **i == index).is_none(){
                 self.infect_patient(index);

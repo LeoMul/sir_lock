@@ -11,7 +11,7 @@ use {
     crate::sir_model::sir_states::*,
     crate::sir_model::offset::*,
     crate::sir_model::sir_writer::*,
-    crate::misc_types::*
+    crate::misc_types::*,
 };
 
 //might need but leaving it here.
@@ -22,14 +22,6 @@ const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
 const PATIENT_MOVE: f64 = 0.05;
 const LOCKDOWN_CHANGE: f64 = 0.01;
-
-
-#[derive(Serialize, Deserialize)]
-pub struct LockdownMarkovMove{
-    lockdown_index: usize,
-    not_lockdown_index: usize
-}
-
 
 
 use net_ensembles::GraphIteratorsMut;
@@ -517,24 +509,8 @@ impl SWLargeDeviation
         self.last_extinction_index
     }
 }
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub struct ExchangeInfo
-{
-    pub index: usize,
-    pub old_val: f64
-}
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum MarkovStep
-{
-    RotateLeft,
-    RotateRight,
-    Transmission(ExchangeInfo),
-    Recovery(ExchangeInfo),
-    SwapTrans((usize, usize)),
-    SwapRec((usize, usize)),
-    MovePatientZero(usize)
-}
+
 impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
 {
     fn m_step(&mut self) -> MarkovStep
@@ -600,7 +576,7 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
             let f = 1.0 / self.max_degree as f64;
             let mut old = 0.0;
             let p = uniform.sample(&mut self.markov_rng);
-
+            //Choose the patient zero in question at random from the array
             let neighbours_of_patient_zero:Vec<usize> = self.base_model.ensemble
             .contained_iter_neighbors_with_index(self.patient_zero).map(|(index,_)| index).collect();
 
@@ -610,6 +586,9 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
                 let new_prob = f  + old;// <- less efficient
                 if (old..new_prob).contains(&p)
                 {
+                    //check if new index is already a p0
+                    //yes: break
+                    //no: below
                     let old_patient = self.patient_zero;
                     self.patient_zero  = n;
                     self.hist_patient_zero.increment_quiet(self.patient_zero);
@@ -673,16 +652,7 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
 
 
 
-#[derive(Serialize, Deserialize)]
-pub enum MarkovStepWithLocks{
-    BaseMarkovStep(MarkovStep),
-    LockdownStep(LockdownMarkovMove) 
-}
-impl From<MarkovStep> for MarkovStepWithLocks{
-    fn from(other:MarkovStep) -> Self{
-        Self::BaseMarkovStep(other)
-    }
-}
+
 
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -920,7 +890,6 @@ impl MarkovChain<MarkovStepWithLocks, ()> for SWLargeDeviationWithLocks
 
 #[cfg(test)]
 mod tests {
-    use crate::misc_types::*;
     use crate::sir_model::small_world_options::*;
 
     //use crate::large_deviations::*;

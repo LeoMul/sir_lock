@@ -74,8 +74,8 @@ pub enum CmdOption
     PropTest(prop_test::PropTest),
     LargeDevSimpleSample(large_deviations::SimpleSampleCMDopts),
     SimpleSample(simple_sampling::SimpleSampleScan),
-    LargeDeviationsLD(large_deviations::BALDOptsLD),
-    LargeDeviationsLDContinue(large_deviations::BALDContinueCmdOpts),
+    LargeDeviationsLD(large_deviations::LDOptsLD),
+    LargeDeviationsLDContinue(large_deviations::LDContinueCmdOpts),
     REESLd(large_deviations::ReesOpts)
 
 

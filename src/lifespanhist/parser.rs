@@ -41,6 +41,7 @@ pub struct LifeSpanParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
+    pub initial_infected:usize
 }
 
 impl Default for LifeSpanParams{
@@ -53,7 +54,8 @@ impl Default for LifeSpanParams{
             samples: DEFAULT_SAMPLES_PER_STEP,
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
-            sir_seed: DEFAULT_SIR_SEED
+            sir_seed: DEFAULT_SIR_SEED,
+            initial_infected: DEFAULT_INITIAL_INFECTED
 
         }
     }
@@ -68,12 +70,13 @@ impl LifeSpanParams{
         };
         format!(
             //"ver{}LS_{}_{}_N{}t{}-{}_{}r{}-{}_{}v{}S_G{}GS{}SS{}{}{}.{}",
-            "ver{}TIMEGRAPH_{}_S{}_R{}_T{}_G{}_SAM{}_GS{}_SS{}_THREADS{}.{}",
+            "ver{}TIMEGRAPH_{}_S{}_R{}_T{}_InInf{}_G{}_SAM{}_GS{}_SS{}_THREADS{}.{}",
             crate::VERSION,
             something_else,
             self.system_size,
             self.recovery_prob,
             self.trans_prob,
+            self.initial_infected,
             self.graph_type.name(),
             self.samples,
             self.graph_seed,

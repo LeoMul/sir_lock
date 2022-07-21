@@ -44,6 +44,7 @@ pub struct PropTestParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
+    pub initial_infected:usize
 }
 
 impl Default for PropTestParams{
@@ -58,7 +59,8 @@ impl Default for PropTestParams{
             measure: MeasureType::C,
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
-            sir_seed: DEFAULT_SIR_SEED
+            sir_seed: DEFAULT_SIR_SEED,
+            initial_infected:DEFAULT_INITIAL_INFECTED
 
         }
     }

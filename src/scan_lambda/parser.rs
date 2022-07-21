@@ -49,6 +49,7 @@ pub struct ScanLambdaParams{
     pub lockdown: LockdownParameters,
     pub complock: LockdownParameters,
     pub compare: bool,
+    pub initial_infected:usize
 }
 
 impl Default for ScanLambdaParams{
@@ -79,6 +80,7 @@ impl Default for ScanLambdaParams{
                 release_threshold: 0.05,
             },
             compare: true,
+            initial_infected: DEFAULT_INITIAL_INFECTED
             
 
         }
@@ -92,7 +94,7 @@ impl ScanLambdaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LamScan_{}_N{}r{}t{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}{}.{}",
+            "ver{}LamScan_{}_N{}r{}t{}-{}_{}InInf{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}{}.{}",
             crate::VERSION,
             self.measure.name(),
             self.system_size,
@@ -100,6 +102,7 @@ impl ScanLambdaParams{
             self.lambda_range.start,
             self.lambda_range.end,
             self.lambda_range.steps,
+            self.initial_infected,
             self.samples_per_step,
             self.graph_type.name(),
             self.graph_seed,

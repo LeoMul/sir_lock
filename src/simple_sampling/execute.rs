@@ -27,7 +27,7 @@ pub fn execute_sir(
 pub fn execute_ba(param: SimpleSampleParam,json: Value,num_threads: Option<NonZeroUsize>){
     let opt = BarabasiOptions::from_simple_sample(&param);
     let ba = opt.into();
-    let model = SimpleSampleBarabasi::from_base(ba,param.sir_seed);
+    let model = SimpleSampleBarabasi::from_base(ba,param.sir_seed,param.initial_infected);
 
     let j = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     // limit number of threads to j
@@ -109,7 +109,7 @@ pub fn execute_ba(param: SimpleSampleParam,json: Value,num_threads: Option<NonZe
 pub fn execute_sw(param: SimpleSampleParam,json: Value,num_threads: Option<NonZeroUsize>){
     let opt = SWOptions::from_simple_sample(&param);
     let ba = opt.into();
-    let model = SimpleSampleSW::from_base(ba,param.sir_seed);
+    let model = SimpleSampleSW::from_base(ba,param.sir_seed,param.initial_infected);
 
     let j = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     // limit number of threads to j

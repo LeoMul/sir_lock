@@ -29,6 +29,7 @@ pub struct LDContinueCmdOpts
     pub no_save: bool,
 }
 
+
 impl LDContinueCmdOpts
 {
 
@@ -58,35 +59,28 @@ impl LDContinueCmdOpts
                 serde_json::from_reader(reader).expect("Parsing error for json")
             }
         };
-
+        
         
         crate::large_deviations::load_high_degree_rewl(
             opts, 
             instant, 
-            self.no_save
+            self.no_save, 
         )
 
     }
 
 }
-pub struct LDLdOpts
-{
-    pub energy: MeasureType,
-    pub allowed_seconds: u64,
-    pub quick_name:  Box<dyn Fn (Option<usize>, &str, LargeDeviationMode) -> String>,
-    pub value: Vec<serde_json::Value>,
-    pub no_save: bool
-}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LDContinueOpts
 {
-
     pub file_name: String,
     pub seconds: Option<NonZeroU64>,
     pub minutes: Option<NonZeroU64>,
     pub days: Option<NonZeroU64>,
     pub hours: Option<NonZeroU64>,
-    pub change_step_size: Option<NonZeroUsize>
+    pub change_step_size: Option<NonZeroUsize>,
+    pub rewltype: RewlType
 }
 impl Default for LDContinueOpts
 {
@@ -98,18 +92,14 @@ impl Default for LDContinueOpts
             minutes: None,
             hours: None,
             days: None,
-            change_step_size: None
+            change_step_size: None,
+            rewltype: RewlType::None
         }
     }
 }
-#[inline]
-fn get_or_0(val: Option<NonZeroU64>) -> u64
-{
-    match val {
-        None => 0,
-        Some(v) => v.get()
-    }
-}
+
+
+
 
 impl LDContinueOpts
 {
@@ -127,7 +117,23 @@ impl LDContinueOpts
         seconds
     }
 }
+#[inline]
+fn get_or_0(val: Option<NonZeroU64>) -> u64
+{
+    match val {
+        None => 0,
+        Some(v) => v.get()
+    }
+}
 
+pub struct LDLdOpts
+{
+    pub energy: MeasureType,
+    pub allowed_seconds: u64,
+    pub quick_name:  Box<dyn Fn (Option<usize>, &str, LargeDeviationMode) -> String>,
+    pub value: Vec<serde_json::Value>,
+    pub no_save: bool
+}
 #[derive(StructOpt, Debug, Clone)]
 /// Large deviation REWL using lockdowns!
 pub struct LDOptsLD
@@ -448,7 +454,7 @@ impl HistogramCreator
     }
 }
 
-pub fn calc_m(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+pub fn calc_m_ba(model: &mut BALargeDeviationWithLocks) -> Option<u32>
 {
     Some(
         if !model.ld_model.markov_changed{
@@ -460,7 +466,31 @@ pub fn calc_m(model: &mut BALargeDeviationWithLocks) -> Option<u32>
         })
 }
 
-pub fn calc_c(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+pub fn calc_c_ba(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            model.ld_energy_m();
+            model.ld_model.energy = model.calculate_ever_infected() as u32;
+            model.ld_model.energy 
+        })
+}
+pub fn calc_m_sw(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            model.ld_model.energy = model.ld_energy_m();
+            model.ld_model.energy 
+        })
+}
+
+pub fn calc_c_sw(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
 {
     Some(
         if !model.ld_model.markov_changed{
@@ -473,14 +503,28 @@ pub fn calc_c(model: &mut BALargeDeviationWithLocks) -> Option<u32>
         })
 }
 
-pub fn energy_function_returner(measure_type:MeasureType) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
+pub fn energy_function_returner_ba(measure_type:MeasureType) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
 
 
 
     match measure_type{
-        MeasureType::C => calc_c,
+        MeasureType::C => calc_c_ba,
         MeasureType::M => {
-            calc_m
+            calc_m_ba
+        }
+    }
+    
+
+}
+
+pub fn energy_function_returner_sw(measure_type:MeasureType) -> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
+
+
+
+    match measure_type{
+        MeasureType::C => calc_c_sw,
+        MeasureType::M => {
+            calc_m_sw
         }
     }
     

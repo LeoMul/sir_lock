@@ -11,10 +11,13 @@ use{
     crate::stats_methods::*,
     crate::grid::*,
 };
+
+
 pub const DEFAULT_SYSTEM_SIZE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(200)};
 pub const DEFAULT_RECOVERY_PROB: f64 = 0.14;
 pub const DEFAULT_GRAPH_SEED: u64 = 875629289;
 pub const DEFAULT_SIR_SEED: u64 = 1489264107025;
+pub const DEFAULT_INITIAL_INFECTED:usize = 1;
 //pub const DEFAULT_VACCINE_SEED: u64 = 4896709264107025;
 pub const DEFAULT_SAMPLES_PER_STEP: u64 = 5000;
 pub const ONE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(1)};
@@ -49,10 +52,50 @@ impl GraphType{
     {
         match self
         {
-            Self::SmallWorld(p) => format!("sw{}", p),
-            Self::Barabasi(q,r) => format!("ba{}{}",q,r),
+            Self::SmallWorld(p) => format!("SmallWorld{}", p),
+            Self::Barabasi(q,r) => format!("Barabasi{}{}",q,r),
             Self::Invalid => unimplemented!()
         }
+    }
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum RewlType{
+    SmallWorld,
+    Barabasi,
+    None
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct ExchangeInfo
+{
+    pub index: usize,
+    pub old_val: f64
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub enum MarkovStep
+{
+    RotateLeft,
+    RotateRight,
+    Transmission(ExchangeInfo),
+    Recovery(ExchangeInfo),
+    SwapTrans((usize, usize)),
+    SwapRec((usize, usize)),
+    MovePatientZero(usize)
+}
+#[derive(Serialize, Deserialize)]
+pub struct LockdownMarkovMove{
+    pub lockdown_index: usize,
+    pub not_lockdown_index: usize
+}
+#[derive(Serialize, Deserialize)]
+pub enum MarkovStepWithLocks{
+    BaseMarkovStep(MarkovStep),
+    LockdownStep(LockdownMarkovMove) 
+}
+impl From<MarkovStep> for MarkovStepWithLocks{
+    fn from(other:MarkovStep) -> Self{
+        Self::BaseMarkovStep(other)
     }
 }
 

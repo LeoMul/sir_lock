@@ -21,11 +21,7 @@ const PATIENT_MOVE: f64 = 0.05;
 const LOCKDOWN_CHANGE: f64 = 0.01;
 
 
-#[derive(Serialize, Deserialize)]
-pub struct LockdownMarkovMove{
-    lockdown_index: usize,
-    not_lockdown_index: usize
-}
+
 
 
 
@@ -514,24 +510,9 @@ impl BALargeDeviation
         self.last_extinction_index
     }
 }
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub struct ExchangeInfo
-{
-    pub index: usize,
-    pub old_val: f64
-}
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
-pub enum MarkovStep
-{
-    RotateLeft,
-    RotateRight,
-    Transmission(ExchangeInfo),
-    Recovery(ExchangeInfo),
-    SwapTrans((usize, usize)),
-    SwapRec((usize, usize)),
-    MovePatientZero(usize)
-}
+
+
 impl MarkovChain<MarkovStep, ()> for BALargeDeviation
 {
     fn m_step(&mut self) -> MarkovStep
@@ -670,16 +651,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
 
 
 
-#[derive(Serialize, Deserialize)]
-pub enum MarkovStepWithLocks{
-    BaseMarkovStep(MarkovStep),
-    LockdownStep(LockdownMarkovMove) 
-}
-impl From<MarkovStep> for MarkovStepWithLocks{
-    fn from(other:MarkovStep) -> Self{
-        Self::BaseMarkovStep(other)
-    }
-}
+
 
 
 #[derive(Clone, Serialize, Deserialize)]

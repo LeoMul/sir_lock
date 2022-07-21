@@ -48,6 +48,7 @@ pub struct ScanLambdaGammaParams{
     pub lock_thresh: f64,
     pub rel_thresh: f64,
     pub compare_nolock: bool,
+    pub initial_infected: usize
 }
 
 impl Default for ScanLambdaGammaParams{
@@ -76,7 +77,8 @@ impl Default for ScanLambdaGammaParams{
             lockdown:LockdownType::Random(123131315,0.6),
             lock_thresh:0.1,
             rel_thresh:0.05,
-            compare_nolock: false
+            compare_nolock: false,
+            initial_infected: DEFAULT_INITIAL_INFECTED
 
         }
     }
@@ -89,7 +91,7 @@ impl ScanLambdaGammaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LamGamScan_{}_N{}t{}-{}_{}r{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}.{}",
+            "ver{}LamGamScan_{}_N{}t{}-{}_{}r{}-{}_{}InInf{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}_LT{}_RT{}_COMP{}.{}",
             crate::VERSION,
             measure.name(),
             self.system_size,
@@ -100,6 +102,7 @@ impl ScanLambdaGammaParams{
             self.gamma_range.start,
             self.gamma_range.end,
             self.gamma_range.steps,
+            self.initial_infected,
             self.samples_per_step,
             self.graph_type.name(),
             self.graph_seed,

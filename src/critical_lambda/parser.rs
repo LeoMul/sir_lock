@@ -44,6 +44,7 @@ pub struct CriticalLambdaParams{
     pub graph_seed: u64,
     pub sir_seed: u64,
     pub lockdown: LockdownParameters,
+    pub initial_infected: usize
 }
 impl Default for CriticalLambdaParams{
     fn default() -> Self{
@@ -66,7 +67,8 @@ impl Default for CriticalLambdaParams{
                 lock_style: LockdownType::Random(151515151656,0.6),
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
-            }
+            },
+            initial_infected: DEFAULT_INITIAL_INFECTED
             
         }
     }
@@ -78,16 +80,17 @@ impl CriticalLambdaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}CriticalLam_ThisFileN{}Size{}to{}Lam{}to{}_{}_NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
+            "ver{}CriticalLam_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
             crate::VERSION,
             particular_n,
             self.system_size_range[0],
             self.system_size_range[self.system_size_range.len()-1],
-            //self.recovery_prob,
+            //
             self.lambda_range.start,
             self.lambda_range.end,
             self.lambda_range.steps,
-            
+            self.recovery_prob,
+            self.initial_infected,
             self.num_networks,
             
             self.graph_type.name(),

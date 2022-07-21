@@ -44,7 +44,8 @@ pub struct LifespanSizeFittingParams{
     pub graph_seed: u64,
     pub sir_seed: u64,
     pub lockdown: LockdownParameters,
-    pub lifespanpercent: f64
+    pub lifespanpercent: f64,
+    pub initial_infected: usize
 }
 
 impl Default for LifespanSizeFittingParams{
@@ -75,6 +76,7 @@ impl Default for LifespanSizeFittingParams{
                 release_threshold: 0.05,
             },
             lifespanpercent: 0.98,
+            initial_infected: DEFAULT_INITIAL_INFECTED
         }
     }
 }
@@ -86,13 +88,14 @@ impl LifespanSizeFittingParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LifeSpanFitting_Size{}_r{}_t{}{}-{}_NumNet{}_gr{}_gs{}_sir{}_thr{}_LSPER{}_LOCK{}.{}",
+            "ver{}LifeSpanFitting_Size{}_r{}_t{}{}-{}_InInf{}_NumNet{}_gr{}_gs{}_sir{}_thr{}_LSPER{}_LOCK{}.{}",
             crate::VERSION,
             system_size,
             self.recovery_prob,
             self.trans_prob_range.start,
             self.trans_prob_range.end,
             self.trans_prob_range.steps,
+            self.initial_infected,
             self.num_networks,
             self.graph_type.name(),
             self.graph_seed,

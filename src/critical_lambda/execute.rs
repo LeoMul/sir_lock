@@ -94,7 +94,7 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
                 let new_graph_seed = graph_rng.gen::<u64>();
                 let opt = BarabasiOptions::from_critical_lambda_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed);
+                let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed,param.initial_infected);
                 let lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{
@@ -209,7 +209,7 @@ fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZ
                 let new_graph_seed = graph_rng.gen::<u64>();
                 let opt = SWOptions::from_critical_lambda_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed);
+                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
                 let lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{

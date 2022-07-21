@@ -83,7 +83,7 @@ fn sim_barabasi(param: LifespanSizeFittingParams, json: Value, num_threads:Optio
                 let new_graph_seed = graph_rng.gen::<u64>();
                 let opt = BarabasiOptions::from_life_span_fiting_params(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed);
+                let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed,param.initial_infected);
                 let lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{
@@ -156,7 +156,7 @@ fn sim_small_world(param: LifespanSizeFittingParams, json: Value, num_threads:Op
                 let new_graph_seed = graph_rng.gen::<u64>();
                 let opt = SWOptions::from_lifespan_size_fitting_param(&param,NonZeroUsize::new(*n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed);
+                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
                 let lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{

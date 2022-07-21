@@ -22,7 +22,7 @@ pub fn run_simulation(param:LifeSpanParams, json: Value, num_threads: Option<Non
 fn sim_small_world(param: LifeSpanParams, json: Value, num_threads:Option<NonZeroUsize>){
     let opt = SWOptions::from_lifespan_param(&param);
     let small_world = opt.into();
-    let model = SimpleSampleSW::from_base(small_world, param.sir_seed);
+    let model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
 
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();

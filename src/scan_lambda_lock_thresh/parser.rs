@@ -44,6 +44,7 @@ pub struct ScanLambdaThreshParams{
     pub graph_seed: u64,
     pub sir_seed: u64,
     pub lockdown: LockdownParameters,
+    pub initial_infected: usize
 }
 
 impl Default for ScanLambdaThreshParams{
@@ -73,6 +74,7 @@ impl Default for ScanLambdaThreshParams{
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },
+            initial_infected: DEFAULT_INITIAL_INFECTED
         }
     }
 }
@@ -84,7 +86,7 @@ impl ScanLambdaThreshParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}.{}",
+            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}.{}",
             crate::VERSION,
             measure.name(),
             self.system_size,
@@ -93,6 +95,7 @@ impl ScanLambdaThreshParams{
             self.lambda_range.end,
             self.lambda_range.steps,
             self.recovery_prob,
+            self.initial_infected,
             self.lockt_range.start,
             self.lockt_range.end,
             self.lockt_range.steps,

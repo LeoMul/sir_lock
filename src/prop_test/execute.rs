@@ -24,7 +24,7 @@ fn sim_barabasi(_param:PropTestParams, _json: Value, _num_threads: Option<NonZer
 fn sim_small_world(param:PropTestParams, _json: Value, _num_threads: Option<NonZeroUsize>){
     let opt = SWOptions::from_prop_test_param(&param);
     let barabasi_world = opt.into();
-    let mut model = SimpleSampleSW::from_base(barabasi_world, param.sir_seed);
+    let mut model = SimpleSampleSW::from_base(barabasi_world, param.sir_seed,param.initial_infected);
 
     let lock = LockdownParameters{
         lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_SEED,DEFAULT_RANDOM_LOCKDOWN_FRAC),

@@ -33,7 +33,7 @@ pub fn run_simulation(param:ScanLambdaGammaParams, json: Value, num_threads: Opt
 fn sim_small_world(param: ScanLambdaGammaParams, json: Value, num_threads:Option<NonZeroUsize>){
     let opt = SWOptions::from_lambda_gamma_scan_param(&param);
     let small_world = opt.into();
-    let model = SimpleSampleSW::from_base(small_world, param.sir_seed);
+    let model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
 
     //let range_lam = param.lambda_range.get_range();
     //let range_gam = param.gamma_range.get_range();
@@ -238,7 +238,7 @@ fn sim_small_world(param: ScanLambdaGammaParams, json: Value, num_threads:Option
 fn sim_barabasi(param: ScanLambdaGammaParams, json: Value, num_threads:Option<NonZeroUsize>){
     let opt = BarabasiOptions::from_lambda_gamma_scan_param(&param);
     let barabasi_world = opt.into();
-    let model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed);
+    let model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed,param.initial_infected);
 
     //let range_lam = param.lambda_range.get_range();
     //let range_gam = param.gamma_range.get_range();
