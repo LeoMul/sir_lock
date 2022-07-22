@@ -17,7 +17,7 @@ pub const DEFAULT_SYSTEM_SIZE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked
 pub const DEFAULT_RECOVERY_PROB: f64 = 0.14;
 pub const DEFAULT_GRAPH_SEED: u64 = 875629289;
 pub const DEFAULT_SIR_SEED: u64 = 1489264107025;
-pub const DEFAULT_INITIAL_INFECTED:usize = 1;
+pub const DEFAULT_INITIAL_INFECTED:usize = 5;
 //pub const DEFAULT_VACCINE_SEED: u64 = 4896709264107025;
 pub const DEFAULT_SAMPLES_PER_STEP: u64 = 5000;
 pub const ONE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(1)};
@@ -36,7 +36,8 @@ pub const DEFAULT_RANDOM_LOCKDOWN_FRAC: f64 = 0.6;
 pub struct LargeDeviationParam
 {
     pub time_steps: NonZeroUsize,
-    pub markov_seed: u64
+    pub markov_seed: u64,
+    pub initial_infected: usize
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum GraphType{
@@ -81,7 +82,7 @@ pub enum MarkovStep
     Recovery(ExchangeInfo),
     SwapTrans((usize, usize)),
     SwapRec((usize, usize)),
-    MovePatientZero(usize)
+    MovePatientZero(usize,usize)
 }
 #[derive(Serialize, Deserialize)]
 pub struct LockdownMarkovMove{

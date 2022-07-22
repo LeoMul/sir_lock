@@ -121,8 +121,10 @@ pub fn sim_barabasi(m:usize,n:usize,param:SimpleSampleldParam,value:Value){
         match param.randomize{
             Randomize::Random => ld_model.randomise_monte_carlo(&mut rng),
             Randomize::Markov(markov) => {
+                //println!("yes");
                 for _ in 0..markov.every.get()
-                {
+                {   
+                    //println!("l");
                     ld_model.m_steps(markov.step_size.get(), &mut markov_vec);
                 }
             }

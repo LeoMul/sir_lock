@@ -56,7 +56,8 @@ pub struct SWLargeDeviation
     /// counting how many nodes are currently infected
     currently_infected_count: u32,
     last_extinction_index: usize,
-    patient_zero: usize,
+    patient_zero_vec: Vec<usize>,
+    initial_infected: usize,
     max_degree: usize,
     hist_patient_zero: HistUsizeFast
 }
@@ -115,9 +116,25 @@ impl SWLargeDeviation
         let offset = Offset::new(param.time_steps.get(), system_size.get());
         let dangerous_neighbor_count = vec![0; system_size.get()];
         //let dangerous_neighbor_count_lock = vec![0; system_size.get()];
-        let patient_zero = Uniform::new(0, base_model.ensemble.vertex_count()).sample(&mut markov_rng);
+        //let patient_zero = Uniform::new(0, base_model.ensemble.vertex_count()).sample(&mut markov_rng);
+        let mut patient_zero_vec = Vec::new();
+        let un = Uniform::new(0,base_model.ensemble.graph().vertex_count());
         let mut hist = HistUsizeFast::new(0, base_model.ensemble.vertex_count()).unwrap();
-        hist.increment_quiet(patient_zero);
+
+        while patient_zero_vec.len() < param.initial_infected{
+            let index = un.sample(&mut markov_rng);
+            if patient_zero_vec.iter().find(|i| **i == index).is_none(){
+                //patient_zero_vec.infect_patient(index);
+                patient_zero_vec.push(index);
+                hist.increment_quiet(index);
+
+            }
+            
+
+        }
+
+
+        
 
         let max_degree = base_model.ensemble.graph().degree_iter().max().unwrap();
 
@@ -142,7 +159,8 @@ impl SWLargeDeviation
             system_size,
             currently_infected_count: 0,
             last_extinction_index: usize::MAX,
-            patient_zero,
+            patient_zero_vec,
+            initial_infected: param.initial_infected,
             max_degree,
             hist_patient_zero: hist
         }
@@ -474,25 +492,29 @@ impl SWLargeDeviation
         writer.write_line().unwrap();
     }
     pub fn reset_ld_sir_simulation(&mut self){
-        let p0 = self.patient_zero;
-        self.infect_patient(p0);
 
         self.dangerous_neighbor_count
             .iter_mut()
             .for_each(|v| *v = 0);
-        
-        
-        let neighbor_iter = self
+
+        let pzerovec = self.patient_zero_vec.clone();
+
+        self.infect_many_patients(&pzerovec);
+        //Need all infected to be complete so we can calc dangerous neighbour list correctly.
+        for j in &mut self.patient_zero_vec{
+            let neighbor_iter = self
             .base_model
             .ensemble
-            .contained_iter_neighbors_with_index(self.patient_zero)
+            .contained_iter_neighbors_with_index(*j)
             .filter(|(_, state)| state.sus_check());
         
-        for (i, _) in neighbor_iter
-        {
-            self.dangerous_neighbor_count[i] += 1;
+            for (i, _) in neighbor_iter
+            {
+                self.dangerous_neighbor_count[i] += 1;
+            }
+
         }
-        self.currently_infected_count = 1;
+        self.currently_infected_count = self.initial_infected as u32;
     }
     pub fn unfinished_counter(&self) -> u64 
     {
@@ -548,8 +570,8 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
                 // rotate left
                 self.offset.plus_1();
             },
-            MarkovStep::MovePatientZero(old_patient) => {
-                self.patient_zero = *old_patient;
+            MarkovStep::MovePatientZero(old_patient,index) => {
+                self.patient_zero_vec[*index] = *old_patient;
             }
         }
     }
@@ -561,7 +583,7 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
 
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
         let which = uniform.sample(&mut self.markov_rng);
-
+        let uniform_usize = Uniform::new(0,self.initial_infected);
         if which <= ROTATE_LEFT {
             //println!("rotating left");
             self.offset.plus_1();
@@ -577,29 +599,39 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
             let mut old = 0.0;
             let p = uniform.sample(&mut self.markov_rng);
             //Choose the patient zero in question at random from the array
+            let index_of_patient_to_be_changed = uniform_usize.sample(&mut self.markov_rng);
+            //let patient_in_question = 
+
             let neighbours_of_patient_zero:Vec<usize> = self.base_model.ensemble
-            .contained_iter_neighbors_with_index(self.patient_zero).map(|(index,_)| index).collect();
+            .contained_iter_neighbors_with_index(self.patient_zero_vec[index_of_patient_to_be_changed]).map(|(index,_)| index).collect();
 
             //let neighbours_of_patient_zero_2 = self.base_model.ensemble.graph().container(self.patient_zero).neighbors();
             for n in neighbours_of_patient_zero
             {
                 let new_prob = f  + old;// <- less efficient
                 if (old..new_prob).contains(&p)
-                {
-                    //check if new index is already a p0
-                    //yes: break
-                    //no: below
-                    let old_patient = self.patient_zero;
-                    self.patient_zero  = n;
-                    self.hist_patient_zero.increment_quiet(self.patient_zero);
-                    steps.push(MarkovStep::MovePatientZero(old_patient));
-                    return;
+                {   
+                    if self.patient_zero_vec.contains(&n){
+                        break
+                    }
+                    else{
+                        //check if new index is already a p0
+                        //yes: break
+                        //no: below
+                        let old_patient = self.patient_zero_vec[index_of_patient_to_be_changed];
+                        self.patient_zero_vec[index_of_patient_to_be_changed]  = n;
+                        self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+                        steps.push(MarkovStep::MovePatientZero(old_patient,index_of_patient_to_be_changed));
+                        return;
+
+                    }
+                    
                 }
                 old = new_prob;
             }
             self.markov_changed = false;
-            self.hist_patient_zero.increment_quiet(self.patient_zero);
-            steps.push(MarkovStep::MovePatientZero(self.patient_zero));
+            self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+            steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed));
         }
         else {
             let amount = Binomial::new(count as u64, 0.5).unwrap().sample(&mut self.markov_rng);
@@ -687,10 +719,12 @@ impl SWLargeDeviationWithLocks
             
             }
         }
-    pub fn infect_patient(&mut self)
+        pub fn infect_initial_patients(&mut self)
         {
-            let p0 = self.patient_zero;
-            self.ld_model.infect_patient(p0);
+            //let p0 = self.patient_zero;
+            let p  = (self.patient_zero_vec).clone();
+            self.ld_model.infect_many_patients(&p)
+            
         }
 
 
@@ -729,10 +763,18 @@ impl SWLargeDeviationWithLocks
         //randomising order of transmission vector.
         self.transmission_rand_vec.iter_mut().for_each(|elem| *elem = iter.next().unwrap());
 
-        let uniform = Uniform::new(0_usize, self.base_model.ensemble.vertex_count());
 
-        let patient_zero = uniform.sample(&mut self.markov_rng);
-        self.patient_zero = patient_zero;
+        let mut patient_zero_vec = Vec::new();
+        
+        let uniform = Uniform::new(0_usize, self.base_model.ensemble.vertex_count());
+        while patient_zero_vec.len() < self.ld_model.initial_infected{
+            let index = uniform.sample(&mut self.markov_rng);
+            if patient_zero_vec.iter().find(|i| **i == index).is_none(){
+                //patient_zero_vec.infect_patient(index);
+                patient_zero_vec.push(index);
+            }
+        }
+        self.patient_zero_vec = patient_zero_vec;
         self.recovery_rand_vec
             .iter_mut()
             .zip(iter)
@@ -741,11 +783,7 @@ impl SWLargeDeviationWithLocks
                 *elem = random
             );
     }
-    #[inline]
-    pub fn patient_zero(&self) -> usize
-    {
-        self.ld_model.patient_zero
-    }
+    
 
     pub fn find_lockdown_markovmove(&mut self) -> LockdownMarkovMove{
         match self.lockdownparams.lock_style{
@@ -902,6 +940,7 @@ mod tests {
         let param = LargeDeviationParam {
             time_steps: ONE,
             markov_seed: DEFAULT_MARKOV_SEED,
+            initial_infected:DEFAULT_INITIAL_INFECTED
         };
 
         let lockparams = LockdownParameters{

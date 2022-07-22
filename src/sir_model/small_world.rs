@@ -48,16 +48,33 @@ impl SWModel{
     {
         self.gamma = gamma;
     }
-    pub fn infect_patient(&mut self,patient:usize){
-        
+    pub fn set_all_to_sus(&mut self){
+        //resets all states to S
         self.ensemble
             .contained_iter_mut()
             .for_each(|s| *s = InfectionState::Suspectible);
-            //resets all states to S
+
+        
+        debug_assert_eq!(self.n,self.sus_count())
+    
+    }
+    pub fn sus_count(&self) -> usize{
+        self.ensemble.contained_iter().filter(|s| s.sus_check()).count()
+    }
+    pub fn infect_patient(&mut self,patient:usize){
+        
         //println!("infecting");
         *self.ensemble_mut().at_mut(patient) = InfectionState::Infected
         //infects patient 0
+    }
+    pub fn infect_many_patients(&mut self, vec:&Vec<usize>){
+        self.ensemble
+            .contained_iter_mut()
+            .for_each(|s| *s = InfectionState::Suspectible);
+        for patient in vec{
+            *self.ensemble_mut().at_mut(*patient) = InfectionState::Infected
         }
+    }
     /// Called C in the paper
     pub fn calculate_ever_infected(&self) -> usize
     {

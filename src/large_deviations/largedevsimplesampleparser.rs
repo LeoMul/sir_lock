@@ -111,7 +111,8 @@ impl Default for SimpleSampleldParam
             large_deviation_param: LargeDeviationParam
             {
                 time_steps: ONE,
-                markov_seed: DEFAULT_MARKOV_SEED
+                markov_seed: DEFAULT_MARKOV_SEED,
+                initial_infected:DEFAULT_INITIAL_INFECTED
             },
             lockdown: LockdownParameters{
                 lock_style: LockdownType::Random(12151515,0.6),
@@ -120,7 +121,7 @@ impl Default for SimpleSampleldParam
             },
             energy: MeasureType::C,
             samples: DEFAULT_SAMPLES_SIMPLE_SAMPLE,
-            randomize: Randomize::default()
+            randomize: Randomize::Random
         }
     }
 }

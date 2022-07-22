@@ -50,7 +50,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
     let ba:BarabasiModel = base_options.into();
     let model = BALargeDeviation::new(ba.clone(),param.large_deviation_param,param.lockdownparams);
     let mut ld_model = BALargeDeviationWithLocks::new(model);
-    ld_model.infect_patient();
+    ld_model.infect_initial_patients();
     
 
     let histograms = param.histograms.create(
@@ -133,7 +133,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
     let sw:SWModel = base_options.into();
     let model = SWLargeDeviation::new(sw.clone(),param.large_deviation_param,param.lockdownparams);
     let mut ld_model = SWLargeDeviationWithLocks::new(model);
-    ld_model.infect_patient();
+    ld_model.infect_initial_patients();
     
 
     let histograms = param.histograms.create(

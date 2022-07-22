@@ -292,7 +292,8 @@ impl Default for LDLDparam
             large_deviation_param: LargeDeviationParam
             {
                 time_steps: ONE,
-                markov_seed: DEFAULT_MARKOV_SEED
+                markov_seed: DEFAULT_MARKOV_SEED,
+                initial_infected: DEFAULT_INITIAL_INFECTED
             },
             lockdownparams: LockdownParameters{
                 lock_style: LockdownType::Random(191905810985091580,0.6),

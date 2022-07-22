@@ -64,16 +64,14 @@ impl SimpleSampleSW{
     pub fn reset_simple_sample_sir_simulation(&mut self)
     {  
         self.infected_list.clear();
+        self.set_all_to_sus();
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());
 
         while self.infected_list.len() < self.initial_infected{
             let index = un.sample(&mut self.rng_type);
             if self.infected_list.iter().find(|i| **i == index).is_none(){
                 self.infect_patient(index);
-        
-            // now only node 0 is infected!
-            
-            self.infected_list.push(index);
+                self.infected_list.push(index);
 
             }
             
@@ -85,6 +83,7 @@ impl SimpleSampleSW{
     pub fn reset_simple_sample_sir_simulation_legacy(&mut self){  
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());  
         let index = un.sample(&mut self.rng_type);
+        self.set_all_to_sus();
         self.infect_patient(index);
         
         // now only node 0 is infected!
@@ -272,17 +271,19 @@ impl SimpleSampleSW{
         let release_threshold = lockparams.release_threshold;
 
         let mut max_infected = self.infected_list.len();
-        debug_assert_eq!(max_infected,1);
+        debug_assert_eq!(max_infected,self.initial_infected);
         let mut lockdown_indicator = false;
         loop{
             //debug_assert_eq!(max_infected,post_locked_down_graph.contained_iter().filter(|&state| *state == InfectionState::Infected).count());
-
+            //let sus = self.sus_count();
+            //let infected_integer = self.infected_list.len();
+            //println!("sus {sus} inf {infected_integer}");
 
 
             //let prob_dist = Uniform::new_inclusive(0.0,1.0);
             //let lambda = self.lambda; 
             let inf = self.infected_list.len() as f64/self.n as f64;
-            println!("{}",inf);
+            //println!("{}",inf);
             //println!("{:?}",self.infected_list);
 
             //transfer SIR information when lockdown comes in/leaves
@@ -433,39 +434,36 @@ impl SimpleSampleBarabasi{
         res
     }
 
-    /// Note: vaccine list should not contain patiend zero or any of 
-    /// its neighbors. This is not checked here.
-    pub fn reset_simple_sample_sir_simulation_legacy(&mut self){  
-        let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());  
-        let index = un.sample(&mut self.rng_type);
-        self.infect_patient(index);
-        
-        // now only node 0 is infected!
-        self.infected_list.clear();
-        self.infected_list.push(index);
-        //self.recovered_list.clear();
-        
-        
-    }
-
+    
     pub fn reset_simple_sample_sir_simulation(&mut self)
     {  
         self.infected_list.clear();
+        self.set_all_to_sus();
         let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());
 
         while self.infected_list.len() < self.initial_infected{
             let index = un.sample(&mut self.rng_type);
             if self.infected_list.iter().find(|i| **i == index).is_none(){
                 self.infect_patient(index);
-        
-            // now only node 0 is infected!
-            
-            self.infected_list.push(index);
+                self.infected_list.push(index);
 
             }
             
 
         } 
+        
+        
+    }
+    pub fn reset_simple_sample_sir_simulation_legacy(&mut self){  
+        let un = Uniform::new(0,self.base_model.ensemble.graph().vertex_count());  
+        let index = un.sample(&mut self.rng_type);
+        self.set_all_to_sus();
+        self.infect_patient(index);
+        
+        // now only node 0 is infected!
+        self.infected_list.clear();
+        self.infected_list.push(index);
+        //self.recovered_list.clear();
         
         
     }
@@ -655,7 +653,9 @@ impl SimpleSampleBarabasi{
             let inf = self.infected_list.len() as f64/self.n as f64;
             //println!("{}",inf);
             //println!("{:?}",self.infected_list);
-
+            //let sus = self.sus_count();
+            //let infected_integer = self.infected_list.len();
+            //println!("sus {sus} inf {infected_integer}");
             //transfer SIR information when lockdown comes in/leaves
             //let mut new_locked_down_infected:Vec<usize> = Vec::new();
             if inf > lockdown_threshold && !lockdown_indicator{
