@@ -754,7 +754,10 @@ impl SWLargeDeviationWithLocks
 
         match self.lockdown.lock_style{
             LockdownType::Random(_,_) => self.random_lockdown_monte_carlo(),
-            _ => unimplemented!()
+            //other lockdown types, such as neone and circuit breaker, do not need to be randomised.
+            LockdownType::CircuitBreaker => {},
+            LockdownType::None => {},
+            _ => unimplemented!() 
         };
 
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
@@ -895,33 +898,53 @@ impl MarkovChain<MarkovStepWithLocks, ()> for SWLargeDeviationWithLocks
         self.ld_model.markov_changed = true;
 
         steps.clear();
-        let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
 
-        let which = uniform.sample(&mut self.markov_rng);
+        match self.lockdown.lock_style{
+            LockdownType::Random(_,_) => 
+            {
+                let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
+                let which = uniform.sample(&mut self.markov_rng);
 
 
-        if which <= LOCKDOWN_CHANGE
-        {   
-            //println!("lockdown markov move");
-            //let rng  = &mut self.markov_rng;
-            let ld_step = self.find_lockdown_markovmove();
-            self.change_edge(&ld_step);
-            steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
-            
-    
-            
-        } else {
-            //println!("not lockdown markov move");
-            self.ld_model.m_steps(count, &mut self.markov_workaround);
+                if which <= LOCKDOWN_CHANGE
+                {   
+                    //println!("lockdown markov move");
+                    //let rng  = &mut self.markov_rng;
+                    let ld_step = self.find_lockdown_markovmove();
+                    self.change_edge(&ld_step);
+                    steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
 
-            steps.extend(
-                self.markov_workaround
-                    .iter()
-                    .copied()
-                    .map(MarkovStepWithLocks::from)
-            );
-            self.markov_workaround.clear();
+                
+
+                } else {
+                    //println!("not lockdown markov move");
+                    self.ld_model.m_steps(count, &mut self.markov_workaround);
+                
+                    steps.extend(
+                        self.markov_workaround
+                            .iter()
+                            .copied()
+                            .map(MarkovStepWithLocks::from)
+                    );
+                    self.markov_workaround.clear();
+                }
+
+            },
+            _ =>{ //other lockdowns have no markov moves as they are not random. hence we just do the 'else' of the other step.
+                self.ld_model.m_steps(count, &mut self.markov_workaround);
+
+                steps.extend(
+                    self.markov_workaround
+                        .iter()
+                        .copied()
+                        .map(MarkovStepWithLocks::from)
+                );
+                self.markov_workaround.clear();
+
+                }
         }
+
+        
     }
 }
 

@@ -25,7 +25,7 @@ pub mod scan_lambda_lock_thresh;
 pub mod lifespanhist;
 pub mod large_deviations;
 pub mod simple_sampling;
-
+pub mod scan_gamma;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -34,6 +34,7 @@ fn main() {
     let opt = CmdOption::from_args();
     match opt{
         CmdOption::ScanLambda(o) => o.execute(),
+        CmdOption::ScanGamma(o) => o.execute(),
         CmdOption::ScanLambdaGamma(o) => o.execute(), 
         CmdOption::LifeSpanHist(o) => o.execute(),
         CmdOption::LifespanSizeFitting(o) => o.execute(),
@@ -66,6 +67,7 @@ pub fn indication_bar(len: u64) -> ProgressBar
 pub enum CmdOption 
 {
     ScanLambda(scan_lambda::ScanLambda),
+    ScanGamma(scan_gamma::ScanGamma),
     ScanLambdaThresh(scan_lambda_lock_thresh::ScanLambdaThresh),
     ScanLambdaGamma(scan_lambda_gamma::ScanLambdaGamma),
     LifeSpanHist(lifespanhist::LifeSpan),

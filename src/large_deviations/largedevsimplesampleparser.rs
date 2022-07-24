@@ -121,7 +121,7 @@ impl Default for SimpleSampleldParam
             },
             energy: MeasureType::C,
             samples: DEFAULT_SAMPLES_SIMPLE_SAMPLE,
-            randomize: Randomize::Random
+            randomize: Randomize::default()
         }
     }
 }

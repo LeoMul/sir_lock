@@ -1,6 +1,7 @@
 use{
     std::num::*,
     crate::scan_lambda::*,
+    crate::scan_gamma::*,
     crate::GraphType,
     crate::scan_lambda_gamma::*,
     //crate::time_graph::*,
@@ -33,6 +34,20 @@ impl SWOptions{
             system_size: param.system_size,
             lambda: param.lambda_range.start,
             gamma: param.recovery_prob
+        }
+    }
+    pub fn from_gamma_scan_param(param: &ScanGammaParams) -> Self
+    {
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            rewire_prob,
+            graph_seed: param.graph_seed,
+            system_size: param.system_size,
+            lambda: param.transmission_prob,
+            gamma: param.gamma_range.start
         }
     }
     pub fn from_lambda_gamma_scan_param(param: &ScanLambdaGammaParams) -> Self

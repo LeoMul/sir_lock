@@ -43,13 +43,14 @@ impl BarabasiModel{
     pub fn set_lambda(&mut self, lambda: f64)
     {
         self.lambda = lambda;
-    }
+    }   
 
     pub fn set_gamma(&mut self, gamma: f64)
     {
         self.gamma = gamma;
     }
     pub fn infect_many_patients(&mut self, vec:&Vec<usize>){
+        //println!("p0 vec {:?}",vec);
         self.ensemble
             .contained_iter_mut()
             .for_each(|s| *s = InfectionState::Suspectible);
