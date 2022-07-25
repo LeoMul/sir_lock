@@ -60,13 +60,16 @@ impl SimpleSampleldParam
         };
 
         format!(
-            "{}_LargeDevSimSamN{}_{rand}_trans{}_gamma{}_time{}S{}_order_rand_1.dat",
+            "{}_LargeDevSimSamN{}_{rand}_trans{}_gamma{}_time{}S{}Energy{}Lock{}_order_rand_1.dat",
             crate::VERSION,
             self.system_size,
             self.lambda,
             self.recovery_prob,
             self.large_deviation_param.time_steps,
-            self.samples
+            self.samples,
+            self.energy.name(),
+            lockdown_naming_string(self.lockdown.lock_style)
+
         )
     }
 }

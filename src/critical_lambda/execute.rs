@@ -95,9 +95,9 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
 
                     }).collect(); 
                     data_point_for_each_lambda
-                    }).collect()
+                    }).progress_with(bar.clone()).collect()
             }
-        ).progress_with(bar).collect();
+        ).collect();
 
         let mut measure_vec:Vec<Measured> = Vec::with_capacity(lambda_vec.len());
         let num = (per_thread*k.get() as u64) as f64;
@@ -198,9 +198,9 @@ fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZ
 
                     }).collect(); 
                     data_point_for_each_lambda
-                    }).collect()
+                    }).progress_with(bar.clone()).collect()
             }
-        ).progress_with(bar).collect();
+        ).collect();
 
         let mut measure_vec:Vec<Measured> = Vec::with_capacity(lambda_vec.len());
         let num = (per_thread*k.get() as u64) as f64;
