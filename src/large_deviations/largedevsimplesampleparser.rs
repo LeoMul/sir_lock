@@ -115,7 +115,7 @@ impl Default for SimpleSampleldParam
                 initial_infected:DEFAULT_INITIAL_INFECTED
             },
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(12151515,0.6),
+                lock_style: LockdownType::Random(0.6),
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },

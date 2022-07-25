@@ -27,7 +27,7 @@ fn sim_small_world(param:PropTestParams, _json: Value, _num_threads: Option<NonZ
     let mut model = SimpleSampleSW::from_base(barabasi_world, param.sir_seed,param.initial_infected);
 
     let lock = LockdownParameters{
-        lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_SEED,DEFAULT_RANDOM_LOCKDOWN_FRAC),
+        lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
         lock_threshold: 0.1,
         release_threshold: 0.05
     };

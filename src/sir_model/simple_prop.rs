@@ -69,7 +69,7 @@ impl SimpleSampleSW{
 
         while self.infected_list.len() < self.initial_infected{
             let index = un.sample(&mut self.rng_type);
-            if self.infected_list.iter().find(|i| **i == index).is_none(){
+            if !self.infected_list.iter().any(|i| *i == index){
                 self.infect_patient(index);
                 self.infected_list.push(index);
 
@@ -170,7 +170,7 @@ impl SimpleSampleSW{
         //this will only work right now during a simulation, not at the beginning because of the current implementation of reset_simple_sample.
         let graph = self.base_model.ensemble.graph().clone();
         //This transfers the SIR information to the new network also. //doesn't work? need to fix maybe
-        lockdown(lockdownparams,graph)
+        lockdown(lockdownparams,graph,&mut self.rng_type)
         
 
         
@@ -443,7 +443,7 @@ impl SimpleSampleBarabasi{
 
         while self.infected_list.len() < self.initial_infected{
             let index = un.sample(&mut self.rng_type);
-            if self.infected_list.iter().find(|i| **i == index).is_none(){
+            if !self.infected_list.iter().any(|i| *i == index){
                 self.infect_patient(index);
                 self.infected_list.push(index);
 
@@ -539,7 +539,7 @@ impl SimpleSampleBarabasi{
         //this will only work right now during a simulation, not at the beginning because of the current implementation of reset_simple_sample.
         let graph = self.base_model.ensemble.graph().clone();
         //This transfers the SIR information to the new network also. //doesn't work? need to fix maybe
-        lockdown(lockdownparams,graph)
+        lockdown(lockdownparams,graph,&mut self.rng_type)
         
 
         

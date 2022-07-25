@@ -296,7 +296,7 @@ impl Default for LDLDparam
                 initial_infected: DEFAULT_INITIAL_INFECTED
             },
             lockdownparams: LockdownParameters{
-                lock_style: LockdownType::Random(191905810985091580,0.6),
+                lock_style: LockdownType::Random(0.6),
                 lock_threshold: 0.1,
                 release_threshold: 0.05
             },

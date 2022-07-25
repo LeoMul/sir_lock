@@ -9,7 +9,6 @@ use {
     rand_distr::Binomial,
     crate::lockdown_methods::*,
     crate::misc_types::*,
-    rand::seq::SliceRandom,
 };
 
 //might need but leaving it here.
@@ -18,10 +17,8 @@ use {
 
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
-const PATIENT_MOVE: f64 = 0.05;//0.05;
+const PATIENT_MOVE: f64 = 0.05;
 const LOCKDOWN_CHANGE: f64 = 0.01;
-const PATIENT_MOVE_2:f64 =0.;//0.05;//;
-
 
 
 
@@ -88,18 +85,11 @@ impl BALargeDeviation
 
         //do I need the lockdown parameters here also? yes
         //let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph());
-        let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph());
-        
-
-
         let mut markov_rng = Pcg64::seed_from_u64(param.markov_seed);
-
+        let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph(),&mut markov_rng);
         let lock_graph =create_locked_down_network_from_pair_list(&pairs_struct, base_model.ensemble.graph());
-
         let not_lockdown_pairs = pairs_struct.to_be_removed;
         let lockdown_pairs = pairs_struct.to_be_kept;
-
-
         let system_size = NonZeroUsize::new(base_model.ensemble.graph().vertex_count())
             .unwrap();
         let rng_vec_len = system_size.get() * param.time_steps.get();
@@ -123,7 +113,7 @@ impl BALargeDeviation
 
         while patient_zero_vec.len() < param.initial_infected{
             let index = un.sample(&mut markov_rng);
-            if patient_zero_vec.iter().find(|i| **i == index).is_none(){
+            if !patient_zero_vec.iter().any(|i| *i == index){
                 //patient_zero_vec.infect_patient(index);
                 patient_zero_vec.push(index);
                 hist.increment_quiet(index);
@@ -591,7 +581,8 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
 
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
         let which = uniform.sample(&mut self.markov_rng);
-        let uniform_usize = Uniform::new(0,self.initial_infected);
+        //change to vec.len
+        
 
         if which <= ROTATE_LEFT {
             //println!("rotating left");
@@ -608,13 +599,14 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
             let mut old = 0.0;
             let p = uniform.sample(&mut self.markov_rng);
             //Choose the patient zero in question at random from the array
+            let uniform_usize = Uniform::new(0,self.initial_infected);
             let index_of_patient_to_be_changed = uniform_usize.sample(&mut self.markov_rng);
-
-            let neighbours_of_patient_zero:Vec<usize> = self.base_model.ensemble
-            .contained_iter_neighbors_with_index(self.patient_zero_vec[index_of_patient_to_be_changed]).map(|(index,_)| index).collect();
-
-            //let neighbours_of_patient_zero_2 = self.base_model.ensemble.graph().container(self.patient_zero).neighbors();
-            for n in neighbours_of_patient_zero
+            //let neighbours_of_patient_zero:Vec<usize> = self.base_model.ensemble
+            //.contained_iter_neighbors_with_index(self.patient_zero_vec[index_of_patient_to_be_changed]).map(|(index,_)| index).collect()
+            //let neighbours_of_patient_zero_2 = self.base_model.ensemble.graph().container(self.patient_zero).neighbors()
+            //change this to the iterator.
+            for n in self.base_model.ensemble
+            .contained_iter_neighbors_with_index(self.patient_zero_vec[index_of_patient_to_be_changed]).map(|(index,_)| index)
             {
                 //let mut old = 0.0;
                 let new_prob = f  + old;// <- less efficient
@@ -623,6 +615,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                     if self.patient_zero_vec.contains(&n){
                         //println!("rejecting a patient move");
                         break
+                        //continue
                     }
                     else{
                         //println!("doing a patient move");
@@ -633,7 +626,11 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                         self.patient_zero_vec[index_of_patient_to_be_changed]  = n;
                         //let x = self.patient_zero_vec[index_of_patient_to_be_changed];
                         //println!("old {old_patient}, new {x}");
-                        self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+
+                        //self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+                        for i in self.patient_zero_vec.iter(){
+                            self.hist_patient_zero.increment_quiet(i);
+                        }
                         steps.push(MarkovStep::MovePatientZero(old_patient,index_of_patient_to_be_changed));
                         return;
 
@@ -643,56 +640,15 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                 old = new_prob;
             }   
             self.markov_changed = false;
-            self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
-            steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed));
-        } else if which <= PATIENT_MOVE_2
-        {   
-            
-            //this doesnt work
-            //let new_patient_zero_vec:Vec<usize> = Vec::new();
-            //let iterator = 0..self.initial_infected;
-            let p = uniform.sample(&mut self.markov_rng);
-            let mut vector:Vec<usize> = (0..self.initial_infected).collect();
-            vector.shuffle(&mut self.markov_rng);
-            '_outer: for i in vector{
-                //println!("{i}");
-                let f = 1.0 / self.max_degree as f64;
-                let mut old = 0.0;
-                let mut new_prob = f;
-                let neighbours_of_patient_zero:Vec<usize> = self.base_model.ensemble
-                    .contained_iter_neighbors_with_index(self.patient_zero_vec[i]).map(|(index,_)| index).collect();
-                    'inner: for n in neighbours_of_patient_zero
-                    {
-                        new_prob += old;// <- less efficient
-                        if (old..new_prob).contains(&p)
-                        {   
-                            if self.patient_zero_vec.contains(&n){
-                                //println!("rejecting a patient move");
-                                break 'inner
-                            }
-                            else{
-                                //println!("doing a patient move");
-                                //check if new index is already a p0
-                                //yes: break
-                                //no: below
-                                let old_patient = self.patient_zero_vec[i];
-                                self.patient_zero_vec[i]  = n;
-                                //let x = self.patient_zero_vec[index_of_patient_to_be_changed];
-                                //println!("old {old_patient}, new {x}");
-                                self.hist_patient_zero.increment_quiet(self.patient_zero_vec[i]);
-                                steps.push(MarkovStep::MovePatientZero(old_patient,i));
-                                return;
-        
-                            }
-                            
-                        }
-                        old = new_prob;
-                    }
-                    self.hist_patient_zero.increment_quiet(self.patient_zero_vec[i]);
-                    steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[i],i));
+            //self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+            for i in self.patient_zero_vec.iter(){
+                self.hist_patient_zero.increment_quiet(i);
             }
+            steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed));
             
-        }
+
+
+        } 
         else {
             let amount = Binomial::new(count as u64, 0.5).unwrap().sample(&mut self.markov_rng);
             let index_uniform = Uniform::new(0, self.recovery_rand_vec.len());
@@ -782,10 +738,14 @@ impl BALargeDeviationWithLocks
     pub fn infect_initial_patients(&mut self)
         {
             //let p0 = self.patient_zero;
-            let p  = (self.patient_zero_vec).clone();
+            //let p  = (self.patient_zero_vec).clone();
             //println!("{:?}",p);
             //let k = &mut self.patient_zero_vec;
-            self.ld_model.infect_many_patients(&p)
+            //self.ld_model.infect_many_patients(&p);
+
+            let pzerovec = self.patient_zero_vec.clone();
+
+            self.infect_many_patients(&pzerovec);
             
         }
 
@@ -805,7 +765,7 @@ impl BALargeDeviationWithLocks
     }
     pub fn random_lockdown_monte_carlo(&mut self){
         //I guess to randomie the montecarlo for the random lockdown.. we just have to redraw the edges to be removed?
-        let pairs_struct = create_lock_pairs_lists(self.lockdown, self.ld_model.base_model.ensemble.graph());
+        let pairs_struct = create_lock_pairs_lists(self.lockdown, self.ld_model.base_model.ensemble.graph(),&mut self.ld_model.markov_rng);
         
         self.ld_model.lock_graph = create_locked_down_network_from_pair_list(&pairs_struct, self.ld_model.base_model.ensemble.graph());
         self.ld_model.lockdown_pairs = pairs_struct.to_be_kept;
@@ -815,7 +775,7 @@ impl BALargeDeviationWithLocks
     pub fn randomise_monte_carlo(&mut self,rng: &mut Pcg64){
 
         match self.lockdown.lock_style{
-            LockdownType::Random(_,_) => self.random_lockdown_monte_carlo(),
+            LockdownType::Random(_) => self.random_lockdown_monte_carlo(),
             //other lockdown types, such as neone and circuit breaker, do not need to be randomised.
             LockdownType::CircuitBreaker => {},
             LockdownType::None => {},
@@ -834,7 +794,7 @@ impl BALargeDeviationWithLocks
         let uniform = Uniform::new(0_usize, self.base_model.ensemble.vertex_count());
         while patient_zero_vec.len() < self.ld_model.initial_infected{
             let index = uniform.sample(&mut self.markov_rng);
-            if patient_zero_vec.iter().find(|i| **i == index).is_none(){
+            if !patient_zero_vec.iter().any(|i| *i == index){
                 //patient_zero_vec.infect_patient(index);
                 patient_zero_vec.push(index);
             }
@@ -852,7 +812,7 @@ impl BALargeDeviationWithLocks
 
     pub fn find_lockdown_markovmove(&mut self) -> LockdownMarkovMove{
         match self.ld_model.lockdownparams.lock_style{
-            LockdownType::Random(_,_) => self.find_replace_edge_for_random_lock(),
+            LockdownType::Random(_) => self.find_replace_edge_for_random_lock(),
             _ => unimplemented!()
         }
     }
@@ -962,7 +922,7 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
         steps.clear();
 
         match self.lockdown.lock_style{
-            LockdownType::Random(_,_) => 
+            LockdownType::Random(_) => 
             {
                 let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
                 let which = uniform.sample(&mut self.markov_rng);
@@ -972,10 +932,12 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
                 {   
                     //println!("lockdown markov move");
                     //let rng  = &mut self.markov_rng;
-                    let ld_step = self.find_lockdown_markovmove();
-                    self.change_edge(&ld_step);
-                    steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
-
+                    for _ in 0..5{
+                        let ld_step = self.find_lockdown_markovmove();
+                        self.change_edge(&ld_step);
+                        steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
+                    }
+                    
                 
 
                 } else {
@@ -992,7 +954,8 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
                 }
 
             },
-            _ =>{ //other lockdowns have no markov moves as they are not random. hence we just do the 'else' of the other step.
+            _ =>{ 
+                //other lockdowns have no markov moves as they are not random. hence we just do the 'else' of the other step.
                 self.ld_model.m_steps(count, &mut self.markov_workaround);
 
                 steps.extend(
@@ -1029,7 +992,7 @@ mod tests {
         };
 
         let lockparams = LockdownParameters{
-            lock_style: LockdownType::Random(191905810985091580,0.6),
+            lock_style: LockdownType::Random(0.6),
             lock_threshold: 0.1,
             release_threshold: 0.05
         };

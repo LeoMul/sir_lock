@@ -12,7 +12,7 @@ use net_ensembles::rand::prelude::Distribution;
 pub enum LockdownType{
     CircuitBreaker,
     None,
-    Random(u64,f64),
+    Random(f64),
     Targeted,
     LimitContacts(usize),
     Invalid
@@ -46,18 +46,24 @@ pub struct LockdownPairStorage{
     pub to_be_removed: Vec<[usize;2]>,
     pub to_be_kept: Vec<[usize;2]>
 }
-pub fn lockdown<InfectionState,A>(lockdownparams: LockdownParameters,graph:GenericGraph<InfectionState,A>) 
--> GenericGraph<InfectionState,A> where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone{
-    let pairs_struct = create_lock_pairs_lists(lockdownparams, &graph);
+pub fn lockdown<InfectionState,A,R>(lockdownparams: LockdownParameters,graph:GenericGraph<InfectionState,A>,rng:R) 
+-> GenericGraph<InfectionState,A> 
+    where 
+    A: net_ensembles::AdjContainer<InfectionState>, 
+    InfectionState: net_ensembles::Node, 
+    A: std::clone::Clone, 
+    R:Rng
+{
+    let pairs_struct = create_lock_pairs_lists(lockdownparams, &graph,rng);
     create_locked_down_network_from_pair_list(&pairs_struct, &graph)
 
 }
-pub fn create_lock_pairs_lists<InfectionState,A>(lockdownparams: LockdownParameters,graph:&GenericGraph<InfectionState,A>) 
--> LockdownPairStorage  where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone {
+pub fn create_lock_pairs_lists<InfectionState,A,R>(lockdownparams: LockdownParameters,graph:&GenericGraph<InfectionState,A>,rng:R) 
+-> LockdownPairStorage  where A: net_ensembles::AdjContainer<InfectionState>, InfectionState: net_ensembles::Node, A: std::clone::Clone, R: Rng {
     match lockdownparams.lock_style{
-        LockdownType::Random(seed,prob) => create_pair_lists_for_random(&graph, seed, prob),
+        LockdownType::Random(prob) => create_pair_lists_for_random(graph, prob,rng),
         LockdownType::CircuitBreaker => create_pair_lists_for_circuitbreaker(graph),
-        LockdownType::None => create_pairs_lists_for_nolock(&graph),
+        LockdownType::None => create_pairs_lists_for_nolock(graph),
         _ => unimplemented!()
     }
 }
@@ -92,24 +98,28 @@ where A: net_ensembles::AdjContainer<T>, T: net_ensembles::Node, A: std::clone::
 
 pub fn create_pair_lists_for_circuitbreaker<T,A>(graph:&GenericGraph<T,A>) ->LockdownPairStorage
 where A: net_ensembles::AdjContainer<T>, T: net_ensembles::Node, A: std::clone::Clone {
-    let pairs = pair_finder(&graph);
+    let pairs = pair_finder(graph);
     LockdownPairStorage{
         to_be_removed:pairs,
         to_be_kept: Vec::new()
     }
 }
 
-pub fn create_pair_lists_for_random<T,A>(graph:&GenericGraph<T,A>,seed:u64,prob:f64)-> LockdownPairStorage
-where A: net_ensembles::AdjContainer<T>, T: net_ensembles::Node, A: std::clone::Clone {
+pub fn create_pair_lists_for_random<T,A,R>(graph:&GenericGraph<T,A>,prob:f64,mut rng:R)-> LockdownPairStorage
+where A: net_ensembles::AdjContainer<T>, T: net_ensembles::Node, A: std::clone::Clone, 
+    R: Rng{
+
     let mut pairs = pair_finder(graph);
     let amount = (pairs.len()as f64 *prob).ceil() as usize;
-    let mut rng = Pcg64::seed_from_u64(seed);
-    let (shuffled,not_shuffled) = pairs.partial_shuffle(&mut rng, amount);
-
+    //let mut rng = Pcg64::seed_from_u64(seed);
+    //let (shuffled,not_shuffled) = pairs.partial_shuffle(&mut rng, amount);
+    //unimplemented!();
+    pairs.shuffle(&mut rng);
+    let to_be_kept:Vec<_> = pairs.drain(amount..).collect();
     //This computation only happens once so happy to have it be done this way,
     LockdownPairStorage{
-        to_be_removed: shuffled.to_vec(),
-        to_be_kept: not_shuffled.to_vec()
+        to_be_removed: pairs,
+        to_be_kept
     }
 
 }
@@ -139,7 +149,7 @@ pub fn lockdown_naming_string(lockdowntype:LockdownType) -> String{
     
     match lockdowntype{
         LockdownType::CircuitBreaker => "CircuitBreaker".to_owned(),
-        LockdownType::Random(_,_) => "Random".to_owned(),
+        LockdownType::Random(_) => "Random".to_owned(),
         LockdownType::None => "None".to_owned(),
         LockdownType::Targeted => "Targeted".to_owned(), //retired
         LockdownType::LimitContacts(_) => "LimitContacts".to_owned(), //retired

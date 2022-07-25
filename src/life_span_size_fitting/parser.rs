@@ -71,7 +71,7 @@ impl Default for LifespanSizeFittingParams{
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(2151515153,0.6),
+                lock_style: LockdownType::Random(0.6),
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },

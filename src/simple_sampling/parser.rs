@@ -100,7 +100,7 @@ impl Default for SimpleSampleParam
             system_size: DEFAULT_SYSTEM_SIZE,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(12151515,0.6),
+                lock_style: LockdownType::Random(0.6),
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },

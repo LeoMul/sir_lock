@@ -70,7 +70,7 @@ impl Default for ScanGammaParams{
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown:LockdownParameters{
-                lock_style: LockdownType::Random(123131315,0.6),
+                lock_style: LockdownType::Random(0.6),
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },

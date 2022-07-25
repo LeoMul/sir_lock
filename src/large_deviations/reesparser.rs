@@ -166,17 +166,15 @@ impl Write for LogfilePrinter
 
 //use {serde::{Serialize, Deserialize}};
 
-pub fn deserialize_from_file<'a,T>(filename: &str) -> (Rewl<T,Pcg64,HistogramFast<u32>,u32,MarkovStepWithLocks,()>, Vec<String>)
+type RewlCompact<T> = (Rewl<T,Pcg64,HistogramFast<u32>,u32,MarkovStepWithLocks,()>, Vec<String>);
+
+pub fn deserialize_from_file<T>(filename: &str) -> RewlCompact<T>
 where T: serde::de::DeserializeOwned
 {
     let file = File::open(filename).expect("unable to open save file");
     let reader = BufReader::new(file);
 
-    let res: Result<
-        (
-            Rewl<T,Pcg64,HistogramFast<u32>,u32,MarkovStepWithLocks,()>,
-            Vec<String>
-        ), _> =  bincode::deserialize_from(reader);
+    let res: Result<RewlCompact<T>, _> =  bincode::deserialize_from(reader);
 
         match res
         {

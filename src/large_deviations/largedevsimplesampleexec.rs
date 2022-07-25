@@ -137,7 +137,7 @@ pub fn sim_barabasi(m:usize,n:usize,param:SimpleSampleldParam,value:Value){
         {
             energy = ld_model.calculate_ever_infected() as u32;
         }
-
+        //println!("{energy}");
         hist.increment(energy)
             .unwrap();
 
