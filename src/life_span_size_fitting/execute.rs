@@ -220,9 +220,9 @@ fn alternate_writing(param:&LifespanSizeFittingParams,json:&Value,num_threads: O
         writeln!(buf).unwrap();
         // let data_vec = &data[n];
         writeln!(buf, "#lambda percentlifespan").unwrap();
+        //println!("{}",data_master.len());
         let data = &data_master;
         for k in 0..data.len(){
-            
             writeln!(buf,"{} {}",lambda[k],data[k]).unwrap();
         }
 
