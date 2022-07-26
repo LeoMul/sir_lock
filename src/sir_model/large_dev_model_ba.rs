@@ -568,7 +568,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                 // rotate left
                 self.offset.plus_1();
             },
-            MarkovStep::MovePatientZero(old_patient,index) => {
+            MarkovStep::MovePatientZero(old_patient,index,_checker) => {
                 self.patient_zero_vec[*index] = *old_patient;
             }
         }
@@ -631,7 +631,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                         for i in self.patient_zero_vec.iter(){
                             self.hist_patient_zero.increment_quiet(i);
                         }
-                        steps.push(MarkovStep::MovePatientZero(old_patient,index_of_patient_to_be_changed));
+                        steps.push(MarkovStep::MovePatientZero(old_patient,index_of_patient_to_be_changed,true));
                         return;
 
                     }
@@ -644,7 +644,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
             for i in self.patient_zero_vec.iter(){
                 self.hist_patient_zero.increment_quiet(i);
             }
-            steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed));
+            steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed,false));
             
 
 
@@ -709,6 +709,7 @@ pub struct BALargeDeviationWithLocks
     pub ld_model: BALargeDeviation,
     markov_workaround: Vec<MarkovStep>,
     lockdown: LockdownParameters,
+    pub tracker: AcceptanceTracker
 }
 
 impl HasRng<Pcg64> for BALargeDeviationWithLocks{
@@ -732,6 +733,7 @@ impl BALargeDeviationWithLocks
 
                 ld_model,
                 markov_workaround: Vec::new(),
+                tracker: AcceptanceTracker::new()
             
             }
         }
@@ -913,6 +915,15 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
                 //self.high_degree_helper.swap_order(to_step.0, to_step.1)
             }
         }
+    }
+    fn steps_accepted(&mut self, steps: &[MarkovStepWithLocks])
+    {
+        self.tracker.accept(&steps[0]);
+    }
+
+    fn steps_rejected(&mut self, steps: &[MarkovStepWithLocks])
+    {
+        self.tracker.reject(&steps[0])
     }
 
     fn m_steps(&mut self, count: usize, steps: &mut Vec<MarkovStepWithLocks>)

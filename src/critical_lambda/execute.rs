@@ -146,6 +146,8 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
     //alternate_writing(param, json, num_threads, data_vec,n_size,lambda_vec);
 
 }
+
+
 fn _sim_small_world_in_boots(param: CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>){
     //working but quite slow in the data re-extraction..
     fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(f64,f64)>>) -> (Vec<Vec<u32>>,Vec<Vec<u32>>){
@@ -274,8 +276,6 @@ fn _sim_small_world_in_boots(param: CriticalLambdaParams,json:Value,num_threads:
     }   
 
 }
-
-
 
 fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>){
 

@@ -270,7 +270,15 @@ pub fn execute_high_degree_helper_sw(mut rewl: Rewl<SWLargeDeviationWithLocks, P
                     "# Acceptance_rate_markov: {}",
                     walker.acceptance_rate_markov()
                 ).unwrap();
-
+                rewl.ensemble_iter()
+                    .enumerate()
+                    .for_each(
+                        |(index, ensemble)|
+                        {
+                            let _ = writeln!(buf, "#Ensemble {index}");
+                            ensemble.tracker.write_stats(&mut buf);
+                        }
+                    );
                 write!(buf, "#roundtrips of all walkers:").unwrap();
 
                 for roundtrip in rewl.roundtrip_iter()
@@ -381,6 +389,15 @@ pub fn execute_high_degree_helper_ba(mut rewl: Rewl<BALargeDeviationWithLocks, P
                     "# Acceptance_rate_markov: {}",
                     walker.acceptance_rate_markov()
                 ).unwrap();
+                rewl.ensemble_iter()
+                    .enumerate()
+                    .for_each(
+                        |(index, ensemble)|
+                        {
+                            let _ = writeln!(buf, "#Ensemble {index}");
+                            ensemble.tracker.write_stats(&mut buf);
+                        }
+                    );
 
                 write!(buf, "#roundtrips of all walkers:").unwrap();
 

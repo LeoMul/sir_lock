@@ -10,6 +10,7 @@ use{
     },
     crate::stats_methods::*,
     crate::grid::*,
+    std::io::Write,
 };
 
 
@@ -82,7 +83,7 @@ pub enum MarkovStep
     Recovery(ExchangeInfo),
     SwapTrans((usize, usize)),
     SwapRec((usize, usize)),
-    MovePatientZero(usize,usize)
+    MovePatientZero(usize,usize,bool)
 }
 #[derive(Serialize, Deserialize)]
 pub struct LockdownMarkovMove{
@@ -99,6 +100,206 @@ impl From<MarkovStep> for MarkovStepWithLocks{
         Self::BaseMarkovStep(other)
     }
 }
+#[derive(Clone, Copy, Serialize, Deserialize, Default)]
+pub struct StepTracker
+{
+    accepted: u64,
+    rejected: u64
+}
+
+impl StepTracker
+{
+    pub fn new() -> Self 
+    {
+        Self::default()
+    }
+
+    pub fn accept(&mut self)
+    {
+        self.accepted += 1;
+    }
+
+    pub fn reject(&mut self)
+    {
+        self.rejected += 1;
+        if self.rejected > self.total_steps(){
+            panic!("{} {}", self.accepted, self.rejected);
+        }
+    }
+
+    #[inline]
+    pub fn total_steps(&self) -> u64
+    {
+        self.accepted + self.rejected
+    }
+
+    pub fn rejection_rate(self) -> f64
+    {
+        self.rejected as f64 / (self.total_steps()) as f64
+    }
+
+    pub fn acceptance_rate(self) -> f64
+    {
+        self.accepted as f64 / (self.total_steps()) as f64
+    }
+
+    pub fn write<W: Write>(&self, mut writer: W, name: &str)
+    {
+        let _ = writeln!(
+            writer,
+            "#{name} total_steps {} rejected {} acceptance_rate {}", 
+            self.total_steps(),
+            self.rejected,
+            self.acceptance_rate()
+        );
+    }
+
+    pub fn reset(&mut self)
+    {
+        self.accepted = 0;
+        self.rejected = 0;
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Default)]
+pub struct AcceptanceTracker
+{
+    lockdown: StepTracker,
+    patient_move: StepTracker,
+    //patient_move_random: StepTracker,
+    rotate_left: StepTracker,
+    rotate_right: StepTracker,
+    swap_trans_or_rec: StepTracker,
+    base_move: StepTracker,
+}
+
+impl AcceptanceTracker{
+    pub fn new() -> Self 
+    {
+        Self::default()
+    }
+
+    pub fn reset(&mut self)
+    {
+        self.lockdown.reset();
+        self.patient_move.reset();
+        //self.patient_move_random.reset();
+        self.rotate_left.reset();
+        self.rotate_right.reset();
+        self.swap_trans_or_rec.reset();
+        self.base_move.reset(); 
+    }
+
+    pub fn write_stats<W: Write>(&self, mut writer: W)
+    {
+        self.lockdown.write(&mut writer, "LockdownMove");
+        //self.patient_move_edge.write(&mut writer, "PatientEdgeMove");
+        self.patient_move.write(&mut writer, "PatientMove");
+        self.rotate_left.write(&mut writer, "RotateLeft");
+        self.rotate_right.write(&mut writer, "RotateRight");
+        self.swap_trans_or_rec.write(&mut writer, "SwapTransOrRec");
+        self.base_move.write(writer, "BaseMove");
+    }
+
+    pub fn accept(&mut self, step: &MarkovStepWithLocks)
+    {
+        match step
+        {
+            MarkovStepWithLocks::LockdownStep(_) => {
+                self.lockdown.accept()
+            },
+            MarkovStepWithLocks::BaseMarkovStep(base_step) => 
+            {
+                match base_step
+                {
+                    MarkovStep::RotateLeft => {
+                        self.rotate_left.accept()
+                    },
+                    MarkovStep::RotateRight => {
+                        self.rotate_right.accept()
+                    },
+                    MarkovStep::SwapRec(..) | MarkovStep::SwapTrans(..) => 
+                    {
+                        self.swap_trans_or_rec.accept()
+                    },
+                    MarkovStep::Transmission(..) | MarkovStep::Recovery(..) => {
+                        self.base_move.accept()
+                    },
+                    MarkovStep::MovePatientZero(.., moved) => {
+                        if *moved
+                        {
+                            self.patient_move.accept()
+                        }
+                    },
+                    
+                }
+            }
+        }
+    }
+
+    pub fn reject(&mut self, step: &MarkovStepWithLocks)
+    {
+        match step
+        {
+            MarkovStepWithLocks::LockdownStep(_) => {
+                self.lockdown.reject()
+            },
+            MarkovStepWithLocks::BaseMarkovStep(base_step) => 
+            {
+                match base_step
+                {
+                    MarkovStep::RotateLeft => {
+                        self.rotate_left.reject()
+                    },
+                    MarkovStep::RotateRight => {
+                        self.rotate_right.reject()
+                    },
+                    MarkovStep::SwapRec(..) | MarkovStep::SwapTrans(..) => 
+                    {
+                        self.swap_trans_or_rec.reject()
+                    },
+                    MarkovStep::Transmission(..) | MarkovStep::Recovery(..) => {
+                        self.base_move.reject()
+                    },
+                    MarkovStep::MovePatientZero(.., moved) => {
+                        if *moved{
+                            self.patient_move.reject()
+                        }
+                    },
+                    
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub enum MeasureType {
