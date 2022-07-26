@@ -230,11 +230,12 @@ impl LDLDparam
         };
 
         format!(
-            "v{}_{}_LDHD_N{}r{}t{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}.{end}",
+            "v{}_{}_LDHD_N{}r{}t{}_Energy{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}.{end}",
             crate::VERSION,
             mode.name(),
             self.system_size,
             self.recovery_prob,
+            self.energy.name(),
             self.lambda,
             lockdown_naming_string(self.lockdownparams.lock_style),
             self.lockdownparams.release_threshold,
