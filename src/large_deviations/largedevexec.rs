@@ -54,7 +54,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
     
 
     let histograms = param.histograms.create(
-        1, 
+        ld_model.initial_infected as u32, 
         param.system_size.get() as u32, 
         param.walkers_per_interval
     );
@@ -137,7 +137,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
     
 
     let histograms = param.histograms.create(
-        1, 
+        ld_model.initial_infected as u32, 
         param.system_size.get() as u32, 
         param.walkers_per_interval
     );

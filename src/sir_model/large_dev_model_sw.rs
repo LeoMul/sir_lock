@@ -57,7 +57,7 @@ pub struct SWLargeDeviation
     currently_infected_count: u32,
     last_extinction_index: usize,
     patient_zero_vec: Vec<usize>,
-    initial_infected: usize,
+    pub initial_infected: usize,
     max_degree: usize,
     hist_patient_zero: HistUsizeFast
 }
