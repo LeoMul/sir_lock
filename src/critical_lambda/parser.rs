@@ -46,6 +46,7 @@ pub struct CriticalLambdaParams{
     pub lockdown: LockdownParameters,
     pub initial_infected: usize,
     pub bootbool: bool,
+    pub bootsamples: usize,
     pub energy: MeasureType
 }
 impl Default for CriticalLambdaParams{
@@ -72,6 +73,7 @@ impl Default for CriticalLambdaParams{
             },
             initial_infected: DEFAULT_INITIAL_INFECTED,
             bootbool: true,
+            bootsamples: crate::stats_methods::stats::BOOTSTRAP_SAMPLES,
             energy: MeasureType::C
             
         }
@@ -82,6 +84,12 @@ impl CriticalLambdaParams{
         let k = match num_threads{
             None => "".to_owned(),
             Some(v) => format!("k{}",v)
+        };
+        let string = if self.bootbool{
+            format!("BootSamples{}",self.bootsamples)
+        }
+        else{
+            "".to_owned()
         };
         format!(
             "ver{}CriticalLam{}_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}BootStrapping{}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
@@ -96,7 +104,7 @@ impl CriticalLambdaParams{
             self.lambda_range.steps,
             self.recovery_prob,
             self.initial_infected,
-            self.bootbool,
+            string,
             self.num_networks,
             
             self.graph_type.name(),

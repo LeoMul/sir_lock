@@ -8,7 +8,7 @@ use {
 
 //Credit:: Yannick
 
-const BOOTSTRAP_SAMPLES: usize = 400;
+pub const BOOTSTRAP_SAMPLES: usize = 400;
 pub struct MyVarianceBootstrap
 {
     pub mean: f64,
