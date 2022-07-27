@@ -72,7 +72,7 @@ impl Default for CriticalLambdaParams{
                 release_threshold: 0.05,
             },
             initial_infected: DEFAULT_INITIAL_INFECTED,
-            bootbool: true,
+            bootbool: false,
             bootsamples: crate::stats_methods::stats::BOOTSTRAP_SAMPLES,
             energy: MeasureType::C
             
