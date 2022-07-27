@@ -461,7 +461,7 @@ pub fn load_high_degree_rewl(opts: LDContinueOpts, instant: std::time::Instant, 
     match opts.rewltype{
         RewlType::SmallWorld => load_small_world_rewl(opts, instant, no_save),
         RewlType::Barabasi => load_barabasi_rewl(opts,instant,no_save),
-        _ => unimplemented!()
+        _ => println!("Enter the graph type under the RewlType field. SmallWorld or Barabasi")
     }
 
 

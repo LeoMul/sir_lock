@@ -83,7 +83,8 @@ pub enum MarkovStep
     Recovery(ExchangeInfo),
     SwapTrans((usize, usize)),
     SwapRec((usize, usize)),
-    MovePatientZero(usize,usize,bool)
+    MovePatientZero(usize,usize,bool),
+    MovePatientZeroRandom(usize,usize)
 }
 #[derive(Serialize, Deserialize)]
 pub struct LockdownMarkovMove{
@@ -166,7 +167,7 @@ pub struct AcceptanceTracker
 {
     lockdown: StepTracker,
     patient_move: StepTracker,
-    //patient_move_random: StepTracker,
+    patient_move_random: StepTracker,
     rotate_left: StepTracker,
     rotate_right: StepTracker,
     swap_trans_or_rec: StepTracker,
@@ -183,7 +184,7 @@ impl AcceptanceTracker{
     {
         self.lockdown.reset();
         self.patient_move.reset();
-        //self.patient_move_random.reset();
+        self.patient_move_random.reset();
         self.rotate_left.reset();
         self.rotate_right.reset();
         self.swap_trans_or_rec.reset();
@@ -193,7 +194,7 @@ impl AcceptanceTracker{
     pub fn write_stats<W: Write>(&self, mut writer: W)
     {
         self.lockdown.write(&mut writer, "LockdownMove");
-        //self.patient_move_edge.write(&mut writer, "PatientEdgeMove");
+        self.patient_move_random.write(&mut writer, "PatientEdgeMoveRandom");
         self.patient_move.write(&mut writer, "PatientMove");
         self.rotate_left.write(&mut writer, "RotateLeft");
         self.rotate_right.write(&mut writer, "RotateRight");
@@ -231,6 +232,9 @@ impl AcceptanceTracker{
                             self.patient_move.accept()
                         }
                     },
+                    MarkovStep::MovePatientZeroRandom(..) => {
+                        self.patient_move_random.accept()
+                    }
                     
                 }
             }
@@ -266,6 +270,9 @@ impl AcceptanceTracker{
                             self.patient_move.reject()
                         }
                     },
+                    MarkovStep::MovePatientZeroRandom(..) => {
+                        self.patient_move_random.reject()
+                    }
                     
                 }
             }

@@ -18,9 +18,11 @@ use {
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
 const PATIENT_MOVE: f64 = 0.05;
+const PATIENT_MOVE_RANDOM: f64 = 0.08;
+
 const LOCKDOWN_CHANGE: f64 = 0.01;
 
-
+use rand::Rng;
 
 use net_ensembles::GraphIteratorsMut;
 
@@ -568,7 +570,7 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                 // rotate left
                 self.offset.plus_1();
             },
-            MarkovStep::MovePatientZero(old_patient,index,_checker) => {
+            MarkovStep::MovePatientZero(old_patient,index,..) | MarkovStep::MovePatientZeroRandom(old_patient,index) => {
                 self.patient_zero_vec[*index] = *old_patient;
             }
         }
@@ -649,6 +651,22 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
 
 
         } 
+        else if which < PATIENT_MOVE_RANDOM{
+            let index_of_patient_to_be_changed = self.markov_rng.gen_range(0..self.initial_infected);
+
+            loop{
+                let node_index = self.markov_rng.gen_range(0..self.system_size.get());
+                if !self.patient_zero_vec.contains(&node_index){
+                    steps.push(MarkovStep::MovePatientZeroRandom(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed));
+
+                    self.patient_zero_vec[index_of_patient_to_be_changed] = node_index;
+                    return;
+
+                }
+
+            }
+            
+        }
         else {
             let amount = Binomial::new(count as u64, 0.5).unwrap().sample(&mut self.markov_rng);
             let index_uniform = Uniform::new(0, self.recovery_rand_vec.len());
