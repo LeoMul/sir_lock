@@ -63,10 +63,10 @@ pub fn execute_ba(param: SimpleSampleParam,json: Value,num_threads: Option<NonZe
                 
                 for i in 0..samples_per_thread
                 {
-                    let lockgraph = model.create_locked_down_network(param.lockdown);
+                    let mut lockgraph = model.create_locked_down_network(param.lockdown);
                     //let lockgraph = create_locked_down_network_from_pair_list(&pairs_struct, model.ensemble.graph());
 
-                    let m = model.propagate_until_completion_max_with_lockdown(lockgraph,param.lockdown) as u32;
+                    let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,param.lockdown) as u32;
                     hist_m.increment_quiet(m);
                     let c = model.calculate_ever_infected() as u32;
                     hist_c.increment_quiet(c);
@@ -145,9 +145,9 @@ pub fn execute_sw(param: SimpleSampleParam,json: Value,num_threads: Option<NonZe
                 
                 for i in 0..samples_per_thread
                 {
-                    let lockgraph = model.create_locked_down_network(param.lockdown);
+                    let mut lockgraph = model.create_locked_down_network(param.lockdown);
 
-                    let m = model.propagate_until_completion_max_with_lockdown(lockgraph,param.lockdown) as u32;
+                    let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,param.lockdown) as u32;
                     hist_m.increment_quiet(m);
                     let c = model.calculate_ever_infected() as u32;
                     hist_c.increment_quiet(c);

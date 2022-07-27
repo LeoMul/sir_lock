@@ -178,7 +178,7 @@ impl SimpleSampleSW{
 
     }
 
-    pub fn transfer_sir_information(&mut self, mut locked_down_graph:SwSIR) -> SwSIR{
+    pub fn transfer_sir_information<'a>(&mut self, locked_down_graph: &'a mut SwSIR) ->  &'a mut SwSIR{
         //resets and updates the sir informaton of the locked_down_graph
         
 
@@ -250,7 +250,7 @@ impl SimpleSampleSW{
 
     
 
-    pub fn propagate_until_completion_max_with_lockdown(&mut self,mut post_locked_down_graph:SwSIR,lockparams:LockdownParameters) -> usize{
+    pub fn propagate_until_completion_max_with_lockdown(&mut self,post_locked_down_graph:&mut SwSIR,lockparams:LockdownParameters) -> usize{
         
         //this fn makes use of the iterate once function and is identical to the others. Its purpose is mostly so I can figure out how to do the large deviation one.
 
@@ -263,7 +263,7 @@ impl SimpleSampleSW{
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
 
         //wont need after change made
-        post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+        let mut post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
@@ -321,11 +321,11 @@ impl SimpleSampleSW{
 
     }
 
-    pub fn propagate_until_completion_time_with_locks(&mut self,mut post_locked_down_graph:SwSIR,lockparams:LockdownParameters) -> u32{
+    pub fn propagate_until_completion_time_with_locks(&mut self,mut post_locked_down_graph:&mut SwSIR,lockparams:LockdownParameters) -> u32{
         self.reset_simple_sample_sir_simulation();
         let max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
-        post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+        let mut post_locked_down_graph = self.transfer_sir_information(&mut post_locked_down_graph);
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
@@ -547,7 +547,7 @@ impl SimpleSampleBarabasi{
 
     }
 
-    pub fn transfer_sir_information(&mut self, mut locked_down_graph:GenGraphSIR) -> GenGraphSIR{
+    pub fn transfer_sir_information<'a>(&mut self, locked_down_graph: &'a mut GenGraphSIR) ->  &'a mut GenGraphSIR{
         //resets and updates the sir informaton of the locked_down_graph
         
 
@@ -619,7 +619,7 @@ impl SimpleSampleBarabasi{
 
     
 
-    pub fn propagate_until_completion_max_with_lockdown(&mut self,mut post_locked_down_graph:GenGraphSIR,lockparams:LockdownParameters) -> usize{
+    pub fn propagate_until_completion_max_with_lockdown(&mut self,post_locked_down_graph:&mut GenGraphSIR,lockparams:LockdownParameters) -> usize{
         
         //this fn makes use of the iterate once function and is identical to the others. Its purpose is mostly so I can figure out how to do the large deviation one.
 
@@ -632,7 +632,7 @@ impl SimpleSampleBarabasi{
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
 
         //wont need after change made
-        post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+        let mut post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
@@ -696,7 +696,7 @@ impl SimpleSampleBarabasi{
         self.reset_simple_sample_sir_simulation();
         let max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
-        post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
+        let mut post_locked_down_graph = self.transfer_sir_information(&mut post_locked_down_graph);
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;

@@ -132,12 +132,12 @@ fn sim_small_world(param: LifespanSizeFittingParams, json: Value, num_threads:Op
                 let opt = SWOptions::from_lifespan_size_fitting_param(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
                 let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
-                let lockgraph = model.create_locked_down_network(lockparams);
+                let mut lockgraph = model.create_locked_down_network(lockparams);
 
                 let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{
                     model.set_lambda(*lambda);
                     model.reseed_sir_rng(rng);
-                    model.propagate_until_completion_time_with_locks(lockgraph.clone(),lockparams)
+                    model.propagate_until_completion_time_with_locks(&mut lockgraph,lockparams)
                     }
                 ).collect(); 
                 data_point_for_each_lambda

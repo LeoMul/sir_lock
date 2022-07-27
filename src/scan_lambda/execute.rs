@@ -200,7 +200,7 @@ fn scanning_lambda_function_ba(param:&ScanLambdaParams,_json:&Value,num_threads:
                             //vaccine_list_helper.randomize(vaccine_rng);
                             
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
-                            let res = model.propagate_until_completion_max_with_lockdown(locked_down.clone(),lockparams) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(locked_down,lockparams) as u32;
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32
@@ -277,7 +277,7 @@ fn scanning_lambda_function_sw(param:&ScanLambdaParams,_json:&Value,num_threads:
                             //vaccine_list_helper.randomize(vaccine_rng);
                             
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
-                            let res = model.propagate_until_completion_max_with_lockdown(locked_down.clone(),lockparams) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(locked_down,lockparams) as u32;
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32

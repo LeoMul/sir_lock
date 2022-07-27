@@ -31,8 +31,8 @@ fn sim_small_world(param:PropTestParams, _json: Value, _num_threads: Option<NonZ
         lock_threshold: 0.1,
         release_threshold: 0.05
     };
-    let lock_graph = model.create_locked_down_network(lock);
-    let x = model.propagate_until_completion_max_with_lockdown(lock_graph,lock);
+    let mut lock_graph = model.create_locked_down_network(lock);
+    let x = model.propagate_until_completion_max_with_lockdown(&mut lock_graph,lock);
     println!("{}",x);
 
 }

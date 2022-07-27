@@ -44,7 +44,9 @@ pub struct CriticalLambdaParams{
     pub graph_seed: u64,
     pub sir_seed: u64,
     pub lockdown: LockdownParameters,
-    pub initial_infected: usize
+    pub initial_infected: usize,
+    pub bootbool: bool,
+    pub energy: MeasureType
 }
 impl Default for CriticalLambdaParams{
     fn default() -> Self{
@@ -68,7 +70,9 @@ impl Default for CriticalLambdaParams{
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },
-            initial_infected: DEFAULT_INITIAL_INFECTED
+            initial_infected: DEFAULT_INITIAL_INFECTED,
+            bootbool: true,
+            energy: MeasureType::C
             
         }
     }
@@ -80,8 +84,9 @@ impl CriticalLambdaParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}CriticalLam_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
+            "ver{}CriticalLam{}_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}BootStrapping{}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
             crate::VERSION,
+            self.energy.name(),
             particular_n,
             self.system_size_range[0],
             self.system_size_range[self.system_size_range.len()-1],
@@ -91,6 +96,7 @@ impl CriticalLambdaParams{
             self.lambda_range.steps,
             self.recovery_prob,
             self.initial_infected,
+            self.bootbool,
             self.num_networks,
             
             self.graph_type.name(),

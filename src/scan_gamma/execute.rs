@@ -35,10 +35,10 @@ fn sim_barabasi(param:ScanGammaParams,json:Value,num_threads:Option<NonZeroUsize
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
 
-    let lock_graph  = model.create_locked_down_network(param.lockdown);
+    let mut lock_graph  = model.create_locked_down_network(param.lockdown);
 
     //let y = scanning_lambda_function_dynamic(&param, &json, num_threads, &model);
-    let y = scanning_gamma_function_static(&param, &json, num_threads, &model,param.lockdown,lock_graph);
+    let y = scanning_gamma_function_static(&param, &json, num_threads, &model,param.lockdown,&mut lock_graph);
     let y_clone = y.clone();
     let samples = Samples{
         gamma: gamma_range,
@@ -58,10 +58,10 @@ fn sim_barabasi(param:ScanGammaParams,json:Value,num_threads:Option<NonZeroUsize
         println!("comparing");
 
         let gamma_range:Vec<_> = range.iter().collect();
-        let lock_graph = model.create_locked_down_network(param.complock);
+        let mut lock_graph = model.create_locked_down_network(param.complock);
         println!("{}",lock_graph.edge_count());
         //let y2 = scanning_lambda_function_dynamic(&param, &json, num_threads, &model);
-        let y2 = scanning_gamma_function_static(&param, &json, num_threads, &model,param.complock,lock_graph);
+        let y2 = scanning_gamma_function_static(&param, &json, num_threads, &model,param.complock,&mut lock_graph);
 
         let samples2 = Samples2{
             gamma:gamma_range,
@@ -147,7 +147,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                 let inner = lock.deref_mut();
                 //let vaccine_rng = &mut inner.0;
                 let model = &mut inner.0;
-                let locked_down_graph = &mut inner.1;
+                let mut locked_down_graph = &mut inner.1;
                 //let vaccine_list_helper = &mut inner.2;
 
                 model.set_gamma(gamma);
@@ -162,7 +162,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                             }
                             else{
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
-                            let res = model.propagate_until_completion_max_with_lockdown(locked_down_graph.clone(),param.lockdown) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(&mut locked_down_graph,param.lockdown) as u32;
                             //println!("locked down {}",locked_down_graph.edge_count());
                             if param.measure.is_c() 
                             {
@@ -244,7 +244,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                 let inner = lock.deref_mut();
                 //let vaccine_rng = &mut inner.0;
                 let model = &mut inner.0;
-                let locked_down_graph = &mut inner.1;
+                let mut locked_down_graph = &mut inner.1;
                 //let vaccine_list_helper = &mut inner.2;
 
                 model.set_lambda(gamma);
@@ -262,7 +262,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                                 (param.system_size.get() as f64/factor) as u32
                             }
                             else{
-                            let res = model.propagate_until_completion_max_with_lockdown(locked_down_graph.clone(),param.lockdown) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(&mut locked_down_graph,param.lockdown) as u32;
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32
@@ -292,7 +292,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
     }
 
 }
-fn scanning_gamma_function_static(param:&ScanGammaParams,_json:&Value,num_threads:Option<NonZeroUsize>,model:&SimpleSampleBarabasi,lockparams:LockdownParameters,lockgraph:GenGraphSIR) -> Vec<MyVariance>{
+fn scanning_gamma_function_static(param:&ScanGammaParams,_json:&Value,num_threads:Option<NonZeroUsize>,model:&SimpleSampleBarabasi,lockparams:LockdownParameters,lockgraph:&mut GenGraphSIR) -> Vec<MyVariance>{
     //,lockgraph:&GenGraphSIR
     let mut rng = Pcg64::seed_from_u64(param.sir_seed);
 
@@ -305,9 +305,9 @@ fn scanning_gamma_function_static(param:&ScanGammaParams,_json:&Value,num_thread
         {
             let mut model = model.clone();
             model.reseed_sir_rng(&mut rng);
-            //let mut lock_down_graph = lockgraph.clone();
+            let lock_down_graph = lockgraph.clone();
             Mutex::new(
-                (model,)
+                (model,lock_down_graph)
             )
 
         }
@@ -354,7 +354,7 @@ fn scanning_gamma_function_static(param:&ScanGammaParams,_json:&Value,num_thread
                 let model = &mut inner.0;
                 //let vaccine_list_helper = &mut inner.2;
                 //let locked_down = &mut inner.1;
-        
+                let lockgraph = &mut inner.1;
                 model.set_gamma(gamma);
 
                 let vals: Vec<_> = (0..param.samples_per_step)
@@ -367,7 +367,7 @@ fn scanning_gamma_function_static(param:&ScanGammaParams,_json:&Value,num_thread
                             }
                             else{ 
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
-                            let res = model.propagate_until_completion_max_with_lockdown(lockgraph.clone(),lockparams) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(lockgraph,lockparams) as u32;
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32
