@@ -171,10 +171,19 @@ fn transpose(matrix:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
 
 }
 fn decompose_thread_split_data(mut vecofmatrices:Vec<Vec<Vec<u32>>>) -> Vec<Vec<u32>>{
-    
-    vecofmatrices.iter_mut().for_each(|item|{transpose(item);});
+    //println!("{:?}",vecofmatrices[0]);
+    //vecofmatrices.iter_mut().for_each(|item|{
+    //    transpose(item);
+    //});
 
+    for j in 0..vecofmatrices.len(){
+        vecofmatrices[j] = transpose(&vecofmatrices[j]);
+    }
+
+    //println!("{:?}",vecofmatrices[0]);
     let num_lams = vecofmatrices[0].len();
+
+    //println!("{num_lams}");
     let mut matrix_new = Vec::with_capacity(num_lams);
     for i in 0..num_lams{
         let mut new_row:Vec<u32> = Vec::new();
@@ -221,9 +230,10 @@ fn alternate_writing(param:&LifespanSizeFittingParams,json:&Value,num_threads: O
         // let data_vec = &data[n];
         writeln!(buf, "#lambda percentlifespan").unwrap();
         //println!("{}",data_master.len());
-        let data = &data_master;
-        for k in 0..data.len(){
-            writeln!(buf,"{} {}",lambda[k],data[k]).unwrap();
+        //println!("{}",lambda.len());
+        //let data = &data_master;
+        for k in 0..data_master.len(){
+            writeln!(buf,"{} {}",lambda[k],data_master[k]).unwrap();
         }
 
     
