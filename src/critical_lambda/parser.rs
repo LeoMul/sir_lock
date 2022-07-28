@@ -92,7 +92,7 @@ impl CriticalLambdaParams{
             "".to_owned()
         };
         format!(
-            "ver{}CriticalLam{}_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}BootStrapping{}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
+            "ver{}CriticalLam{}_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}{string}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
             crate::VERSION,
             self.energy.name(),
             particular_n,
@@ -104,7 +104,6 @@ impl CriticalLambdaParams{
             self.lambda_range.steps,
             self.recovery_prob,
             self.initial_infected,
-            string,
             self.num_networks,
             
             self.graph_type.name(),

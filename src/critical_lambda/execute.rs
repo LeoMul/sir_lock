@@ -38,13 +38,13 @@ pub struct MeasuredWithErrors{
 
 pub fn run_simulation(param:CriticalLambdaParams, json: Value, num_threads: Option<NonZeroUsize>){
     match param.graph_type{
-        GraphType::SmallWorld(_) => sim_small_world(param, json, num_threads),
-        GraphType::Barabasi(_,_) => sim_ba(param, json, num_threads),
+        GraphType::SmallWorld(_) => sim_small_world_new(param, json, num_threads),
+        GraphType::Barabasi(_,_) => sim_ba_new(param, json, num_threads),
         _ => unimplemented!()
     }
 
 }
-fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>){
+fn _sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>){
     fn collect_columns_sums(data:&Vec<Vec<(f64,f64)>>)-> Vec<(f64,f64,f64,f64)>{
     
         let num_columns = data[0].len();
@@ -194,7 +194,7 @@ fn sim_ba(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>
 }
 
 
-fn sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>){
+fn _sim_small_world(param:CriticalLambdaParams,json:Value,num_threads:Option<NonZeroUsize>){
     fn collect_columns_sums(data:&Vec<Vec<(f64,f64)>>)-> Vec<(f64,f64,f64,f64)>{
     
         let num_columns = data[0].len();
