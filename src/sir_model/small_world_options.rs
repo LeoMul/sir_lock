@@ -11,7 +11,8 @@ use{
     crate::simple_sampling::*,
     crate::prop_test::*,
     crate::scan_lambda_lock_thresh::*,
-    crate::scan_lock_params::*
+    crate::scan_lock_params::*,
+    crate::critical_threshold::*
 };
 
 pub struct SWOptions{
@@ -146,6 +147,20 @@ impl SWOptions{
             graph_seed: new_graph_seed,
             system_size: system_size_new,
             lambda: param.lambda_range.start,
+            gamma: param.recovery_prob
+        }
+
+    }
+    pub fn from_critical_thresh_params(param:&CriticalThreshParams,system_size_new:NonZeroUsize,new_graph_seed:u64) -> Self{
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            rewire_prob,
+            graph_seed: new_graph_seed,
+            system_size: system_size_new,
+            lambda: param.lambda,
             gamma: param.recovery_prob
         }
 

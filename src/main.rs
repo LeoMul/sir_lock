@@ -27,6 +27,7 @@ pub mod large_deviations;
 pub mod simple_sampling;
 pub mod scan_gamma;
 pub mod scan_lock_params;
+pub mod critical_threshold;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
@@ -40,6 +41,7 @@ fn main() {
         CmdOption::LifeSpanHist(o) => o.execute(),
         CmdOption::LifespanSizeFitting(o) => o.execute(),
         CmdOption::CriticalLambda(o) => o.execute(),
+        CmdOption::CriticalThresh(o) => o.execute(),
         CmdOption::PropTest(o) => o.execute(),
         CmdOption::ScanLambdaThresh(o) => o.execute(),
         CmdOption::LargeDevSimpleSample(o) => o.execute(),
@@ -75,6 +77,7 @@ pub enum CmdOption
     LifeSpanHist(lifespanhist::LifeSpan),
     LifespanSizeFitting(life_span_size_fitting::LifespanSizeFitting),
     CriticalLambda(critical_lambda::CriticalLambda),
+    CriticalThresh(critical_threshold::CriticalThresh),
     PropTest(prop_test::PropTest),
     LargeDevSimpleSample(large_deviations::SimpleSampleCMDopts),
     SimpleSample(simple_sampling::SimpleSampleScan),

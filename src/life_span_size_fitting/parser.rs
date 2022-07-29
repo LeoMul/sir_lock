@@ -88,7 +88,7 @@ impl LifespanSizeFittingParams{
             Some(v) => format!("k{}",v)
         };
         format!(
-            "ver{}LifeSpanFitting_Size{}_r{}_t{}{}-{}_InInf{}_NumNet{}_gr{}_gs{}_sir{}_thr{}_LSPER{}_LOCK{}.{}",
+            "ver{}LifeSpanFitting_Size{}_r{}_t{}{}-{}_InInf{}_NumNet{}_gr{}_gs{}_sir{}_thr{}_LSPER{}_LOCK{}t{}r{}.{}",
             crate::VERSION,
             system_size,
             self.recovery_prob,
@@ -103,6 +103,8 @@ impl LifespanSizeFittingParams{
             k,
             self.lifespanpercent,
             lockdown_naming_string(self.lockdown.lock_style),
+            self.lockdown.lock_threshold,
+            self.lockdown.release_threshold,
             file_ending
 
 

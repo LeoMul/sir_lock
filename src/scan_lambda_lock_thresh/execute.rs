@@ -89,7 +89,7 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
             //let vaccine_rng = &mut inner.0;
             let model = &mut inner.0;
             //let vaccine_list_helper = &mut inner.2;
-            let locked_down = &mut inner.1;
+            //let locked_down = &mut inner.1;
             //model.set_gamma(pair.y);
             model.set_lambda(pair.x);
             lockparams.set_lock_thresh(pair.y);
@@ -115,7 +115,9 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
                   //  }
                 //else{
                // (model.propagate_until_completion_max_with_lockdown(lock_graph.clone(),lockparams) as f64,model.calculate_ever_infected() as f64)};
-               let (mut m,mut c) = (model.propagate_until_completion_max_with_lockdown(locked_down,lockparams) as f64,model.calculate_ever_infected() as f64);
+               let lock_graph  = &mut model.create_locked_down_network(lockparams);
+
+               let (mut m,mut c) = (model.propagate_until_completion_max_with_lockdown(lock_graph,lockparams) as f64,model.calculate_ever_infected() as f64);
                 
                
                 m/= system_size_fraction;

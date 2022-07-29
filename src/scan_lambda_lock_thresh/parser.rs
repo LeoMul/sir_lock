@@ -85,8 +85,13 @@ impl ScanLambdaThreshParams{
             None => "".to_owned(),
             Some(v) => format!("k{}",v)
         };
+        let s = if let LockdownType::Random(n) = self.lockdown.lock_style{
+                format!("percent{n}")
+        }else{
+            "".to_owned()
+        };
         format!(
-            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}.{}",
+            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}{s}.{}",
             crate::VERSION,
             measure.name(),
             self.system_size,

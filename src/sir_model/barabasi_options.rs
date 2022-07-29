@@ -15,6 +15,7 @@ use{
     crate::critical_lambda::*,
     crate::simple_sampling::*,
     crate::scan_lock_params::*,
+    crate::critical_threshold::*,
 };
 
 pub struct BarabasiOptions{
@@ -125,6 +126,21 @@ impl BarabasiOptions{
             graph_seed,
             system_size: system_size_new,
             lambda: param.lambda_range.start,
+            gamma: param.recovery_prob,
+            m,
+            source_n,
+        }
+
+    }
+    pub fn from_critical_thresh_params(param: &CriticalThreshParams,system_size_new:NonZeroUsize,graph_seed:u64) -> Self{
+        let (m,source_n )= match param.graph_type {
+            GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            graph_seed,
+            system_size: system_size_new,
+            lambda: param.lambda,
             gamma: param.recovery_prob,
             m,
             source_n,
