@@ -956,7 +956,8 @@ impl MarkovChain<MarkovStepWithLocks, ()> for SWLargeDeviationWithLocks
                 {   
                     //println!("lockdown markov move");
                     //let rng  = &mut self.markov_rng;
-                    for _ in 0..1{
+                    let num_moves = self.markov_rng.gen_range(1..=15);
+                    for _ in 0..num_moves{
                         let ld_step = self.find_lockdown_markovmove();
                         self.change_edge(&ld_step);
                         steps.push(MarkovStepWithLocks::LockdownStep(ld_step));

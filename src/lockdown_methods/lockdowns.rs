@@ -39,6 +39,9 @@ impl LockdownParameters{
         self.release_threshold = rel_thresh;
 
     }
+    pub fn set_lock_severity(&mut self, severity:f64){
+        self.lock_style = LockdownType::Random(severity);
+    }
 }
 
 #[derive(Debug, Clone,Serialize, Deserialize)]

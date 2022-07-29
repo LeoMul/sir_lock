@@ -11,6 +11,7 @@ use{
     crate::simple_sampling::*,
     crate::prop_test::*,
     crate::scan_lambda_lock_thresh::*,
+    crate::scan_lock_params::*
 };
 
 pub struct SWOptions{
@@ -22,6 +23,20 @@ pub struct SWOptions{
 }
 
 impl SWOptions{
+    pub fn from_lock_scan_param(param: &ScanLockParams) -> Self
+    {
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            rewire_prob,
+            graph_seed: param.graph_seed,
+            system_size: param.system_size,
+            lambda: param.trans_prob,
+            gamma: param.recovery_prob
+        }
+    }
     pub fn from_lambda_scan_param(param: &ScanLambdaParams) -> Self
     {
         let rewire_prob = match param.graph_type {

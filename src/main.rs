@@ -26,7 +26,7 @@ pub mod lifespanhist;
 pub mod large_deviations;
 pub mod simple_sampling;
 pub mod scan_gamma;
-
+pub mod scan_lock_params;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
@@ -36,6 +36,7 @@ fn main() {
         CmdOption::ScanLambda(o) => o.execute(),
         CmdOption::ScanGamma(o) => o.execute(),
         CmdOption::ScanLambdaGamma(o) => o.execute(), 
+        CmdOption::ScanThreshParams(o) => o.execute(),
         CmdOption::LifeSpanHist(o) => o.execute(),
         CmdOption::LifespanSizeFitting(o) => o.execute(),
         CmdOption::CriticalLambda(o) => o.execute(),
@@ -70,6 +71,7 @@ pub enum CmdOption
     ScanGamma(scan_gamma::ScanGamma),
     ScanLambdaThresh(scan_lambda_lock_thresh::ScanLambdaThresh),
     ScanLambdaGamma(scan_lambda_gamma::ScanLambdaGamma),
+    ScanThreshParams(scan_lock_params::ScanLock),
     LifeSpanHist(lifespanhist::LifeSpan),
     LifespanSizeFitting(life_span_size_fitting::LifespanSizeFitting),
     CriticalLambda(critical_lambda::CriticalLambda),
