@@ -18,6 +18,7 @@ use{
     net_ensembles::rand::SeedableRng,
     rayon::prelude::*,
     crate::stats_methods::MyVariance,
+    crate::misc_types::MeasureType,
 };
 
 use crate::stats_methods::*;
@@ -38,21 +39,19 @@ pub struct MeasuredWithErrors{
 
 pub fn run_simulation(param:CriticalThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
     match param.graph_type{
-        GraphType::SmallWorld(_) => sim_small_world_new(param, json, num_threads),
-        GraphType::Barabasi(_,_) => sim_barabasi_new(param, json, num_threads),
+        GraphType::SmallWorld(_) => sim_small_world_both_m_and_c(param, json, num_threads),
+        GraphType::Barabasi(_,_) => sim_barabasi_both_m_and_c(param, json, num_threads),
         _ => unimplemented!()
     }
 
 }
-
-
-fn sim_small_world_new(param: CriticalThreshParams,json:Value,num_threads:Option<NonZeroUsize>){
+fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threads:Option<NonZeroUsize>){
     
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     let n_size:Vec<_> = param.system_size_range.to_vec();
-    println!("Sampling energy {} for system sizes{:?} over thresh-values {}-{} with {} points.\n Each data point is averaged over {} networks. \n Bootstrapping is {}."
-    ,param.energy.name(),n_size,param.thresh_range.start,param.thresh_range.end,param.thresh_range.steps,param.num_networks,param.bootbool);
+    println!("Sampling energies C and M for system sizes{:?} over thresh-values {}-{} with {} points.\n Each data point is averaged over {} networks. \n Bootstrapping is {}."
+    ,n_size,param.thresh_range.start,param.thresh_range.end,param.thresh_range.steps,param.num_networks,param.bootbool);
     let thresh_range = param.thresh_range.get_range();
     let thresh_vec:Vec<_> = thresh_range.iter().collect();
 
@@ -78,7 +77,7 @@ fn sim_small_world_new(param: CriticalThreshParams,json:Value,num_threads:Option
         
         let bar = crate::indication_bar(param.num_networks);
         //This vector contains 4 vectors of length per_thread. These constituent vectors contain (c.m) spanned over lambda.
-        let intermediate_data_vecs: Vec<Vec<Vec<u32>>> = rngs.par_iter_mut().map(
+        let intermediate_data_vecs: Vec<Vec<Vec<(u32,u32)>>> = rngs.par_iter_mut().map(
             |(r,graph_rng)|
             {
                 //let mut new_vec:Vec<_> = Vec::with_capacity(per_thread as usize);
@@ -103,12 +102,8 @@ fn sim_small_world_new(param: CriticalThreshParams,json:Value,num_threads:Option
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 
                         //println!("{},{},{},{},{}",c,m,lambda,model.ensemble.graph().edge_count(),new_graph_seed);
-                        if param.energy.is_c(){
-                            model.calculate_ever_infected() as u32
-                        }
-                        else{
-                            m as u32
-                        }
+                        let c = model.calculate_ever_infected() as u32;
+                        (m as u32,c)
                         }).collect(); 
 
                     data_point_for_each_lambda
@@ -121,39 +116,41 @@ fn sim_small_world_new(param: CriticalThreshParams,json:Value,num_threads:Option
         for vec in intermediate_data_vecs{
             merged_vec.extend(vec);
         }
-        let merged_vec = transpose_into_a_vec(&merged_vec);
+        let (m_matrix,c_matrix) = transpose_into_two_vecs(&merged_vec);
         //This is now all of the data decomposed for this n.
         
         if param.bootbool{
-            //do bootbool resampling and produce data file.
             
-            //let measure_data:Vec<MyVarianceInBoots> = merged_vec.par_iter().map(|item|{
-            //    crate::stats_methods::MyVarianceBootstrap::from_slice(item,system_size_frac,&mut sir_rng_2.clone() ,&mut graph_rng.clone())
-            //}).collect();
-            
+            let m_measure_data = produce_measure_data_with_boots(m_matrix, &mut sir_rng_2, &mut graph_rng, k, system_size_frac);
+            let c_measure_data = produce_measure_data_with_boots(c_matrix, &mut sir_rng_2, &mut graph_rng, k, system_size_frac);
 
-            let measure_data = produce_measure_data_with_boots(merged_vec, &mut sir_rng_2, &mut graph_rng, k, system_size_frac);
-            
-            writing_with_boot_single_energy(&param, &json, num_threads, &measure_data, n, &thresh_vec)
+            writing_with_boot_single_energy(&param, &json, num_threads, &m_measure_data, n, &thresh_vec,MeasureType::M);
+            writing_with_boot_single_energy(&param, &json, num_threads, &c_measure_data, n, &thresh_vec,MeasureType::C)
+
             }
         else{
             //do not resample and produce data file.print
-            let measure_data:Vec<MyVariance> = merged_vec.par_iter().map(|item|{
+            let m_measure_data:Vec<MyVariance> = m_matrix.par_iter().map(|item|{
                 crate::stats_methods::MyVariance::from_slice(item,system_size_frac)
             }).collect();
-            writing_with_no_boot_single_energy(&param, &json, num_threads, &measure_data, n, &thresh_vec)
+            let c_measure_data:Vec<MyVariance> = c_matrix.par_iter().map(|item|{
+                crate::stats_methods::MyVariance::from_slice(item,system_size_frac)
+            }).collect();
+            writing_with_no_boot_single_energy(&param, &json, num_threads, &m_measure_data, n, &thresh_vec,MeasureType::M);
+            writing_with_no_boot_single_energy(&param, &json, num_threads, &c_measure_data, n, &thresh_vec,MeasureType::C)
+
         }
 
     }
 }
 
-fn sim_barabasi_new(param: CriticalThreshParams,json:Value,num_threads:Option<NonZeroUsize>){
-    
+
+fn sim_barabasi_both_m_and_c(param: CriticalThreshParams,json:Value,num_threads:Option<NonZeroUsize>){
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     let n_size:Vec<_> = param.system_size_range.to_vec();
-    println!("Sampling energy {} for system sizes{:?} over thresh-values {}-{} with {} points.\n Each data point is averaged over {} networks. \n Bootstrapping is {}."
-    ,param.energy.name(),n_size,param.thresh_range.start,param.thresh_range.end,param.thresh_range.steps,param.num_networks,param.bootbool);
+    println!("Sampling energies C and M for system sizes{:?} over thresh-values {}-{} with {} points.\n Each data point is averaged over {} networks. \n Bootstrapping is {}."
+    ,n_size,param.thresh_range.start,param.thresh_range.end,param.thresh_range.steps,param.num_networks,param.bootbool);
     let thresh_range = param.thresh_range.get_range();
     let thresh_vec:Vec<_> = thresh_range.iter().collect();
 
@@ -179,7 +176,7 @@ fn sim_barabasi_new(param: CriticalThreshParams,json:Value,num_threads:Option<No
         
         let bar = crate::indication_bar(param.num_networks);
         //This vector contains 4 vectors of length per_thread. These constituent vectors contain (c.m) spanned over lambda.
-        let intermediate_data_vecs: Vec<Vec<Vec<u32>>> = rngs.par_iter_mut().map(
+        let intermediate_data_vecs: Vec<Vec<Vec<(u32,u32)>>> = rngs.par_iter_mut().map(
             |(r,graph_rng)|
             {
                 //let mut new_vec:Vec<_> = Vec::with_capacity(per_thread as usize);
@@ -204,12 +201,8 @@ fn sim_barabasi_new(param: CriticalThreshParams,json:Value,num_threads:Option<No
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 
                         //println!("{},{},{},{},{}",c,m,lambda,model.ensemble.graph().edge_count(),new_graph_seed);
-                        if param.energy.is_c(){
-                            model.calculate_ever_infected() as u32
-                        }
-                        else{
-                            m as u32
-                        }
+                        let c = model.calculate_ever_infected() as u32;
+                        (m as u32,c)
                         }).collect(); 
 
                     data_point_for_each_lambda
@@ -222,34 +215,33 @@ fn sim_barabasi_new(param: CriticalThreshParams,json:Value,num_threads:Option<No
         for vec in intermediate_data_vecs{
             merged_vec.extend(vec);
         }
-        let merged_vec = transpose_into_a_vec(&merged_vec);
+        let (m_matrix,c_matrix) = transpose_into_two_vecs(&merged_vec);
         //This is now all of the data decomposed for this n.
         
         if param.bootbool{
-            //do bootbool resampling and produce data file.
             
-            //let measure_data:Vec<MyVarianceInBoots> = merged_vec.par_iter().map(|item|{
-            //    crate::stats_methods::MyVarianceBootstrap::from_slice(item,system_size_frac,&mut sir_rng_2.clone() ,&mut graph_rng.clone())
-            //}).collect();
-            
+            let m_measure_data = produce_measure_data_with_boots(m_matrix, &mut sir_rng_2, &mut graph_rng, k, system_size_frac);
+            let c_measure_data = produce_measure_data_with_boots(c_matrix, &mut sir_rng_2, &mut graph_rng, k, system_size_frac);
 
-            let measure_data = produce_measure_data_with_boots(merged_vec, &mut sir_rng_2, &mut graph_rng, k, system_size_frac);
-            
-            writing_with_boot_single_energy(&param, &json, num_threads, &measure_data, n, &thresh_vec)
+            writing_with_boot_single_energy(&param, &json, num_threads, &m_measure_data, n, &thresh_vec,MeasureType::M);
+            writing_with_boot_single_energy(&param, &json, num_threads, &c_measure_data, n, &thresh_vec,MeasureType::C)
+
             }
         else{
             //do not resample and produce data file.print
-            let measure_data:Vec<MyVariance> = merged_vec.par_iter().map(|item|{
+            let m_measure_data:Vec<MyVariance> = m_matrix.par_iter().map(|item|{
                 crate::stats_methods::MyVariance::from_slice(item,system_size_frac)
             }).collect();
-            writing_with_no_boot_single_energy(&param, &json, num_threads, &measure_data, n, &thresh_vec)
+            let c_measure_data:Vec<MyVariance> = c_matrix.par_iter().map(|item|{
+                crate::stats_methods::MyVariance::from_slice(item,system_size_frac)
+            }).collect();
+            writing_with_no_boot_single_energy(&param, &json, num_threads, &m_measure_data, n, &thresh_vec,MeasureType::M);
+            writing_with_no_boot_single_energy(&param, &json, num_threads, &c_measure_data, n, &thresh_vec,MeasureType::C)
+
         }
 
     }
 }
-
-
-
 
 
 
@@ -300,11 +292,11 @@ fn produce_measure_data_with_boots<R>(merged_vec:Vec<Vec<u32>>,mut rng1:&mut R,m
 
 }
 
-fn transpose_into_a_vec(merged_vec:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
+fn _transpose_into_a_vec(merged_vec:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
     let num_lam = merged_vec[0].len();
     let num_cols = merged_vec.len();
     let mut c_matrix:Vec<Vec<u32>> = Vec::with_capacity(num_lam);
-
+    
     for i in 0..num_lam{
         let mut c_vec = Vec::with_capacity(num_cols);
         for j in 0..num_cols{
@@ -318,8 +310,31 @@ fn transpose_into_a_vec(merged_vec:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
     }   
     c_matrix        
 }
-fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVarianceInBoots>,n:usize,lambda:&Vec<f64>){
-    let name = param.name("dat", num_threads,n);
+fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(u32,u32)>>) -> (Vec<Vec<u32>>,Vec<Vec<u32>>){
+    let num_lam = merged_vec[0].len();
+    let num_cols = merged_vec.len();
+    let mut c_matrix:Vec<Vec<u32>> = Vec::with_capacity(num_lam);
+    let mut m_matrix:Vec<Vec<u32>> = Vec::with_capacity(num_lam);
+
+    for i in 0..num_lam{
+        let mut c_vec = Vec::with_capacity(num_cols);
+        let mut m_vec = Vec::with_capacity(num_cols);
+
+        for j in 0..num_cols{
+            let col = &merged_vec[j];
+            let point = col[i];
+            c_vec.push(point.1 as u32);
+            m_vec.push(point.0 as u32);
+        }
+
+        c_matrix.push(c_vec);
+        m_matrix.push(m_vec);
+
+    }   
+    (m_matrix,c_matrix)        
+}
+fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVarianceInBoots>,n:usize,lambda:&Vec<f64>,energy:MeasureType){
+    let name = param.name("dat", num_threads,n,energy);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");
     let mut buf = BufWriter::new(file);
@@ -327,7 +342,7 @@ fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_t
     serde_json::to_writer(&mut buf, &json).unwrap();
     writeln!(buf).unwrap();
     // let data_vec = &data[n];
-    if param.energy.is_c(){
+    if energy.is_c(){
         writeln!(buf, "#thresh c c_var c_err c_var_err").unwrap();
     }
     else{
@@ -341,8 +356,8 @@ fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_t
     }
     
 }
-fn writing_with_no_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVariance>,n:usize,lambda:&Vec<f64>){
-    let name = param.name("dat", num_threads,n);
+fn writing_with_no_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVariance>,n:usize,lambda:&Vec<f64>,energy:MeasureType){
+    let name = param.name("dat", num_threads,n,energy);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");
     let mut buf = BufWriter::new(file);
@@ -350,7 +365,7 @@ fn writing_with_no_boot_single_energy(param:&CriticalThreshParams,json:&Value,nu
     serde_json::to_writer(&mut buf, &json).unwrap();
     writeln!(buf).unwrap();
     // let data_vec = &data[n];
-    if param.energy.is_c(){
+    if energy.is_c(){
         writeln!(buf, "#thresh c c_var ").unwrap();
     }
     else{
