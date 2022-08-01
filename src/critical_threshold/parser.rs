@@ -45,6 +45,7 @@ pub struct CriticalThreshParams{
     pub graph_seed: u64,
     pub sir_seed: u64,
     pub lockdown: LockdownParameters,
+    pub releasebool: bool,
     pub initial_infected: usize,
     pub bootbool: bool,
     pub bootsamples: usize,
@@ -67,6 +68,7 @@ impl Default for CriticalThreshParams{
             fraction: true,
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
+            releasebool: true,
             lockdown: LockdownParameters{
                 lock_style: LockdownType::Random(0.35),
                 lock_threshold: 0.1,

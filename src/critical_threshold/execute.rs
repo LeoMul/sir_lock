@@ -97,7 +97,11 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
                         lockparams.set_lock_thresh(*thresh);
-                        lockparams.set_rel_thresh(*thresh/2.);
+                        if param.releasebool{
+                            lockparams.set_rel_thresh(*thresh/2.);}
+                        else{
+                            lockparams.set_rel_thresh(-1.);
+                        }
                         model.reseed_sir_rng(r);
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 

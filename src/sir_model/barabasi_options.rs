@@ -16,6 +16,7 @@ use{
     crate::simple_sampling::*,
     crate::scan_lock_params::*,
     crate::critical_threshold::*,
+    crate::connectedcomponent::*
 };
 
 pub struct BarabasiOptions{
@@ -29,6 +30,21 @@ pub struct BarabasiOptions{
     
 }
 impl BarabasiOptions{
+    pub fn from_connectedcomponent_param(param: &ConnectedComponentParams,seed:u64) -> Self
+    {
+        let (m,source_n )= match param.graph_type {
+            GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            m,
+            source_n,
+            graph_seed: seed,
+            system_size: param.system_size,
+            lambda: 0.,
+            gamma: 0.
+        }
+    }
     pub fn from_lock_scan_param(param: &ScanLockParams) -> Self
     {
         let (m,source_n )= match param.graph_type {

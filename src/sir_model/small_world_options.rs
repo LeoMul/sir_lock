@@ -12,7 +12,8 @@ use{
     crate::prop_test::*,
     crate::scan_lambda_lock_thresh::*,
     crate::scan_lock_params::*,
-    crate::critical_threshold::*
+    crate::critical_threshold::*,
+    crate::connectedcomponent::*,
 };
 
 pub struct SWOptions{
@@ -24,6 +25,20 @@ pub struct SWOptions{
 }
 
 impl SWOptions{
+    pub fn from_connectedcomponent_param(param: &ConnectedComponentParams,seed:u64) -> Self
+    {
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            rewire_prob,
+            graph_seed: seed,
+            system_size: param.system_size,
+            lambda: 0.,
+            gamma: 0.
+        }
+    }
     pub fn from_lock_scan_param(param: &ScanLockParams) -> Self
     {
         let rewire_prob = match param.graph_type {

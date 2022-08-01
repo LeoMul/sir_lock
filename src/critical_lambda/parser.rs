@@ -47,7 +47,6 @@ pub struct CriticalLambdaParams{
     pub initial_infected: usize,
     pub bootbool: bool,
     pub bootsamples: usize,
-    pub energy: MeasureType
 }
 impl Default for CriticalLambdaParams{
     fn default() -> Self{
@@ -73,14 +72,13 @@ impl Default for CriticalLambdaParams{
             },
             initial_infected: DEFAULT_INITIAL_INFECTED,
             bootbool: false,
-            bootsamples: crate::stats_methods::stats::BOOTSTRAP_SAMPLES,
-            energy: MeasureType::C
+            bootsamples: crate::stats_methods::stats::BOOTSTRAP_SAMPLES
             
         }
     }
 }
 impl CriticalLambdaParams{
-    pub fn name<E>(&self, file_ending:E , num_threads:Option<NonZeroUsize>,particular_n:usize) -> String where E:Display{
+    pub fn name<E>(&self, file_ending:E , num_threads:Option<NonZeroUsize>,particular_n:usize,energy:MeasureType) -> String where E:Display{
         let k = match num_threads{
             None => "".to_owned(),
             Some(v) => format!("k{}",v)
@@ -91,10 +89,11 @@ impl CriticalLambdaParams{
         else{
             "".to_owned()
         };
+        //let e = energy.name();
         format!(
             "ver{}CriticalLam{}_ThisFileN{}Size{}to{}Lam{}to{}_{}_Gam{}_InInf{}{string}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}t{}r{}.{}",
             crate::VERSION,
-            self.energy.name(),
+            energy.name(),
             particular_n,
             self.system_size_range[0],
             self.system_size_range[self.system_size_range.len()-1],
