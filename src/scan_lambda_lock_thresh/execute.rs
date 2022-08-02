@@ -93,7 +93,13 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
             //model.set_gamma(pair.y);
             model.set_lambda(pair.x);
             lockparams.set_lock_thresh(pair.y);
-            lockparams.set_rel_thresh(pair.y/2.);
+            if param.releasebool{
+                lockparams.set_rel_thresh(pair.y/2.);
+
+            }else{
+                lockparams.set_rel_thresh(-1.);
+
+            }
             //let t = lockparams.lock_threshold;
             //println!("{}",t);
             let mut sum_m_pt = 0.;
@@ -313,7 +319,13 @@ pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Opti
             //model.set_gamma(pair.y);
             model.set_lambda(pair.x);
             lockparams.set_lock_thresh(pair.y);
-            lockparams.set_rel_thresh(pair.y/2.);
+            if param.releasebool{
+                lockparams.set_rel_thresh(pair.y/2.);
+
+            }else{
+                lockparams.set_rel_thresh(-1.);
+
+            }
             //let t = lockparams.lock_threshold;
             //println!("{}",t);
             let mut sum_m_pt = 0.;

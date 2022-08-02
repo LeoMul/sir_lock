@@ -44,7 +44,8 @@ pub struct ScanLambdaThreshParams{
     pub graph_seed: u64,
     pub sir_seed: u64,
     pub lockdown: LockdownParameters,
-    pub initial_infected: usize
+    pub initial_infected: usize,
+    pub releasebool: bool
 }
 
 impl Default for ScanLambdaThreshParams{
@@ -74,7 +75,8 @@ impl Default for ScanLambdaThreshParams{
                 lock_threshold: 0.1,
                 release_threshold: 0.05,
             },
-            initial_infected: DEFAULT_INITIAL_INFECTED
+            initial_infected: DEFAULT_INITIAL_INFECTED,
+            releasebool: true
         }
     }
 }
@@ -91,7 +93,7 @@ impl ScanLambdaThreshParams{
             "".to_owned()
         };
         format!(
-            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}{s}.{}",
+            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}Rel{}{s}.{}",
             crate::VERSION,
             measure.name(),
             self.system_size,
@@ -110,7 +112,8 @@ impl ScanLambdaThreshParams{
             self.sir_seed,
             k,
             lockdown_naming_string(self.lockdown.lock_style),
-                    file_ending
+            self.releasebool,
+            file_ending
 
 
         )

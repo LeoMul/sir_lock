@@ -53,7 +53,7 @@ pub struct CriticalThreshParams{
 }
 impl Default for CriticalThreshParams{
     fn default() -> Self{
-        let system_size_range_def =vec![3000,400,600,800,1000,1200,1600,2000,2500,200];
+        let system_size_range_def =vec![14400,400,800,1200,1600,2000,2400,2800,3200,4800,9600];
         let thresh_range = F64RangeBuilder{
             start: 0.01,
             end:0.07,
@@ -71,8 +71,8 @@ impl Default for CriticalThreshParams{
             releasebool: true,
             lockdown: LockdownParameters{
                 lock_style: LockdownType::Random(0.35),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
+                lock_threshold: 1.1,
+                release_threshold: 0.0,
             },
             thresh_range,
             initial_infected: DEFAULT_INITIAL_INFECTED,
