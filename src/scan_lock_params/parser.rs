@@ -45,8 +45,8 @@ pub struct ScanLockParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
-    pub lockdown: LockdownParameters,
     pub initial_infected: usize,
+    pub releaseparams: ReleaseType,
 }
 impl Default for ScanLockParams{
     fn default() -> Self{
@@ -67,13 +67,9 @@ impl Default for ScanLockParams{
             fraction: true,
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(0.6),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
-            },
+            
             initial_infected: DEFAULT_INITIAL_INFECTED,
-    
+            releaseparams:ReleaseType::FracOfLock(0.125),
             
         }
     }
@@ -86,7 +82,7 @@ impl ScanLockParams{
         };
         
         format!(
-            "ver{}ScanLock_ThisFileSev{}SevList{}to{}Thresh{}to{}_{}Lam{}_Gam{}_InInf{}NumSamples{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}.{}",
+            "ver{}ScanLock_ThisFileSev{}SevList{}to{}Thresh{}to{}_{}Lam{}_Gam{}_InInf{}NumSamples{}_GT{}_GS{}_SIRS{}_THR{}_RandLockRelease{}.{}",
             crate::VERSION,
             particular_sev*100.0,
             self.lockdown_severities[0],
@@ -99,12 +95,11 @@ impl ScanLockParams{
             self.recovery_prob,
             self.initial_infected,
             self.num_samples,
-            
             self.graph_type.name(),
             self.graph_seed,
             self.sir_seed,
             k,
-            lockdown_naming_string(self.lockdown.lock_style),
+            self.releaseparams.name(),
             file_ending
 
 

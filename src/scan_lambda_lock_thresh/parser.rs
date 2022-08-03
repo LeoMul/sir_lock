@@ -43,9 +43,9 @@ pub struct ScanLambdaThreshParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
-    pub lockdown: LockdownParameters,
+    pub lockdowntype: LockdownType,
     pub initial_infected: usize,
-    pub releasebool: bool
+    pub releaseparams: ReleaseType
 }
 
 impl Default for ScanLambdaThreshParams{
@@ -65,18 +65,14 @@ impl Default for ScanLambdaThreshParams{
             lockt_range:lock_thresh_range_def,
             system_size: DEFAULT_SYSTEM_SIZE,
             recovery_prob:DEFAULT_RECOVERY_PROB,
-            graph_type: GraphType::Barabasi(2,10),
+            graph_type: GraphType::SmallWorld(0.1),
             samples_per_step: DEFAULT_SAMPLES_PER_STEP,
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            lockdown:LockdownParameters{
-                lock_style: LockdownType::Random(0.6),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
-            },
+            lockdowntype:LockdownType::Random(0.35),
             initial_infected: DEFAULT_INITIAL_INFECTED,
-            releasebool: true
+            releaseparams: ReleaseType::FracOfLock(0.125),
         }
     }
 }
@@ -87,13 +83,14 @@ impl ScanLambdaThreshParams{
             None => "".to_owned(),
             Some(v) => format!("k{}",v)
         };
-        let s = if let LockdownType::Random(n) = self.lockdown.lock_style{
-                format!("percent{n}")
-        }else{
+        let s: String = if let LockdownType::Random(n) = self.lockdowntype{
+            format!("Severity{n}")
+        }
+        else{
             "".to_owned()
         };
         format!(
-            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}Rel{}{s}.{}",
+            "ver{}LamThreshScan_{}_N{}t{}-{}_{}r{}InInf{}LockThresh{}-{}_{}SamStep{}_Graph{}_GSeed{}_SS{}_THR{}_LOCK{}SEV{s}Rel{}.{}",
             crate::VERSION,
             measure.name(),
             self.system_size,
@@ -111,8 +108,8 @@ impl ScanLambdaThreshParams{
             self.graph_seed,
             self.sir_seed,
             k,
-            lockdown_naming_string(self.lockdown.lock_style),
-            self.releasebool,
+            lockdown_naming_string(self.lockdowntype),
+            self.releaseparams.name(),
             file_ending
 
 

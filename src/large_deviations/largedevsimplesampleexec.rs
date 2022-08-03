@@ -179,6 +179,7 @@ pub fn hist_to_file(hist: &HistU32Fast, file_name: String, json: &Value)
         );
 }
 
+
 pub fn norm_hist_log(hist: &HistU32Fast) -> Vec<f64>
 {
     let mut density: Vec<_> = hist.hist()

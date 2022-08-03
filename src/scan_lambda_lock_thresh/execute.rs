@@ -17,7 +17,7 @@ use{
     rayon::prelude::*,
     crate::stats_methods::MyVariance,
     crate::grid::*,
-   
+    crate::lockdown_methods::*,
 };
 use crate::misc_types::*;
 pub fn run_simulation(param:ScanLambdaThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
@@ -53,7 +53,12 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
 
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
-    let lockparams = param.lockdown;
+    //let lockparams = param.lockdown;
+    let lockparams = LockdownParameters{
+        lock_style:param.lockdowntype,
+        release_threshold: 0.0,
+        lock_threshold:0.0,
+        };
 
     let lock_graph  = &mut model.create_locked_down_network(lockparams);
 
@@ -82,24 +87,21 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
         let vec:Vec<_> = container.par_iter().map(|container|{
             
             
-            let mut lockparams = param.lockdown;
+            let lockparams = LockdownParameters{
+                lock_style:param.lockdowntype,
+                release_threshold: get_release_threshold(param.releaseparams,pair.y),
+                lock_threshold:pair.y,
+                };
             let mut lock = container.lock()
                     .expect("unable to lock");
             let inner = lock.deref_mut();
             //let vaccine_rng = &mut inner.0;
             let model = &mut inner.0;
             //let vaccine_list_helper = &mut inner.2;
-            //let locked_down = &mut inner.1;
+            let locked_down = &mut inner.1;
             //model.set_gamma(pair.y);
             model.set_lambda(pair.x);
-            lockparams.set_lock_thresh(pair.y);
-            if param.releasebool{
-                lockparams.set_rel_thresh(pair.y/2.);
-
-            }else{
-                lockparams.set_rel_thresh(-1.);
-
-            }
+            
             //let t = lockparams.lock_threshold;
             //println!("{}",t);
             let mut sum_m_pt = 0.;
@@ -121,9 +123,7 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
                   //  }
                 //else{
                // (model.propagate_until_completion_max_with_lockdown(lock_graph.clone(),lockparams) as f64,model.calculate_ever_infected() as f64)};
-               let lock_graph  = &mut model.create_locked_down_network(lockparams);
-
-               let (mut m,mut c) = (model.propagate_until_completion_max_with_lockdown(lock_graph,lockparams) as f64,model.calculate_ever_infected() as f64);
+               let (mut m,mut c) = (model.propagate_until_completion_max_with_lockdown(locked_down,lockparams) as f64,model.calculate_ever_infected() as f64);
                 
                
                 m/= system_size_fraction;
@@ -256,8 +256,8 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
 }
 pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
     let opt = BarabasiOptions::from_lambda_thresh_param(&param);
-    let barabasi_world = opt.into();
-    let mut model = SimpleSampleBarabasi::from_base(barabasi_world, param.sir_seed,param.initial_infected);
+    let world = opt.into();
+    let mut model = SimpleSampleBarabasi::from_base(world, param.sir_seed,param.initial_infected);
 
     //let range_lam = param.lambda_range.get_range();
     //let range_gam = param.gamma_range.get_range();
@@ -279,7 +279,12 @@ pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Opti
 
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
-    let lockparams = param.lockdown;
+    //let lockparams = param.lockdown;
+    let lockparams = LockdownParameters{
+        lock_style:param.lockdowntype,
+        release_threshold: 0.0,
+        lock_threshold:0.0,
+        };
 
     let lock_graph  = &mut model.create_locked_down_network(lockparams);
 
@@ -308,7 +313,11 @@ pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Opti
         let vec:Vec<_> = container.par_iter().map(|container|{
             
             
-            let mut lockparams = param.lockdown;
+            let lockparams = LockdownParameters{
+                lock_style:param.lockdowntype,
+                release_threshold: get_release_threshold(param.releaseparams,pair.y),
+                lock_threshold:pair.y,
+                };
             let mut lock = container.lock()
                     .expect("unable to lock");
             let inner = lock.deref_mut();
@@ -318,14 +327,7 @@ pub fn sim_barabasi(param:ScanLambdaThreshParams, json: Value, num_threads: Opti
             let locked_down = &mut inner.1;
             //model.set_gamma(pair.y);
             model.set_lambda(pair.x);
-            lockparams.set_lock_thresh(pair.y);
-            if param.releasebool{
-                lockparams.set_rel_thresh(pair.y/2.);
-
-            }else{
-                lockparams.set_rel_thresh(-1.);
-
-            }
+            
             //let t = lockparams.lock_threshold;
             //println!("{}",t);
             let mut sum_m_pt = 0.;

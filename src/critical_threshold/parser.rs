@@ -44,8 +44,8 @@ pub struct CriticalThreshParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
-    pub lockdown: LockdownParameters,
-    pub releasebool: bool,
+    pub lockdowntype: LockdownType,
+    pub releasetype: ReleaseType,
     pub initial_infected: usize,
     pub bootbool: bool,
     pub bootsamples: usize,
@@ -55,8 +55,8 @@ impl Default for CriticalThreshParams{
     fn default() -> Self{
         let system_size_range_def =vec![14400,400,800,1200,1600,2000,2400,2800,3200,4800,9600];
         let thresh_range = F64RangeBuilder{
-            start: 0.01,
-            end:0.07,
+            start: 0.0,
+            end:0.2,
             steps: NonZeroUsize::new(150).unwrap() 
         };
         Self{
@@ -68,12 +68,8 @@ impl Default for CriticalThreshParams{
             fraction: true,
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            releasebool: true,
-            lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(0.35),
-                lock_threshold: 1.1,
-                release_threshold: 0.0,
-            },
+            releasetype: ReleaseType::FracOfLock(0.125),
+            lockdowntype: LockdownType::Random(0.50),
             thresh_range,
             initial_infected: DEFAULT_INITIAL_INFECTED,
             bootbool: false,
@@ -95,13 +91,13 @@ impl CriticalThreshParams{
         else{
             "".to_owned()
         };
-        let s = if let LockdownType::Random(n) = self.lockdown.lock_style{
+        let s = if let LockdownType::Random(n) = self.lockdowntype{
             format!("percent{n}")
         }else{
             "".to_owned()
         };
         format!(
-            "ver{}CriticalThresh{}_ThisFileN{}Size{}to{}Thresh{}to{}_{}_Lam{}_Gam{}_InInf{}{string}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}{s}.{}",
+            "ver{}CriticalThresh{}_ThisFileN{}Size{}to{}Thresh{}to{}_{}_Lam{}_Gam{}_InInf{}{string}NumNet{}_GT{}_GS{}_SIRS{}_THR{}_LOCK{}{s}Release{}.{}",
             crate::VERSION,
             energy.name(),
             particular_n,
@@ -120,7 +116,8 @@ impl CriticalThreshParams{
             self.graph_seed,
             self.sir_seed,
             k,
-            lockdown_naming_string(self.lockdown.lock_style),
+            lockdown_naming_string(self.lockdowntype),
+            self.releasetype.name(),
             file_ending
 
 

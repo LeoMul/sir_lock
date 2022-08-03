@@ -285,7 +285,7 @@ impl Default for LDLDparam
         Self{
             system_size: DEFAULT_SYSTEM_SIZE,
             recovery_prob: DEFAULT_RECOVERY_PROB,
-            graph_type: GraphType::Barabasi(2,10),
+            graph_type: GraphType::SmallWorld(0.1),
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             f_threshold: DEFAULT_F_THRESHOLD,
@@ -301,14 +301,12 @@ impl Default for LDLDparam
                 lock_threshold: 0.1,
                 release_threshold: 0.05
             },
-            histograms: HistogramCreator::Automatic(
-                Intervals{
-                    start: None,
-                    end_inlcusive: None,
-                    num_intervals: 2,
-                    overlap: None,
-                    greedy_search_steps: None
-                }
+            histograms: HistogramCreator::Manual(
+                vec![Interval{
+                    start: 1600,
+                    end_inlcusive: 2000
+
+                }]
             ),
             walkers_per_interval: ONE,
             step_size: DEFAULT_MARKOV_STEP_SIZE,
@@ -505,16 +503,42 @@ pub fn calc_c_sw(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
         })
 }
 
+pub fn change_energy_res_m_ba(model: &mut BALargeDeviationWithLocks)-> Option<u32>
+{
+    calc_m_ba(model).map(|energz| (energz+1)/2)
+}
+pub fn change_energy_res_c_ba(model: &mut BALargeDeviationWithLocks)-> Option<u32>
+{
+    calc_c_ba(model).map(|energz| (energz+1)/2)
+}
+pub fn change_energy_res_sw<A>(function:A)-> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy
+where A:Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy {
+    move |sw|{
+        function(sw).map(
+            |energy|
+            {
+                (energy+1)/2
+            }
+        )
+    }
+
+}
 pub fn energy_function_returner_ba(measure_type:MeasureType) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
 
-
-
+    //,changeresbool:bool
+    //let fun = 
     match measure_type{
         MeasureType::C => calc_c_ba,
         MeasureType::M => {
             calc_m_ba
         }
     }
+    //if changeresbool{
+    //    change_energy_res_ba
+    //}
+    //else{
+    //    fun
+    //}
     
 
 }

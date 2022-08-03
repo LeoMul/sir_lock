@@ -18,6 +18,32 @@ pub enum LockdownType{
     Invalid
 
 }
+#[derive(Debug, Clone,Serialize, Deserialize,Copy)]
+pub enum ReleaseType{
+    FracOfLock(f64),
+    Const(f64),
+    Disabled
+}
+impl ReleaseType{
+    pub fn name(&self) -> String{
+        match self{
+            ReleaseType::FracOfLock(factor) => format!("Fraction{factor}").to_owned(),
+            ReleaseType::Const(thresh) => format!("Const{thresh}").to_owned(),
+            ReleaseType::Disabled => "Disabled".to_owned() 
+        }
+    }
+}
+
+
+pub fn get_release_threshold(rtype:ReleaseType,lockthresh:f64) -> f64{
+    let releasethresh = match rtype{
+                            ReleaseType::FracOfLock(factor) => factor*lockthresh,
+                            ReleaseType::Const(thresh) => thresh,
+                            ReleaseType::Disabled => 0.0 
+                        };
+    releasethresh   
+}
+
 
 pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 pub type SwSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::sw_graph::SwContainer<crate::sir_model::sir_states::InfectionState>>;

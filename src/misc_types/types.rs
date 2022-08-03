@@ -40,6 +40,9 @@ pub struct LargeDeviationParam
     pub markov_seed: u64,
     pub initial_infected: usize
 }
+
+
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum GraphType{
     SmallWorld(f64),

@@ -19,6 +19,7 @@ use{
     rayon::prelude::*,
     crate::stats_methods::MyVariance,
     crate::misc_types::MeasureType,
+    crate::lockdown_methods::*,
 };
 
 use crate::stats_methods::*;
@@ -85,7 +86,11 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                 iter.map(
                     |_|
                     {
-                    let mut lockparams = param.lockdown;
+                    let mut lockparams = LockdownParameters{
+                        lock_style: param.lockdowntype,
+                        release_threshold: 0.0,
+                        lock_threshold: 0.0
+                    };
 
                     let new_graph_seed = graph_rng.gen::<u64>();
                     let opt = SWOptions::from_critical_thresh_params(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
@@ -96,12 +101,10 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                     //(c,m) for each lambda. 
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
+
                         lockparams.set_lock_thresh(*thresh);
-                        if param.releasebool{
-                            lockparams.set_rel_thresh(*thresh/2.);}
-                        else{
-                            lockparams.set_rel_thresh(-1.);
-                        }
+                        lockparams.set_rel_thresh(get_release_threshold(param.releasetype,*thresh));
+
                         model.reseed_sir_rng(r);
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 
@@ -150,6 +153,7 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
 
 
 fn sim_barabasi_both_m_and_c(param: CriticalThreshParams,json:Value,num_threads:Option<NonZeroUsize>){
+    
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     let n_size:Vec<_> = param.system_size_range.to_vec();
@@ -188,19 +192,25 @@ fn sim_barabasi_both_m_and_c(param: CriticalThreshParams,json:Value,num_threads:
                 iter.map(
                     |_|
                     {
-                    let mut lockparams = param.lockdown;
+                    let mut lockparams = LockdownParameters{
+                        lock_style: param.lockdowntype,
+                        release_threshold: 0.0,
+                        lock_threshold: 0.0
+                    };
 
                     let new_graph_seed = graph_rng.gen::<u64>();
                     let opt = BarabasiOptions::from_critical_thresh_params(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
-                    let small_world = opt.into();
-                    let mut model = SimpleSampleBarabasi::from_base(small_world, param.sir_seed,param.initial_infected);
+                    let world = opt.into();
+                    let mut model = SimpleSampleBarabasi::from_base(world, param.sir_seed,param.initial_infected);
                     let mut lockgraph = model.create_locked_down_network(lockparams);
 
                     //(c,m) for each lambda. 
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
+                        
                         lockparams.set_lock_thresh(*thresh);
-                        lockparams.set_rel_thresh(*thresh/2.);
+                        lockparams.set_rel_thresh(get_release_threshold(param.releasetype,*thresh));
+
                         model.reseed_sir_rng(r);
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 

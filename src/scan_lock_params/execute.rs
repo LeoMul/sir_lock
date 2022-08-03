@@ -14,7 +14,8 @@ use{
     std::{fs::File, io::BufWriter},
     rand_pcg::Pcg64,
     net_ensembles::rand::SeedableRng,
-    crate::stats_methods::MyVariance
+    crate::stats_methods::MyVariance,
+    crate::lockdown_methods::*,
 };
 
 //use serde_json::from_slice;
@@ -47,7 +48,7 @@ pub fn sim_small_world(param:ScanLockParams,json:Value,num_threads:Option<NonZer
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     let severities:Vec<_> = param.lockdown_severities.to_vec();
 
-    let mut lockparams = param.lockdown;
+    //let mut lockparams = param.lockdown;
     let thresh_range = param.thresholdrange.get_range();
     let thresh_vec:Vec<_> = thresh_range.iter().collect();
 
@@ -78,12 +79,15 @@ pub fn sim_small_world(param:ScanLockParams,json:Value,num_threads:Option<NonZer
         let per_thread = param.num_samples/k.get() as u64;
         
         let bar = crate::indication_bar(thresh_vec.len() as u64);
-        lockparams.set_lock_severity(severity);
         
         let data:Vec<_> = thresh_vec.iter().map(|t|{
-
-            lockparams.set_lock_thresh(*t);
-            lockparams.set_rel_thresh(*t/2.);
+            let rel = get_release_threshold(param.releaseparams,*t);
+            //println!("{rel},{t}");
+            let lockparams = LockdownParameters{
+                lock_style:LockdownType::Random(severity),
+                release_threshold: rel,
+                lock_threshold:*t,
+                };
 
             let thread_vecs:Vec<_> = container.par_iter_mut().map(|cont|{
                 //let mut lock = cont.lock()
@@ -162,7 +166,7 @@ pub fn sim_ba(param:ScanLockParams,json:Value,num_threads:Option<NonZeroUsize>){
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     let severities:Vec<_> = param.lockdown_severities.to_vec();
 
-    let mut lockparams = param.lockdown;
+    //let mut lockparams = param.lockdown;
     let thresh_range = param.thresholdrange.get_range();
     let thresh_vec:Vec<_> = thresh_range.iter().collect();
 
@@ -193,12 +197,14 @@ pub fn sim_ba(param:ScanLockParams,json:Value,num_threads:Option<NonZeroUsize>){
         let per_thread = param.num_samples/k.get() as u64;
         
         let bar = crate::indication_bar(thresh_vec.len() as u64);
-        lockparams.set_lock_severity(severity);
         
         let data:Vec<_> = thresh_vec.iter().map(|t|{
 
-            lockparams.set_lock_thresh(*t);
-            lockparams.set_rel_thresh(*t/2.);
+            let lockparams = LockdownParameters{
+                lock_style:LockdownType::Random(severity),
+                release_threshold: get_release_threshold(param.releaseparams,*t),
+                lock_threshold:*t,
+                };
 
             let thread_vecs:Vec<_> = container.par_iter_mut().map(|cont|{
                 //let mut lock = cont.lock()

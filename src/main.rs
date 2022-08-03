@@ -30,6 +30,7 @@ pub mod scan_lock_params;
 pub mod critical_threshold;
 pub mod connectedcomponent;
 pub mod simplecurves;
+
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
@@ -52,7 +53,7 @@ fn main() {
         CmdOption::LargeDeviationsLDContinue(o) => o.execute(start_time),
         CmdOption::REESLd(o) => o.execute(start_time),
         CmdOption::ConnectedComponent(o) => o.execute(),
-        CmdOption::SimpleCurves(o) => o.execute()
+        CmdOption::SimpleCurves(o) => o.execute(),
 
     }
     println!("Execution took {}",humantime::format_duration(start_time.elapsed()))
@@ -67,6 +68,7 @@ pub fn indication_bar(len: u64) -> ProgressBar
             .template("{msg} [{elapsed_precise} - {eta_precise}] {wide_bar}"));
         bar
 }
+
 
 
 #[derive(Debug, StructOpt, Clone)]
@@ -90,7 +92,6 @@ pub enum CmdOption
     REESLd(large_deviations::ReesOpts),
     ConnectedComponent(connectedcomponent::ConnectedComponent),
     SimpleCurves(simplecurves::SimpleCurves),
-
 
     
 }
