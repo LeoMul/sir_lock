@@ -14,6 +14,7 @@ use{
     crate::scan_lock_params::*,
     crate::critical_threshold::*,
     crate::connectedcomponent::*,
+    crate::simplecurves::*,
 };
 
 pub struct SWOptions{
@@ -181,6 +182,20 @@ impl SWOptions{
 
     }
     pub fn from_simple_sample(param: &SimpleSampleParam) -> Self
+    {
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            graph_seed: param.graph_seed,
+            system_size: param.system_size,
+            lambda: param.lambda,
+            gamma: param.recovery_prob,
+            rewire_prob,
+        }
+    }
+    pub fn from_simplecurves(param: &SimpleCurvesParam) -> Self
     {
         let rewire_prob = match param.graph_type {
             GraphType::SmallWorld(rewire) => rewire,

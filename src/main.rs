@@ -29,6 +29,7 @@ pub mod scan_gamma;
 pub mod scan_lock_params;
 pub mod critical_threshold;
 pub mod connectedcomponent;
+pub mod simplecurves;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
@@ -50,7 +51,8 @@ fn main() {
         CmdOption::LargeDeviationsLD(o) => o.execute(start_time),
         CmdOption::LargeDeviationsLDContinue(o) => o.execute(start_time),
         CmdOption::REESLd(o) => o.execute(start_time),
-        CmdOption::ConnectedComponent(o) => o.execute()
+        CmdOption::ConnectedComponent(o) => o.execute(),
+        CmdOption::SimpleCurves(o) => o.execute()
 
     }
     println!("Execution took {}",humantime::format_duration(start_time.elapsed()))
@@ -86,7 +88,8 @@ pub enum CmdOption
     LargeDeviationsLD(large_deviations::LDOptsLD),
     LargeDeviationsLDContinue(large_deviations::LDContinueCmdOpts),
     REESLd(large_deviations::ReesOpts),
-    ConnectedComponent(connectedcomponent::ConnectedComponent)
+    ConnectedComponent(connectedcomponent::ConnectedComponent),
+    SimpleCurves(simplecurves::SimpleCurves),
 
 
     
