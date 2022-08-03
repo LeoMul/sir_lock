@@ -101,10 +101,10 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                     //(c,m) for each lambda. 
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
-
+                        let rel = get_release_threshold(param.releasetype,*thresh);
                         lockparams.set_lock_thresh(*thresh);
-                        lockparams.set_rel_thresh(get_release_threshold(param.releasetype,*thresh));
-
+                        lockparams.set_rel_thresh(rel);
+                        //println!("{rel},{thresh}");
                         model.reseed_sir_rng(r);
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 
@@ -207,10 +207,10 @@ fn sim_barabasi_both_m_and_c(param: CriticalThreshParams,json:Value,num_threads:
                     //(c,m) for each lambda. 
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
-                        
+                        let rel = get_release_threshold(param.releasetype,*thresh);
                         lockparams.set_lock_thresh(*thresh);
-                        lockparams.set_rel_thresh(get_release_threshold(param.releasetype,*thresh));
-
+                        lockparams.set_rel_thresh(rel);
+                        //println!("{rel},{thresh}");
                         model.reseed_sir_rng(r);
                         let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
                         //let c = 
