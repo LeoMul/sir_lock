@@ -66,8 +66,13 @@ impl SimpleSampleParam
             None => "".to_owned(),
             Some(v) => format!("j{}", v)
         };
+        let s = if let LockdownType::Random(n) = self.lockdown.lock_style{
+            format!("percent{n}")
+        }else{
+            "".to_owned()
+        };
         format!(
-            "v{}SimpleSampling_Lock{}R{}L{}_Measure{}N{}Rec{}Trans{}InInf{}Sam{}Graph{}GS{}SS{}THR{}.dat",
+            "v{}SimpleSampling_Lock{}{s}R{}L{}_Measure{}N{}Rec{}Trans{}InInf{}Sam{}Graph{}GS{}SS{}THR{}.dat",
             crate::VERSION,
             lockdown_naming_string(self.lockdown.lock_style),
             self.lockdown.release_threshold,

@@ -130,6 +130,7 @@ pub struct LDLdOpts
 {
     pub energy: MeasureType,
     pub allowed_seconds: u64,
+    pub change_energy_res:bool,
     pub quick_name:  Box<dyn Fn (Option<usize>, &str, LargeDeviationMode) -> String>,
     pub value: Vec<serde_json::Value>,
     pub no_save: bool
@@ -171,7 +172,7 @@ impl LDOptsLD{
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone,Serialize, Deserialize)]
 pub struct LDLDparam
 {
     pub system_size: NonZeroUsize,
@@ -188,6 +189,7 @@ pub struct LDLDparam
     pub step_size: usize,
     pub walkers_per_interval: NonZeroUsize,
     pub energy: MeasureType,
+    pub change_energy_res:bool,
     pub seconds: u64,
     pub minutes: u64,
     pub hours: u64,
@@ -230,12 +232,13 @@ impl LDLDparam
         };
 
         format!(
-            "v{}_{}_LDHD_N{}r{}t{}_Energy{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}.{end}",
+            "v{}_{}_LDHD_N{}r{}t{}_Energy{}HalfRes{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}.{end}",
             crate::VERSION,
             mode.name(),
             self.system_size,
             self.recovery_prob,
             self.energy.name(),
+            self.change_energy_res,
             self.lambda,
             lockdown_naming_string(self.lockdownparams.lock_style),
             self.lockdownparams.release_threshold,
@@ -301,17 +304,20 @@ impl Default for LDLDparam
                 lock_threshold: 0.1,
                 release_threshold: 0.05
             },
-            histograms: HistogramCreator::Manual(
-                vec![Interval{
-                    start: 1600,
-                    end_inlcusive: 2000
-
-                }]
+            histograms: HistogramCreator::Automatic(
+                Intervals{
+                    start: None,
+                    end_inlcusive: None,
+                    num_intervals: 2,
+                    overlap: None,
+                    greedy_search_steps: None
+                }
             ),
             walkers_per_interval: ONE,
             step_size: DEFAULT_MARKOV_STEP_SIZE,
             sweep_size: DEFAULT_SWEEP_SIZE,
             energy: MeasureType::C,
+            change_energy_res: false,
             seconds: 0,
             minutes: 5,
             hours: 1,
@@ -454,19 +460,40 @@ impl HistogramCreator
     }
 }
 
-pub fn calc_m_ba(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+pub fn calc_m_sw_no_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
 {
     Some(
         if !model.ld_model.markov_changed{
             model.ld_model.energy
         }
         else{
-            model.ld_model.energy = model.ld_energy_m();
-            model.ld_model.energy 
-        })
+            let m = model.ld_energy_m();
+            model.ld_model.energy = m;
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
+}
+pub fn calc_m_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            let m = (model.ld_energy_m()+1)/2;
+            model.ld_model.energy = m;
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
 }
 
-pub fn calc_c_ba(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+pub fn calc_c_sw_no_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
 {
     Some(
         if !model.ld_model.markov_changed{
@@ -474,23 +501,16 @@ pub fn calc_c_ba(model: &mut BALargeDeviationWithLocks) -> Option<u32>
         }
         else{
             model.ld_energy_m();
-            model.ld_model.energy = model.calculate_ever_infected() as u32;
-            model.ld_model.energy 
-        })
-}
-pub fn calc_m_sw(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
-{
-    Some(
-        if !model.ld_model.markov_changed{
+            let c = model.calculate_ever_infected() as u32;
+            model.ld_model.energy = c ;
             model.ld_model.energy
+            
+            
+             
         }
-        else{
-            model.ld_model.energy = model.ld_energy_m();
-            model.ld_model.energy 
-        })
+        )
 }
-
-pub fn calc_c_sw(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
+pub fn calc_c_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
 {
     Some(
         if !model.ld_model.markov_changed{
@@ -498,19 +518,101 @@ pub fn calc_c_sw(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
         }
         else{
             model.ld_energy_m();
-            model.ld_model.energy = model.calculate_ever_infected() as u32;
-            model.ld_model.energy 
-        })
+            let c = model.calculate_ever_infected() as u32;
+            model.ld_model.energy = (c+1)/2 ;
+            //println!("{}",model.ld_model.energy);
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
+}
+pub fn calc_m_ba_no_res_change(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            let m = model.ld_energy_m();
+            model.ld_model.energy = m;
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
+}
+pub fn calc_m_ba_with_res_change(model: &mut BALargeDeviationWithLocks) -> Option<u32>
+{
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            let m = (model.ld_energy_m()+1)/2;
+            model.ld_model.energy = m;
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
 }
 
-pub fn change_energy_res_m_ba(model: &mut BALargeDeviationWithLocks)-> Option<u32>
+pub fn calc_c_ba_no_res_change(model: &mut BALargeDeviationWithLocks) -> Option<u32>
 {
-    calc_m_ba(model).map(|energz| (energz+1)/2)
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            model.ld_energy_m();
+            let c = model.calculate_ever_infected() as u32;
+            model.ld_model.energy = c ;
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
 }
-pub fn change_energy_res_c_ba(model: &mut BALargeDeviationWithLocks)-> Option<u32>
+pub fn calc_c_ba_with_res_change(model: &mut BALargeDeviationWithLocks) -> Option<u32>
 {
-    calc_c_ba(model).map(|energz| (energz+1)/2)
+    Some(
+        if !model.ld_model.markov_changed{
+            model.ld_model.energy
+        }
+        else{
+            model.ld_energy_m();
+            let c = model.calculate_ever_infected() as u32;
+            model.ld_model.energy = (c+1)/2 ;
+            model.ld_model.energy
+            
+            
+             
+        }
+        )
 }
+
+//pub fn change_energy_res_m_ba(model: &mut BALargeDeviationWithLocks)-> Option<u32>
+//{
+//    calc_m_ba(model).map(|energz| (energz+1)/2)
+//}
+//pub fn change_energy_res_c_ba(model: &mut BALargeDeviationWithLocks)-> Option<u32>
+//{
+//    calc_c_ba(model).map(|energz| (energz+1)/2)
+//}
+//pub fn change_energy_res_m_sw(model: &mut SWLargeDeviationWithLocks)-> Option<u32>
+//{
+//    calc_m_sw(model).map(|energz| (energz+1)/2)
+//}
+//pub fn change_energy_res_c_sw(model: &mut SWLargeDeviationWithLocks)-> Option<u32>
+//{
+//    calc_c_sw(model).map(|energz| (energz+1)/2)
+//}
+
 pub fn change_energy_res_sw<A>(function:A)-> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy
 where A:Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy {
     move |sw|{
@@ -523,36 +625,47 @@ where A:Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy 
     }
 
 }
-pub fn energy_function_returner_ba(measure_type:MeasureType) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
+pub fn energy_function_returner_sw(measure_type:MeasureType,change_res:bool) -> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
 
-    //,changeresbool:bool
-    //let fun = 
+
+
     match measure_type{
-        MeasureType::C => calc_c_ba,
-        MeasureType::M => {
-            calc_m_ba
+        MeasureType::C => if !change_res{
+            calc_c_sw_no_res_change
         }
-    }
-    //if changeresbool{
-    //    change_energy_res_ba
-    //}
-    //else{
-    //    fun
-    //}
-    
-
-}
-
-pub fn energy_function_returner_sw(measure_type:MeasureType) -> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
-
-
-
-    match measure_type{
-        MeasureType::C => calc_c_sw,
-        MeasureType::M => {
-            calc_m_sw
+        else{
+            calc_c_sw_with_res_change
+        },
+        MeasureType::M => if !change_res{
+            calc_m_sw_no_res_change
+        }
+        else{
+            calc_m_sw_with_res_change
         }
     }
     
 
 }
+
+pub fn energy_function_returner_ba(measure_type:MeasureType,change_res:bool) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
+
+
+
+    match measure_type{
+        MeasureType::C => if !change_res{
+            calc_c_ba_no_res_change
+        }
+        else{
+            calc_c_ba_with_res_change
+        },
+        MeasureType::M => if !change_res{
+            calc_m_ba_no_res_change
+        }
+        else{
+            calc_m_ba_with_res_change
+        }
+    }
+    
+
+}
+

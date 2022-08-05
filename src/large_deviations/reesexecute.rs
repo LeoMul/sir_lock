@@ -57,7 +57,7 @@ pub fn execute_entropic_sampling_ba(opt: &REESJsonOpts, start_time: Instant)
     let old_param: LDLDparam = serde_json::from_value(old_jsons[0].clone())
         .expect("Unable to parse old json");
 
-    let energy = energy_function_returner_ba(old_param.energy);
+    let energy = energy_function_returner_ba(old_param.energy,old_param.change_energy_res);
 
     let writer: Vec<_> = rewl.hists()
         .iter()
@@ -241,7 +241,7 @@ pub fn execute_entropic_sampling_sw(opt: &REESJsonOpts, start_time: Instant)
     let old_param: LDLDparam = serde_json::from_value(old_jsons[0].clone())
         .expect("Unable to parse old json");
 
-    let energy = energy_function_returner_sw(old_param.energy);
+    let energy = energy_function_returner_sw(old_param.energy,old_param.change_energy_res);
 
 
     let writer: Vec<_> = rewl.hists()

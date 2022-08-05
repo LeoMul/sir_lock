@@ -70,7 +70,7 @@ impl Offset {
     /// You have to call `set_time` to set the correct time.
     /// If the offset changed, `set_time` has to be called again,
     /// to guarantee correct results.
-    #[inline]
+    #[inline(always)]
     pub fn lookup_index(&self, index: usize) -> usize
     {
         self.time_with_offset * self.n + index

@@ -17,12 +17,19 @@ use {
 
 pub fn execute_large_dev(opt: LDOptsLD, instant: std::time::Instant){
     let (param, value): (LDLDparam, _) = parse(opt.json.as_ref());
-    match param.graph_type{
-        GraphType::SmallWorld(r) => execute_sw(opt, instant,r,param,value),
-        GraphType::Barabasi(m,n) => execute_ba(opt, instant,m,n,param,value),
-        _ => unimplemented!()
-    }
 
+    if param.change_energy_res && param.large_deviation_param.initial_infected%2 == param.system_size.get()%2{
+        println!("Error! The changing of resolution requires two energies per bin. The initial infected and system size must then have opposite parity");
+        panic!()
+
+    }
+    else{
+        match param.graph_type{
+            GraphType::SmallWorld(r) => execute_sw(opt, instant,r,param,value),
+            GraphType::Barabasi(m,n) => execute_ba(opt, instant,m,n,param,value),
+            _ => unimplemented!()
+        }
+    }
 }
 
 
@@ -36,8 +43,9 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
             .build_global()
             .unwrap();
     }
-
     
+    
+    let boolean_res:bool = (param.change_energy_res).clone();
 
     let base_options = BarabasiOptions{
         graph_seed: param.graph_seed,
@@ -53,11 +61,19 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
     ld_model.infect_initial_patients();
     
 
-    let histograms = param.histograms.create(
-        ld_model.initial_infected as u32, 
-        param.system_size.get() as u32, 
-        param.walkers_per_interval
-    );
+    let histograms =  if !boolean_res{
+        param.histograms.create(
+            ld_model.initial_infected as u32, 
+            param.system_size.get() as u32, 
+            param.walkers_per_interval
+        )}
+    else{
+        param.histograms.create(
+            (ld_model.initial_infected as u32-1)/2, 
+            (param.system_size.get() as u32-1)/2, 
+            param.walkers_per_interval
+            )
+    };
     print_min_max_intervalsize(&histograms);
 
     let mut markov_seeder = Pcg64::seed_from_u64(param.large_deviation_param.markov_seed);
@@ -86,7 +102,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
 
     println!("Start greedy build");
 
-    let energy = energy_function_returner_ba(param.energy);
+    let energy = energy_function_returner_ba(param.energy,param.change_energy_res);
 
     let rewl = rewl_builder.greedy_build(energy);
     let duration = format_duration(instant.elapsed());
@@ -104,6 +120,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
         quick_name: Box::new(name_fn),
         allowed_seconds: allowed,
         energy: e,
+        change_energy_res:boolean_res,
         value: vec![value],
         no_save: opt.no_save
     };
@@ -121,7 +138,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
             .unwrap();
     }
 
-    
+    let boolean_res:bool = (param.change_energy_res).clone();
 
     let base_options = SWOptions{
         graph_seed: param.graph_seed,
@@ -136,11 +153,20 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
     ld_model.infect_initial_patients();
     
 
-    let histograms = param.histograms.create(
-        ld_model.initial_infected as u32, 
-        param.system_size.get() as u32, 
-        param.walkers_per_interval
-    );
+    let histograms =  if !boolean_res{
+            param.histograms.create(
+                ld_model.initial_infected as u32, 
+                param.system_size.get() as u32, 
+                param.walkers_per_interval
+            )}
+        else{
+            println!("yes");
+            param.histograms.create(
+                (ld_model.initial_infected as u32+1)/2, 
+                (param.system_size.get() as u32+1)/2, 
+                param.walkers_per_interval
+                )
+    };
     print_min_max_intervalsize(&histograms);
 
     let mut markov_seeder = Pcg64::seed_from_u64(param.large_deviation_param.markov_seed);
@@ -169,7 +195,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
 
     println!("Start greedy build");
 
-    let energy = energy_function_returner_sw(param.energy);
+    let energy = energy_function_returner_sw(param.energy,param.change_energy_res);
 
     let rewl = rewl_builder.greedy_build(energy);
     let duration = format_duration(instant.elapsed());
@@ -187,6 +213,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
         quick_name: Box::new(name_fn),
         allowed_seconds: allowed,
         energy: e,
+        change_energy_res:boolean_res,
         value: vec![value],
         no_save: opt.no_save
     };
@@ -212,7 +239,7 @@ pub fn execute_high_degree_helper_sw(mut rewl: Rewl<SWLargeDeviationWithLocks, P
     instant: std::time::Instant,
     opts: LDLdOpts){
 
-    let energy = energy_function_returner_sw(opts.energy);
+    let energy = energy_function_returner_sw(opts.energy,opts.change_energy_res);
 
     rewl.simulate_while(energy, |_| instant.elapsed().as_secs() < opts.allowed_seconds);
 
@@ -331,7 +358,7 @@ pub fn execute_high_degree_helper_ba(mut rewl: Rewl<BALargeDeviationWithLocks, P
     instant: std::time::Instant,
     opts: LDLdOpts){
 
-    let energy = energy_function_returner_ba(opts.energy);
+    let energy = energy_function_returner_ba(opts.energy,opts.change_energy_res);
 
     rewl.simulate_while(energy, |_| instant.elapsed().as_secs() < opts.allowed_seconds);
 
@@ -476,7 +503,7 @@ pub fn load_small_world_rewl(opts: LDContinueOpts, instant: std::time::Instant, 
 
     let (mut rewl, mut json_string):(Rewl<SWLargeDeviationWithLocks, _, _, _, _, ()>, Vec<_>) = deserialize_from_file(&opts.file_name);
 
-    
+
 
 
     if let Some(step_size) = opts.change_step_size
@@ -498,6 +525,7 @@ pub fn load_small_world_rewl(opts: LDContinueOpts, instant: std::time::Instant, 
     let mut old_opts: LDLDparam = serde_json::from_str(&json_string[0])
         .expect("Unable to deserialize old params");
     old_opts.times_plus_1();
+    let boolean_res = old_opts.change_energy_res;
 
     let mut jsons = vec![serde_json::to_value(old_opts.clone()).expect("unable to create json")];
 
@@ -526,11 +554,11 @@ pub fn load_small_world_rewl(opts: LDContinueOpts, instant: std::time::Instant, 
     {
         old_opts.quick_name(interval, end, mode)
     };
-
     let opts = LDLdOpts{
         quick_name: Box::new(name_fn),
         allowed_seconds,
         energy: e,
+        change_energy_res: boolean_res,
         value: jsons,
         no_save
     };
@@ -590,6 +618,7 @@ pub fn load_barabasi_rewl(opts: LDContinueOpts, instant: std::time::Instant, no_
                 }
             )
     );
+    let boolean_res:bool = old_opts.change_energy_res;
 
     let e = old_opts.energy;
     let name_fn = move |interval: Option<usize>, end: &str, mode: LargeDeviationMode|
@@ -601,6 +630,7 @@ pub fn load_barabasi_rewl(opts: LDContinueOpts, instant: std::time::Instant, no_
         quick_name: Box::new(name_fn),
         allowed_seconds,
         energy: e,
+        change_energy_res: boolean_res,
         value: jsons,
         no_save
     };
@@ -613,74 +643,3 @@ pub fn load_barabasi_rewl(opts: LDContinueOpts, instant: std::time::Instant, no_
 }
 
 
-pub fn _legacy_load_high_degree_rewl<T>(opts: LDContinueOpts, _instant: std::time::Instant, no_save: bool)
-where T: serde::de::DeserializeOwned {
-    let allowed_seconds = opts.seconds();
-
-    let (mut rewl, mut json_string):(Rewl<T, _, _, _, _, ()>, Vec<_>) = deserialize_from_file::<T>(&opts.file_name);
-
-    
-
-
-    if let Some(step_size) = opts.change_step_size
-    {
-        for i in 0..
-        {
-            if rewl.change_step_size_of_interval(i, step_size.get()).is_err()
-            {
-                break;
-            }
-        }
-    }
-
-    // add the json from this call
-    let json_val =  serde_json::to_value(opts).unwrap();
-    json_string.push(json_val.to_string());
-    
-
-    let mut old_opts: LDLDparam = serde_json::from_str(&json_string[0])
-        .expect("Unable to deserialize old params");
-    old_opts.times_plus_1();
-
-    let mut jsons = vec![serde_json::to_value(old_opts.clone()).expect("unable to create json")];
-
-    jsons.extend(
-        json_string.iter()
-            .skip(1)
-            .filter_map(
-                |s|
-                {
-                    let res: Result<LDContinueOpts, _> = serde_json::from_str(s);
-                    
-                    match res
-                    {
-                        Ok(val) => Some(serde_json::to_value(val).expect("Unable to create json in continue")),
-                        Err(_) => {
-                            eprintln!("Cannot read old continue opts. Ignoring the error.");
-                            None
-                        }
-                    }
-                }
-            )
-    );
-
-    let e = old_opts.energy;
-    let name_fn = move |interval: Option<usize>, end: &str, mode: LargeDeviationMode|
-    {
-        old_opts.quick_name(interval, end, mode)
-    };
-
-    let _opts = LDLdOpts{
-        quick_name: Box::new(name_fn),
-        allowed_seconds,
-        energy: e,
-        value: jsons,
-        no_save
-    };
-    //match rewl{
-    //    BALDRewl => execute_high_degree_helper_ba(rewl, instant, opts),
-    //    SWLDRewl => execute_high_degree_helper_ba(rewl, instant, opts),
-    //    _ => print!("error loading rewl graph type")
-
-    
-}

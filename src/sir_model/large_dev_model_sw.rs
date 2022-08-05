@@ -194,7 +194,9 @@ impl SWLargeDeviation
                         // only susceptible nodes are relevant later
                         if contained.sus_check(){
                             // keep track of neighbors of infected nodes
-                            self.dangerous_neighbor_count[j] += 1;
+                            unsafe{
+                                *self.dangerous_neighbor_count.get_unchecked_mut(j) += 1;
+                            }
                         }
                     }
 
@@ -227,7 +229,9 @@ impl SWLargeDeviation
                         // only susceptible nodes are relevant later
                         if contained.sus_check(){
                             // keep track of neighbors of infected nodes
-                           self.dangerous_neighbor_count[j] += 1;
+                            unsafe{
+                                *self.dangerous_neighbor_count.get_unchecked_mut(j) += 1;
+                            }
                         }
                     }
     
@@ -252,7 +256,8 @@ impl SWLargeDeviation
         let iter_danger = self.dangerous_neighbor_count.iter().enumerate();
 
         //New Infections. The choice of topology is handled here.
-        if !lockdown_indicator{
+         if !lockdown_indicator{
+ 
             for (index, &count) in iter_danger{
                 if count > 0{
                     debug_assert!(self.base_model.ensemble.at(index).sus_check());
@@ -287,6 +292,7 @@ impl SWLargeDeviation
         //doing the recoveries.
         if !lockdown_indicator{
             let graph = &mut self.base_model.ensemble;
+
             for index in 0..self.system_size.get() {
                 let contained_mut = graph.at_mut(index);
                 if !contained_mut.inf_check(){
@@ -406,7 +412,7 @@ impl SWLargeDeviation
         
         let mut lockdown_indicator = false;
         //println!("{max_infected}");
-        assert_eq!(max_infected,self.initial_infected as u32);
+        debug_assert_eq!(max_infected,self.initial_infected as u32);
         for i in 0..self.time_steps.get(){
             self.offset.set_time(i);
             let inf = self.currently_infected_count as f64 /self.system_size.get() as f64;
@@ -440,7 +446,7 @@ impl SWLargeDeviation
         let lockdown_threshold = self.lockdownparams.lock_threshold;
         let release_threshold = self.lockdownparams.release_threshold;
         let x = self.base_model.ensemble.graph().contained_iter().filter(|state| state.inf_check()).count();
-        assert_eq!(x,self.initial_infected);
+        debug_assert_eq!(x,self.initial_infected);
         //let mut max_infected = self.currently_infected_count;
         let mut lockdown_indicator = false;
 
