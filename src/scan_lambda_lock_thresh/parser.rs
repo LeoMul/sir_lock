@@ -52,13 +52,13 @@ impl Default for ScanLambdaThreshParams{
     fn default() -> Self{
         let lambda_range_def = F64RangeBuilder{
             start:0.0,
-            end: 1.0,
-            steps: NonZeroUsize::new(20).unwrap()
+            end: 0.4,
+            steps: NonZeroUsize::new(100).unwrap()
         };
         let lock_thresh_range_def = F64RangeBuilder{
-            start:0.06,
-            end: 1.0,
-            steps: NonZeroUsize::new(20).unwrap()
+            start:0.0,
+            end: 0.4,
+            steps: NonZeroUsize::new(100).unwrap()
         };
         Self{
             lambda_range:lambda_range_def,
@@ -70,7 +70,7 @@ impl Default for ScanLambdaThreshParams{
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            lockdowntype:LockdownType::Random(0.35),
+            lockdowntype:LockdownType::Random(0.5541),
             initial_infected: DEFAULT_INITIAL_INFECTED,
             releaseparams: ReleaseType::FracOfLock(0.125),
         }

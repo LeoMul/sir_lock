@@ -74,9 +74,9 @@ impl Default for ScanLambdaGammaParams{
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            lockdown:LockdownType::Random(0.6),
-            lock_thresh:0.1,
-            rel_thresh:0.05,
+            lockdown:LockdownType::Random(0.5541),
+            lock_thresh:0.165,
+            rel_thresh:0.0206,
             compare_nolock: false,
             initial_infected: DEFAULT_INITIAL_INFECTED
 

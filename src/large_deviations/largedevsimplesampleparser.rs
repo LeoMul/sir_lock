@@ -107,7 +107,7 @@ impl Default for SimpleSampleldParam
         Self{
             system_size: DEFAULT_SYSTEM_SIZE,
             recovery_prob: DEFAULT_RECOVERY_PROB,
-            graph_type: GraphType::Barabasi(2,10),
+            graph_type: GraphType::SmallWorld(0.1),
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lambda: DEFAULT_LAMBDA,

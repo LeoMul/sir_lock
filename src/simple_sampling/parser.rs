@@ -101,13 +101,13 @@ impl Default for SimpleSampleParam
             recovery_prob: DEFAULT_RECOVERY_PROB,
             samples: DEFAULT_SAMPLES_SIMPLE_SAMPLE,
             graph_seed: DEFAULT_GRAPH_SEED,
-            graph_type: GraphType::Barabasi(2,10),
+            graph_type: GraphType::SmallWorld(0.1),
             system_size: DEFAULT_SYSTEM_SIZE,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(0.6),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
+                lock_style: LockdownType::Random(0.5541),
+                lock_threshold: 0.165,
+                release_threshold: 0.0206,
             },
             initial_infected: DEFAULT_INITIAL_INFECTED
         }
