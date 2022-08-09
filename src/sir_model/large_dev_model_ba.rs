@@ -1019,6 +1019,8 @@ mod tests {
             time_steps: ONE,
             markov_seed: DEFAULT_MARKOV_SEED,
             initial_infected:DEFAULT_INITIAL_INFECTED
+            ,
+            zero_starting_conditions:false
         };
 
         let lockparams = LockdownParameters{

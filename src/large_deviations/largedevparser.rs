@@ -297,7 +297,8 @@ impl Default for LDLDparam
             {
                 time_steps: ONE,
                 markov_seed: DEFAULT_MARKOV_SEED,
-                initial_infected: DEFAULT_INITIAL_INFECTED
+                initial_infected: DEFAULT_INITIAL_INFECTED,
+                zero_starting_conditions: false,
             },
             lockdownparams: LockdownParameters{
                 lock_style: LockdownType::Random(0.6),
@@ -526,11 +527,11 @@ pub fn calc_c_sw_no_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<
                 let mut writer = SirWriter::new(&name, 1);
                 model.ld_energy_m_and_print(&mut writer);
             }}
+            model.old_energy = model.ld_model.energy;
 
-            let old = model.old_energy;
-            println!("old {old} new {c}");
+            //let old = model.old_energy;
+            //println!("old {old} new {c}");
 
-            model.old_energy = model.energy;
             model.ld_model.energy = c ;
             //println!("{}",model.ld_model.energy);
             model.ld_model.energy})
@@ -559,12 +560,13 @@ pub fn calc_c_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Optio
                 let mut writer = SirWriter::new(&name, 1);
                 model.ld_energy_m_and_print(&mut writer);
             }}
-            let old = model.old_energy;
-            println!("old {old} new {c}");
+            //let old = model.old_energy;
+            model.old_energy = model.ld_model.energy;
+
+            //println!("old {old} new {c}");
             //if c < 200{
             //    panic!()
             //}
-            model.old_energy = model.energy;
             model.ld_model.energy = c ;
             //println!("{}",model.ld_model.energy);
             model.ld_model.energy

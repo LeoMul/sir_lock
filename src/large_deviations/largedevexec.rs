@@ -100,6 +100,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
         param.f_threshold
     ).expect("unable to create rewl builder");
 
+
     println!("Start greedy build");
 
     let energy = energy_function_returner_ba(param.energy,param.change_energy_res);
@@ -107,7 +108,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
     let rewl = rewl_builder.greedy_build(energy);
     let duration = format_duration(instant.elapsed());
     println!("Finished greedy build after {duration}");
-    
+    //panic!();
     //println!("{}",rewl.walkers().len());
     let allowed = param.allowed_seconds();
     let e = param.energy;
@@ -206,7 +207,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
     let rewl = rewl_builder.greedy_build(energy);
     let duration = format_duration(instant.elapsed());
     println!("Finished greedy build after {duration}");
-
+    //panic!();
     
     rewl.ensemble_iter().for_each(
         |ensemble|

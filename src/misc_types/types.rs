@@ -38,7 +38,8 @@ pub struct LargeDeviationParam
 {
     pub time_steps: NonZeroUsize,
     pub markov_seed: u64,
-    pub initial_infected: usize
+    pub initial_infected: usize,
+    pub zero_starting_conditions:bool,
 }
 
 

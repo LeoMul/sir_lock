@@ -73,6 +73,7 @@ pub struct SWLargeDeviation
     pub system_size: NonZeroUsize,
     /// counting how many nodes are currently infected
     currently_infected_count: u32,
+    zero_starting_conditions: bool,
     last_extinction_index: usize,
     pub patient_zero_vec: Vec<usize>,
     max_degree: usize,
@@ -109,7 +110,7 @@ impl SWLargeDeviation
         let mut markov_rng = Pcg64::seed_from_u64(param.markov_seed);
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph(),&mut markov_rng);
         
-
+        let zero_starting_conditions = param.zero_starting_conditions;
         //let name = "curvewritername";
         //let mut writer = SirWriter::new(&name, 1);
         #[cfg(feature = "ldprint")]   
@@ -126,13 +127,26 @@ impl SWLargeDeviation
 
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
 
-        let transmission_rand_vec: Vec<_> = (0..rng_vec_len)
+        
+        
+        
+            
+        
+        let mut transmission_rand_vec: Vec<_> = (0..rng_vec_len)
             .map(|_| uniform.sample(&mut markov_rng))
             .collect();
 
-        let recovery_rand_vec: Vec<_> = (0..rng_vec_len)
+        let mut recovery_rand_vec: Vec<_> = (0..rng_vec_len)
             .map(|_| uniform.sample(&mut markov_rng))
             .collect();
+
+        if zero_starting_conditions{
+            transmission_rand_vec.iter_mut().for_each(|item| *item = 0.0);
+            recovery_rand_vec.iter_mut().for_each(|item| *item = 0.0);
+
+        }
+        println!("{}",transmission_rand_vec[0]);
+
 
         let offset = Offset::new(param.time_steps.get(), system_size.get());
         let dangerous_neighbor_count = vec![0; system_size.get()];
@@ -163,6 +177,7 @@ impl SWLargeDeviation
             markov_rng,
             time_steps: param.time_steps,
             offset,
+
             //writer,
             #[cfg(feature = "ldprint")]   
             printingvector,
@@ -170,6 +185,7 @@ impl SWLargeDeviation
             energy: u32::MAX,
             old_energy: u32::MAX,
             transmission_rand_vec,
+            zero_starting_conditions,
             recovery_rand_vec,
             unfinished_simulations_counter: 0,
             total_simulations_counter: 0,
@@ -1245,7 +1261,8 @@ mod tests {
         let param = LargeDeviationParam {
             time_steps: ONE,
             markov_seed: DEFAULT_MARKOV_SEED,
-            initial_infected:DEFAULT_INITIAL_INFECTED
+            initial_infected:DEFAULT_INITIAL_INFECTED,
+            zero_starting_conditions:false
         };
 
         let lockparams = LockdownParameters{
