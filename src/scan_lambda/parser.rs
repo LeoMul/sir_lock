@@ -71,8 +71,8 @@ impl Default for ScanLambdaParams{
             sir_seed: DEFAULT_SIR_SEED,
             lockdown:LockdownParameters{
                 lock_style: LockdownType::Random(0.6),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
+                lock_threshold: 0.165,
+                release_threshold: 0.0206,
             },
             complock:LockdownParameters{
                 lock_style: LockdownType::None,

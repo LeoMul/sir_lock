@@ -155,19 +155,20 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
 
     let histograms =  if !boolean_res{
             param.histograms.create(
-                ld_model.initial_infected as u32, 
+                ld_model.patient_zero_vec.len() as u32, 
                 param.system_size.get() as u32, 
                 param.walkers_per_interval
             )}
         else{
             println!("yes");
             param.histograms.create(
-                (ld_model.initial_infected as u32+1)/2, 
+                (ld_model.patient_zero_vec.len() as u32+1)/2, 
                 (param.system_size.get() as u32+1)/2, 
                 param.walkers_per_interval
                 )
     };
     print_min_max_intervalsize(&histograms);
+    print_intervals_hists(&histograms);
 
     let mut markov_seeder = Pcg64::seed_from_u64(param.large_deviation_param.markov_seed);
     let uniform = Uniform::new(0, 90357094723984_u64);
@@ -195,12 +196,24 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
 
     println!("Start greedy build");
 
+    let name = "curve";
+
+    let mut writer = SirWriter::new(&name, 1);
+    writer.write_header(&[value.clone()]).unwrap();
+
     let energy = energy_function_returner_sw(param.energy,param.change_energy_res);
 
     let rewl = rewl_builder.greedy_build(energy);
     let duration = format_duration(instant.elapsed());
     println!("Finished greedy build after {duration}");
+
     
+    rewl.ensemble_iter().for_each(
+        |ensemble|
+            {
+                ensemble.tracker.write_stats(std::io::stdout());
+            }
+        );
     //println!("{}",rewl.walkers().len());
     let allowed = param.allowed_seconds();
     let e = param.energy;
@@ -235,6 +248,15 @@ fn print_min_max_intervalsize(hists: &[HistogramFast<u32>]){
     
     println!("min_interval len: {min_interval_size} max interval size {max_interval_size}");
 }
+
+fn print_intervals_hists(hists: &[HistogramFast<u32>]){
+    hists.iter().for_each(|his|{
+        let range = his.range_inclusive();
+        println!("beg {}, end {}",range.start(),range.end() );
+    }
+    )
+}
+
 pub fn execute_high_degree_helper_sw(mut rewl: Rewl<SWLargeDeviationWithLocks, Pcg64, HistogramFast<u32>, u32, MarkovStepWithLocks, ()>, 
     instant: std::time::Instant,
     opts: LDLdOpts){

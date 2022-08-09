@@ -24,16 +24,34 @@ const PATIENT_MOVE: f64 = 0.05;
 const PATIENT_MOVE_RANDOM: f64 = 0.08;
 
 use net_ensembles::GraphIteratorsMut;
+#[derive(Clone, Serialize, Deserialize)]
+pub enum LockdownIndicator{
+    Lockdown,
+    NotLockdown
+}
 
+impl LockdownIndicator{
+
+    pub fn is_in_lockdown(&self) -> bool{
+        matches!(self,LockdownIndicator::Lockdown)
+    }
+    pub fn is_not_in_lockdown(&self) -> bool{
+        matches!(self,LockdownIndicator::NotLockdown)
+    }
+
+}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SWLargeDeviation
 {
     base_model: SWModel,
     lock_graph: SwSIR,
+    #[cfg(feature = "ldprint")]   
+    pub printingvector: Vec<usize>,
     not_lockdown_pairs: Vec<[usize;2]>,
     lockdown_pairs: Vec<[usize;2]>,
-    lockdownparams:LockdownParameters,
+    lockdownparams:LockdownParameters, 
+    lockdown_indicator: LockdownIndicator,
     transmission_rand_vec: Vec<f64>,
     pub markov_changed: bool,
     recovery_rand_vec: Vec<f64>,
@@ -43,6 +61,7 @@ pub struct SWLargeDeviation
     markov_rng: Pcg64,
     offset: Offset,
     pub energy: u32,
+    pub old_energy:u32,
     // temporary storage, allocated here so that 
     // I do not need to allocate it again and again
     new_infected: Vec<usize>,
@@ -51,12 +70,11 @@ pub struct SWLargeDeviation
     // otherwise this is 0, as there is no danger
     dangerous_neighbor_count: Vec<i32>,
     one_minus_lambda: f64,
-    system_size: NonZeroUsize,
+    pub system_size: NonZeroUsize,
     /// counting how many nodes are currently infected
     currently_infected_count: u32,
     last_extinction_index: usize,
-    patient_zero_vec: Vec<usize>,
-    pub initial_infected: usize,
+    pub patient_zero_vec: Vec<usize>,
     max_degree: usize,
     hist_patient_zero: HistUsizeFast
 }
@@ -78,6 +96,8 @@ impl DerefMut for SWLargeDeviation
 }
 
 
+
+
 impl SWLargeDeviation
 {
     pub fn new(base_model: SWModel, param: LargeDeviationParam,lockdown:LockdownParameters) -> Self
@@ -90,15 +110,16 @@ impl SWLargeDeviation
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph(),&mut markov_rng);
         
 
-
-        
-
+        //let name = "curvewritername";
+        //let mut writer = SirWriter::new(&name, 1);
+        #[cfg(feature = "ldprint")]   
+        let printingvector = vec![5,6,7,8,9,10,55,56,57,58,59,60,61,62,63,64,65,66,95,96,97,98,99,100,195,196,197,198,199,200,295,296,297,298,299,300,395,396,397,398,399,400,495,496,497,498,499,500];
         let lock_graph =create_locked_down_network_from_pair_list(&pairs_struct, base_model.ensemble.graph());
 
         let not_lockdown_pairs = pairs_struct.to_be_removed;
         let lockdown_pairs = pairs_struct.to_be_kept;
 
-
+        let lockdown_indicator = LockdownIndicator::NotLockdown;
         let system_size = NonZeroUsize::new(base_model.ensemble.graph().vertex_count())
             .unwrap();
         let rng_vec_len = system_size.get() * param.time_steps.get();
@@ -128,6 +149,7 @@ impl SWLargeDeviation
                 hist.increment_quiet(index);
             }
         }
+
         let max_degree = base_model.ensemble.graph().degree_iter().max().unwrap();
 
         Self{
@@ -141,7 +163,12 @@ impl SWLargeDeviation
             markov_rng,
             time_steps: param.time_steps,
             offset,
+            //writer,
+            #[cfg(feature = "ldprint")]   
+            printingvector,
+            lockdown_indicator,
             energy: u32::MAX,
+            old_energy: u32::MAX,
             transmission_rand_vec,
             recovery_rand_vec,
             unfinished_simulations_counter: 0,
@@ -152,7 +179,6 @@ impl SWLargeDeviation
             currently_infected_count: 0,
             last_extinction_index: usize::MAX,
             patient_zero_vec,
-            initial_infected: param.initial_infected,
             max_degree,
             hist_patient_zero: hist
         }
@@ -164,79 +190,77 @@ impl SWLargeDeviation
     }
 
     //Change this to use lockdown indicator. Only one implementation.
-    pub fn create_dangerous_neighbours_trans_sir(&mut self,lockdown_indicator:bool){
+    pub fn create_dangerous_neighbours_trans_sir(&mut self){
 
         //let n = self.system_size.get();
         self.dangerous_neighbor_count.iter_mut().for_each(|item| *item = 0);
         //let graph = self.base_model.ensemble.graph();
 
-        if !lockdown_indicator{
-            //this transfers the sir information to the base graph and creates the new dangerous neighbour count.
-            self.lock_graph.contained_iter()
-            .zip(
-                self.base_model.ensemble.contained_iter_mut()
-            ).for_each(
-                |(old,new)|
-                {
-                    *new= *old
-                }
-            );
-
-
-            for (index,contained) in self.base_model.ensemble.graph().contained_iter().enumerate(){
-                if !contained.inf_check(){
-                    continue;
-                }
-                else{
-                    let contained_index_iter = self.base_model.ensemble.contained_iter_neighbors_with_index(index);
-                    for (j, contained) in contained_index_iter
-                    {
-                        // only susceptible nodes are relevant later
-                        if contained.sus_check(){
-                            // keep track of neighbors of infected nodes
-                            unsafe{
-                                *self.dangerous_neighbor_count.get_unchecked_mut(j) += 1;
-                            }
+        match self.lockdown_indicator{
+            LockdownIndicator::Lockdown => {
+                self.base_model.ensemble.contained_iter()
+                    .zip(
+                        self.lock_graph.contained_iter_mut()
+                    ).for_each(
+                        |(old,new)|
+                        {
+                            *new= *old
                         }
+                    );
+
+
+                 for (index,contained) in self.lock_graph.contained_iter().enumerate(){
+                     //let contained_mut = unsafe{self.lock_graph.get_contained_unchecked(index)};
+                     
+                     if contained.inf_check(){
+                         let contained_index_iter = self.lock_graph.contained_iter_neighbors_with_index(index);
+                         for (j, contained) in contained_index_iter
+                         {
+                             // only susceptible nodes are relevant later
+                             if contained.sus_check(){
+                                 // keep track of neighbors of infected nodes
+                                 unsafe{
+                                     *self.dangerous_neighbor_count.get_unchecked_mut(j) += 1;
+                                 }
+                             }
+                         }
+                     
+                     }
+                 
+                 
+                 
+                 }
+
+            },
+            LockdownIndicator::NotLockdown => {
+                    self.lock_graph.contained_iter()
+                .zip(
+                    self.base_model.ensemble.contained_iter_mut()
+                ).for_each(
+                    |(old,new)|
+                    {
+                        *new= *old
                     }
+                );
 
-                }
-
-            }
-            
-        }
-        else{
-            self.base_model.ensemble.contained_iter()
-            .zip(
-                self.lock_graph.contained_iter_mut()
-            ).for_each(
-                |(old,new)|
-                {
-                    *new= *old
-                }
-            );
-
-
-            for (index,contained) in self.lock_graph.contained_iter().enumerate(){
-                //let contained_mut = unsafe{self.lock_graph.get_contained_unchecked(index)};
-                if !contained.inf_check(){
-                    continue;
-                }
-                else{
-                    let contained_index_iter = self.lock_graph.contained_iter_neighbors_with_index(index);
-                    for (j, contained) in contained_index_iter
-                    {
-                        // only susceptible nodes are relevant later
-                        if contained.sus_check(){
-                            // keep track of neighbors of infected nodes
-                            unsafe{
-                                *self.dangerous_neighbor_count.get_unchecked_mut(j) += 1;
+                
+                for (index,contained) in self.base_model.ensemble.graph().contained_iter().enumerate(){
+                    if contained.inf_check(){
+                        let contained_index_iter = self.base_model.ensemble.contained_iter_neighbors_with_index(index);
+                        for (j, contained) in contained_index_iter
+                        {
+                            // only susceptible nodes are relevant later
+                            if contained.sus_check(){
+                                // keep track of neighbors of infected nodes
+                                unsafe{
+                                    *self.dangerous_neighbor_count.get_unchecked_mut(j) += 1;
+                                }
                             }
                         }
+    
                     }
     
                 }
-    
             }
 
         }
@@ -245,7 +269,7 @@ impl SWLargeDeviation
 
 
 
-    pub fn ld_iterate_once(&mut self,lockdown_indicator:bool){
+    pub fn ld_iterate_once(&mut self){
 
         let new_infected = &mut self.new_infected;
         debug_assert!(new_infected.is_empty());
@@ -256,146 +280,147 @@ impl SWLargeDeviation
         let iter_danger = self.dangerous_neighbor_count.iter().enumerate();
 
         //New Infections. The choice of topology is handled here.
-         if !lockdown_indicator{
- 
-            for (index, &count) in iter_danger{
-                if count > 0{
-                    debug_assert!(self.base_model.ensemble.at(index).sus_check());
-                    // probability of NOT infecting this node
-                    let prob = self.one_minus_lambda.powi(count);
-                    // infect if random number is bigger
-                    if self.transmission_rand_vec[self.offset.lookup_index(index)] >= prob {
-                        new_infected.push(index);
-                
-                }
-            }
-        }
-        } else{
-            //mark for changing. dont need if 
-            for (index,&count) in iter_danger{
-                if count > 0{
-                    debug_assert!(self.lock_graph.at(index).sus_check());
-                    let prob = self.one_minus_lambda.powi(count);
-                    if self.transmission_rand_vec[self.offset.lookup_index(index)]>= prob{
-                        new_infected.push(index);
-                    }
 
+            
+        for (index, &count) in iter_danger{
+            if count > 0{
+                #[cfg(feature = "debug_assertions")]
+                match self.lockdown_indicator{
+                    LockdownIndicator::Lockdown => {
+                        debug_assert!(self.lock_graph.at(index).sus_check());
+
+                    },
+                    LockdownIndicator::NotLockdown => {
+                        debug_assert!(self.base_model.ensemble.at(index).sus_check());
+
+                    }
+                }
+
+                // probability of NOT infecting this node
+                let prob = self.one_minus_lambda.powi(count);
+                // infect if random number is bigger
+                if self.transmission_rand_vec[self.offset.lookup_index(index)] >= prob {
+                    new_infected.push(index);
+            
                 }
             }
         }
+
+         
         
         let gamma = self.base_model.gamma;
 
-        //if we run into problems, this is probably part of it
-        //let graph = &mut self.base_model.ensemble;
         
-        //doing the recoveries.
-        if !lockdown_indicator{
-            let graph = &mut self.base_model.ensemble;
+        match self.lockdown_indicator{
+            LockdownIndicator::Lockdown => {
+                let graph = &mut self.lock_graph;
 
-            for index in 0..self.system_size.get() {
-                let contained_mut = graph.at_mut(index);
-                if !contained_mut.inf_check(){
-                    continue;
-                }
-                if self.recovery_rand_vec[self.offset.lookup_index(index)] < gamma {
-                    *contained_mut = InfectionState::Recovered;
-                    self.currently_infected_count -= 1;
-
-                    let contained_index_iter = graph
-                        .contained_iter_neighbors_with_index(index);
-                
-                    for (j, contained) in contained_index_iter
-                    {
-                        // only susceptible nodes are relevant later
-                         if contained.sus_check(){
-                         // keep track of neighbors of infected nodes
-                         self.dangerous_neighbor_count[j] -= 1;
-                            }
+                for index in 0..self.system_size.get() {
+                    let contained_mut = graph.at_mut(index);
+                    if !contained_mut.inf_check(){
+                        continue;
                     }
-                }
-                    
-            }
+                    if self.recovery_rand_vec[self.offset.lookup_index(index)] < gamma {
+                        *contained_mut = InfectionState::Recovered;
+                        self.currently_infected_count -= 1;
 
-        }
-        else{
-            
-            for index in 0..self.system_size.get() {
-                let contained_mut = self.lock_graph.at_mut(index);
-                if !contained_mut.inf_check(){
-                    continue;
-                }
-                if self.recovery_rand_vec[self.offset.lookup_index(index)] < gamma {
-                    *contained_mut = InfectionState::Recovered;
-                    self.currently_infected_count -= 1;
-                    let contained_index_iter = self.lock_graph
-                        .contained_iter_neighbors_with_index(index);
-                
-                    for (j, contained) in contained_index_iter
-                    {
-                        // only susceptible nodes are relevant later
-                        if contained.sus_check(){
-                            // keep track of neighbors of infected nodes
-                            self.dangerous_neighbor_count[j] -= 1;
+                        let contained_index_iter = graph
+                            .contained_iter_neighbors_with_index(index);
+                        
+                            
+                        for (j, contained) in contained_index_iter
+                        {
+                            // only susceptible nodes are relevant later
+                             if contained.sus_check(){
+                             // keep track of neighbors of infected nodes
+                                self.dangerous_neighbor_count[j] -= 1;
+                             }
                         }
                     }
+
                 }
-                    
+
+            },
+            LockdownIndicator::NotLockdown => {
+
+                let graph = &mut self.base_model.ensemble;
+
+                for index in 0..self.system_size.get() {
+                    let contained_mut = graph.at_mut(index);
+                    if !contained_mut.inf_check(){
+                        continue;
+                    }
+                    if self.recovery_rand_vec[self.offset.lookup_index(index)] < gamma {
+                        *contained_mut = InfectionState::Recovered;
+                        self.currently_infected_count -= 1;
+
+                        let contained_index_iter = graph
+                            .contained_iter_neighbors_with_index(index);
+                        
+
+                        for (j, contained) in contained_index_iter
+                        {
+                            // only susceptible nodes are relevant later
+                             if contained.sus_check(){
+                             // keep track of neighbors of infected nodes
+                                self.dangerous_neighbor_count[j] -= 1;
+                             }
+                        }
+                    }
+
+                }
             }
-        }
-
-
-
-
-        //transfering SIR infor
-        
+        };         
 
         
         //we have already dealt with the choice of topology, so we need only update the graphs's sir information.
 
-        
-        if !lockdown_indicator{
-            let graph = &mut self.base_model.ensemble;
-            for &i in new_infected.iter()
-            {   let contained_mut = graph.at_mut(i);
-                *contained_mut = InfectionState::Infected;
-                self.currently_infected_count += 1;
-                self.dangerous_neighbor_count[i] = 0;
-                let contained_index_iter = graph
-                .contained_iter_neighbors_with_index(i);
+        match self.lockdown_indicator{
+            LockdownIndicator::Lockdown => {
+                for &i in new_infected.iter()
+                {   
+                    let contained_mut = self.lock_graph.at_mut(i);
+                    *contained_mut = InfectionState::Infected;
+                    self.currently_infected_count += 1;
+                    self.dangerous_neighbor_count[i] = 0;
+                    let contained_index_iter = self.lock_graph
+                    .contained_iter_neighbors_with_index(i);
 
-                for (j, contained) in contained_index_iter
-                {
-                    if contained.sus_check(){
-                        self.dangerous_neighbor_count[j] += 1;
+                    for (j, contained) in contained_index_iter
+                    {
+                        if contained.sus_check(){
+                            self.dangerous_neighbor_count[j] += 1;
+                        }
+                    }
+                }
+
+            },
+            LockdownIndicator::NotLockdown =>{
+                let graph = &mut self.base_model.ensemble;
+                for &i in new_infected.iter(){   
+                    let contained_mut = graph.at_mut(i);
+                    *contained_mut = InfectionState::Infected;
+                    self.currently_infected_count += 1;
+                    self.dangerous_neighbor_count[i] = 0;
+                    let contained_index_iter = graph
+                    .contained_iter_neighbors_with_index(i);
+
+                    for (j, contained) in contained_index_iter
+                    {
+                        if contained.sus_check(){
+                            self.dangerous_neighbor_count[j] += 1;
+                        }
                     }
                 }
             }
-            
-        }
-        else{
-            //let graph = &mut self.base_model.ensemble;
-            for &i in new_infected.iter()
-            {   let contained_mut = self.lock_graph.at_mut(i);
-                *contained_mut = InfectionState::Infected;
-                self.currently_infected_count += 1;
-                self.dangerous_neighbor_count[i] = 0;
-                let contained_index_iter = self.lock_graph
-                .contained_iter_neighbors_with_index(i);
 
-                for (j, contained) in contained_index_iter
-                {
-                    if contained.sus_check(){
-                        self.dangerous_neighbor_count[j] += 1;
-                    }
-                }
-            }
         }
 
         new_infected.clear();
     }
 
     pub fn ld_iterate(&mut self) -> u32{
+
         self.total_simulations_counter += 1;
         self.reset_ld_sir_simulation();
         //let mut vec = Vec::new();
@@ -410,45 +435,62 @@ impl SWLargeDeviation
 
         let mut max_infected = self.currently_infected_count;
         
-        let mut lockdown_indicator = false;
         //println!("{max_infected}");
-        debug_assert_eq!(max_infected,self.initial_infected as u32);
+        debug_assert_eq!(max_infected,self.patient_zero_vec.len() as u32);
         for i in 0..self.time_steps.get(){
+
             self.offset.set_time(i);
             let inf = self.currently_infected_count as f64 /self.system_size.get() as f64;
+
             //println!("inf {}",inf);
-            if inf > lockdown_threshold && !lockdown_indicator{
-                lockdown_indicator = true;
+            if inf > lockdown_threshold && self.lockdown_indicator.is_not_in_lockdown(){
+                self.lockdown_indicator = LockdownIndicator::Lockdown;                
                 //println!("lock");
-                self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
+                self.create_dangerous_neighbours_trans_sir();
             }
-            if inf < release_threshold && lockdown_indicator{
-                lockdown_indicator = false;
+            if inf < release_threshold && self.lockdown_indicator.is_in_lockdown(){
+                self.lockdown_indicator = LockdownIndicator::NotLockdown;                
                 //println!("rel");
-                self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
+                self.create_dangerous_neighbours_trans_sir();
 
             }
 
-            self.ld_iterate_once(lockdown_indicator);
+            self.ld_iterate_once();
+            max_infected = max_infected.max(self.currently_infected_count);
+
             if self.currently_infected_count == 0{
                 self.last_extinction_index = i+1;
+
+                
+                if self.lockdown_indicator.is_in_lockdown(){
+                    self.lock_graph.contained_iter()
+                        .zip(
+                            self.base_model.ensemble.contained_iter_mut()
+                        ).for_each(
+                            |(old,new)|
+                            {
+                                *new= *old
+                            }
+                        );
+                }                
                 return max_infected;
             }
-            max_infected = max_infected.max(self.currently_infected_count);
         }
         self.last_extinction_index = usize::MAX;
         self.unfinished_simulations_counter += 1;
         max_infected
     }
+
+
     pub fn ld_iterate_printing(&mut self,writer: &mut SirWriter)
     {   
         self.reset_ld_sir_simulation();
         let lockdown_threshold = self.lockdownparams.lock_threshold;
         let release_threshold = self.lockdownparams.release_threshold;
         let x = self.base_model.ensemble.graph().contained_iter().filter(|state| state.inf_check()).count();
-        debug_assert_eq!(x,self.initial_infected);
+
+        debug_assert_eq!(x,self.patient_zero_vec.len());
         //let mut max_infected = self.currently_infected_count;
-        let mut lockdown_indicator = false;
 
         writer.write_current(self.ensemble().graph())
             .unwrap();
@@ -458,29 +500,39 @@ impl SWLargeDeviation
             self.offset.set_time(i);
             let inf = self.currently_infected_count as f64 /self.system_size.get() as f64;
             //println!("inf {}",inf);
-            if inf > lockdown_threshold && !lockdown_indicator{
-                lockdown_indicator = true;
+            if inf > lockdown_threshold && self.lockdown_indicator.is_not_in_lockdown(){
+                self.lockdown_indicator = LockdownIndicator::Lockdown;                
                 //println!("lock");
-                self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
+                self.create_dangerous_neighbours_trans_sir();
             }
-            else if inf < release_threshold && lockdown_indicator{
-                lockdown_indicator = false;
+            if inf < release_threshold && self.lockdown_indicator.is_in_lockdown(){
+                self.lockdown_indicator = LockdownIndicator::NotLockdown;                
                 //println!("rel");
-                self.create_dangerous_neighbours_trans_sir(lockdown_indicator);
-
+                self.create_dangerous_neighbours_trans_sir();
             }
 
 
-            self.ld_iterate_once(lockdown_indicator);
+            self.ld_iterate_once();
             
 
 
             //println!("{i}");
-            writer.write_current(self.ensemble().graph())
-                .unwrap();
+            
+            match self.lockdown_indicator{
+                LockdownIndicator::Lockdown => {
+                    writer.write_current(&self.lock_graph)
+                    .unwrap();
+                },
+                LockdownIndicator::NotLockdown =>{
+                    writer.write_current(self.ensemble().graph())
+                    .unwrap();
+                }
+            }
+
+            
 
             if self.currently_infected_count == 0 {
-                if lockdown_indicator{
+                if self.lockdown_indicator.is_in_lockdown(){
                     self.lock_graph.contained_iter()
                         .zip(
                             self.base_model.ensemble.contained_iter_mut()
@@ -498,20 +550,25 @@ impl SWLargeDeviation
     }
     pub fn reset_ld_sir_simulation(&mut self){
 
+        self.lockdown_indicator = LockdownIndicator::NotLockdown;
+
         self.dangerous_neighbor_count
             .iter_mut()
             .for_each(|v| *v = 0);
 
 
-        let pzerovec = self.patient_zero_vec.clone();
-        self.infect_many_patients(&pzerovec);
+        let pzerovec = &self.patient_zero_vec;
+
+        self.base_model.infect_many_patients(pzerovec);
+
         //Need all infected to be complete so we can calc dangerous neighbour list correctly.
+
         for j in &mut self.patient_zero_vec{
             let neighbor_iter = self
-            .base_model
-            .ensemble
-            .contained_iter_neighbors_with_index(*j)
-            .filter(|(_, state)| state.sus_check());
+                .base_model
+                .ensemble
+                .contained_iter_neighbors_with_index(*j)
+                .filter(|(_, state)| state.sus_check());
         
             for (i, _) in neighbor_iter
             {
@@ -519,7 +576,7 @@ impl SWLargeDeviation
             }
 
         }
-        self.currently_infected_count = self.initial_infected as u32;
+        self.currently_infected_count = self.patient_zero_vec.len() as u32;
     }
     pub fn unfinished_counter(&self) -> u64 
     {
@@ -583,11 +640,12 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
         }
     }
 
-    fn m_steps(&mut self, count: usize, steps: &mut Vec<MarkovStep>)
+    /* 
+    fn m_steps_retired(&mut self, count: usize, steps: &mut Vec<MarkovStep>)
     {   
         //self.patient_move_boolean = false;
         steps.clear();
-
+        self.markov_changed = true;
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
         let which = uniform.sample(&mut self.markov_rng);
         //change to vec.len
@@ -640,6 +698,7 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
                         for i in self.patient_zero_vec.iter(){
                             self.hist_patient_zero.increment_quiet(i);
                         }
+                        
                         steps.push(MarkovStep::MovePatientZero(old_patient,index_of_patient_to_be_changed,true));
                         return;
 
@@ -660,6 +719,165 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
         }
         else if which < PATIENT_MOVE_RANDOM{
             let index_of_patient_to_be_changed = self.markov_rng.gen_range(0..self.initial_infected);
+
+            loop{
+                let node_index = self.markov_rng.gen_range(0..self.system_size.get());
+                if !self.patient_zero_vec.contains(&node_index){
+                    steps.push(MarkovStep::MovePatientZeroRandom(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed));
+
+                    self.patient_zero_vec[index_of_patient_to_be_changed] = node_index;
+                    return;
+
+                }
+
+            }
+            
+        } 
+        else {
+            let amount:usize = Binomial::new(count as u64, 0.5).unwrap().sample(&mut self.markov_rng) as usize;
+            let index_uniform = Uniform::new(0, self.system_size.get());
+            let w = uniform.sample(&mut self.markov_rng);
+
+            let tmp = count /2;
+            let amount = self.markov_rng.gen_range(1..=tmp);
+            let count = amount *2;
+
+            let time_step = self.markov_rng.gen_range(0..self.time_steps.get());
+
+
+            if w < 0.5 {
+                steps.extend(
+                    (0..count)
+                        .map(
+                            |_|
+                            {
+                                let index = index_uniform.sample(&mut self.markov_rng);
+                                // Transmission 
+                                let index = index + time_step*self.system_size.get();
+                                    let old_val = std::mem::replace(
+                                        &mut self.transmission_rand_vec[index],
+                                        uniform.sample(&mut self.markov_rng)
+                                    ); 
+                                        MarkovStep::Transmission(
+                                        ExchangeInfo{
+                                            index,
+                                            old_val
+                                            }
+                                        )
+                                        
+                                
+                                
+                            }
+                        )
+                );
+            } else {
+                steps.extend(
+                    (0..(count))
+                        .map(
+                            |_|
+                            {
+                                let index = index_uniform.sample(&mut self.markov_rng);
+                                // Transmission 
+                                let index = index + time_step*self.system_size.get();
+
+                                let old_val = std::mem::replace(
+                                    &mut self.recovery_rand_vec[index],
+                                    uniform.sample(&mut self.markov_rng)
+                                ); 
+                                        MarkovStep::Recovery(
+                                        ExchangeInfo{
+                                            index,
+                                            old_val
+                                            }
+                                        )
+                                
+                            }
+                        )
+                );
+            }
+            
+
+            
+        }
+    }
+    */
+    fn m_steps(&mut self, count: usize, steps: &mut Vec<MarkovStep>)
+    {   
+        //self.patient_move_boolean = false;
+        steps.clear();
+
+        let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
+        let which = uniform.sample(&mut self.markov_rng);
+        //change to vec.len
+        
+
+        if which <= ROTATE_LEFT {
+            //println!("rotating left");
+            self.offset.plus_1();
+            steps.push(MarkovStep::RotateLeft);
+        } else if which <= ROTATE_RIGHT
+        {
+            //println!("rotating r");
+            self.offset.minus_1();
+            steps.push(MarkovStep::RotateRight);
+        } else if which <= PATIENT_MOVE//maybe make this high, big degrees in BA
+        {
+            let f = 1.0 / self.max_degree as f64;
+            let mut old = 0.0;
+            let p = uniform.sample(&mut self.markov_rng);
+            //Choose the patient zero in question at random from the array
+            let uniform_usize = Uniform::new(0,self.patient_zero_vec.len());
+            let index_of_patient_to_be_changed = uniform_usize.sample(&mut self.markov_rng);
+            //let neighbours_of_patient_zero:Vec<usize> = self.base_model.ensemble
+            //.contained_iter_neighbors_with_index(self.patient_zero_vec[index_of_patient_to_be_changed]).map(|(index,_)| index).collect()
+            //let neighbours_of_patient_zero_2 = self.base_model.ensemble.graph().container(self.patient_zero).neighbors()
+            //change this to the iterator.
+            for n in self.base_model.ensemble
+            .contained_iter_neighbors_with_index(self.patient_zero_vec[index_of_patient_to_be_changed]).map(|(index,_)| index)
+            {
+                //let mut old = 0.0;
+                let new_prob = f  + old;// <- less efficient
+                if (old..new_prob).contains(&p)
+                {   
+                    if self.patient_zero_vec.contains(&n){
+                        //println!("rejecting a patient move");
+                        break
+                        //continue
+                    }
+                    else{
+                        //println!("doing a patient move");
+                        //check if new index is already a p0
+                        //yes: break
+                        //no: below
+                        let old_patient = self.patient_zero_vec[index_of_patient_to_be_changed];
+                        self.patient_zero_vec[index_of_patient_to_be_changed]  = n;
+                        //let x = self.patient_zero_vec[index_of_patient_to_be_changed];
+                        //println!("old {old_patient}, new {x}");
+
+                        //self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+                        for i in self.patient_zero_vec.iter(){
+                            self.hist_patient_zero.increment_quiet(i);
+                        }
+                        steps.push(MarkovStep::MovePatientZero(old_patient,index_of_patient_to_be_changed,true));
+                        return;
+
+                    }
+                    
+                }
+                old = new_prob;
+            }   
+            self.markov_changed = false;
+            //self.hist_patient_zero.increment_quiet(self.patient_zero_vec[index_of_patient_to_be_changed]);
+            for i in self.patient_zero_vec.iter(){
+                self.hist_patient_zero.increment_quiet(i);
+            }
+            steps.push(MarkovStep::MovePatientZero(self.patient_zero_vec[index_of_patient_to_be_changed],index_of_patient_to_be_changed,false));
+            
+
+
+        }
+        else if which < PATIENT_MOVE_RANDOM{
+            let index_of_patient_to_be_changed = self.markov_rng.gen_range(0..self.patient_zero_vec.len());
 
             loop{
                 let node_index = self.markov_rng.gen_range(0..self.system_size.get());
@@ -720,9 +938,9 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
                     )
             );
         }
-    }
+   
 }
-
+}
 
 
 
@@ -764,9 +982,9 @@ impl SWLargeDeviationWithLocks
         }
     pub fn infect_initial_patients(&mut self)
         {
-            let pzerovec = self.patient_zero_vec.clone();
+            let pzerovec = &self.ld_model.patient_zero_vec;
 
-            self.infect_many_patients(&pzerovec);
+            self.ld_model.base_model.infect_many_patients(&pzerovec);
             
         }
 
@@ -813,7 +1031,7 @@ impl SWLargeDeviationWithLocks
         let mut patient_zero_vec = Vec::new();
         
         let uniform = Uniform::new(0_usize, self.base_model.ensemble.vertex_count());
-        while patient_zero_vec.len() < self.ld_model.initial_infected{
+        while patient_zero_vec.len() < self.ld_model.patient_zero_vec.len(){
             let index = uniform.sample(&mut self.markov_rng);
             if !patient_zero_vec.iter().any(|i| *i == index){
                 //patient_zero_vec.infect_patient(index);
@@ -935,6 +1153,14 @@ impl MarkovChain<MarkovStepWithLocks, ()> for SWLargeDeviationWithLocks
             }
         }
     }
+    
+    fn undo_steps_quiet(&mut self, steps: &[MarkovStepWithLocks]) {
+        self.energy = self.old_energy;
+        steps.iter()
+            .rev()
+            .for_each( |step| self.undo_step_quiet(step));
+    }
+
     fn steps_accepted(&mut self, steps: &[MarkovStepWithLocks])
     {
         self.tracker.accept(&steps[0]);

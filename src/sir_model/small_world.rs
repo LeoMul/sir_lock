@@ -67,10 +67,12 @@ impl SWModel{
         *self.ensemble_mut().at_mut(patient) = InfectionState::Infected
         //infects patient 0
     }
-    pub fn infect_many_patients(&mut self, vec:&Vec<usize>){
+    pub fn infect_many_patients(&mut self, vec:&[usize]){
+
         self.ensemble
             .contained_iter_mut()
             .for_each(|s| *s = InfectionState::Suspectible);
+
         for patient in vec{
             *self.ensemble_mut().at_mut(*patient) = InfectionState::Infected
         }

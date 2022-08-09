@@ -304,14 +304,16 @@ impl Default for LDLDparam
                 lock_threshold: 0.1,
                 release_threshold: 0.05
             },
-            histograms: HistogramCreator::Automatic(
-                Intervals{
-                    start: None,
-                    end_inlcusive: None,
-                    num_intervals: 2,
-                    overlap: None,
-                    greedy_search_steps: None
+            histograms: HistogramCreator::Manual(vec![
+                Interval{
+                    start: 5,
+                    end_inlcusive: 133
+                },
+                Interval{
+                    start: 1472,
+                    end_inlcusive: 1600
                 }
+            ]
             ),
             walkers_per_interval: ONE,
             step_size: DEFAULT_MARKOV_STEP_SIZE,
@@ -495,31 +497,75 @@ pub fn calc_m_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Optio
 
 pub fn calc_c_sw_no_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
 {
-    Some(
-        if !model.ld_model.markov_changed{
-            model.ld_model.energy
-        }
-        else{
+    Some({
+    //    if !model.ld_model.markov_changed{
+    //        model.ld_model.energy
+    //    }
+    //    else{
+    //        model.ld_energy_m();
+    //        let c = model.calculate_ever_infected() as u32;
+    //        model.ld_model.energy = c ;
+    //        model.ld_model.energy
+    //        
+    //        
+    //         
+    //    }
+    //    ) 
+            
             model.ld_energy_m();
             let c = model.calculate_ever_infected() as u32;
+            //let cfrac = c as f64/ model.ld_model.system_size.get() as f64;
+            #[cfg(feature = "ldprint")]{   
+            let f = c as usize;
+            if let Some(index) = model.printingvector.iter().position(|item| *item == f){
+
+                model.printingvector.swap_remove(index);
+
+                let name = "I haven't named this yet";
+                let name = name.to_owned() + &format!("{}",c);
+                let mut writer = SirWriter::new(&name, 1);
+                model.ld_energy_m_and_print(&mut writer);
+            }}
+
+            let old = model.old_energy;
+            println!("old {old} new {c}");
+
+            model.old_energy = model.energy;
             model.ld_model.energy = c ;
-            model.ld_model.energy
-            
-            
-             
-        }
-        )
+            //println!("{}",model.ld_model.energy);
+            model.ld_model.energy})
 }
 pub fn calc_c_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
 {
     Some(
-        if !model.ld_model.markov_changed{
-            model.ld_model.energy
-        }
-        else{
+        //if !model.ld_model.markov_changed{
+        //    model.ld_model.energy
+        //}
+        {//else{
+            
+
             model.ld_energy_m();
-            let c = model.calculate_ever_infected() as u32;
-            model.ld_model.energy = (c+1)/2 ;
+            let c = (model.calculate_ever_infected() as u32+1)/2;
+            //let cfrac = c as f64/ model.ld_model.system_size.get() as f64;
+            #[cfg(feature = "ldprint")]{   
+            let f = c as usize;
+    
+            if let Some(index) = model.printingvector.iter().position(|item| *item == f){
+
+                model.printingvector.swap_remove(index);
+
+                let name = "quickname";
+                let name = name.to_owned() + &format!("{}",c);
+                let mut writer = SirWriter::new(&name, 1);
+                model.ld_energy_m_and_print(&mut writer);
+            }}
+            let old = model.old_energy;
+            println!("old {old} new {c}");
+            //if c < 200{
+            //    panic!()
+            //}
+            model.old_energy = model.energy;
+            model.ld_model.energy = c ;
             //println!("{}",model.ld_model.energy);
             model.ld_model.energy
             
