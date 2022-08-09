@@ -85,7 +85,7 @@ fn sim_small_world_new(param: ConnectedComponentParams,json:Value,num_threads:Op
         let mut core_av_vec:Vec<f64> = vec![0.;vec_length as usize];
         let mut core_var_vec = core_av_vec.clone();
         //println!("test");
-        let iter = (0..per_thread).into_iter();
+        let iter = 0..per_thread;
         iter.for_each(|_|{
             let new_graph_seed = rng.gen::<u64>();
             let opt = SWOptions::from_connectedcomponent_param(&param,new_graph_seed);
@@ -100,14 +100,20 @@ fn sim_small_world_new(param: ConnectedComponentParams,json:Value,num_threads:Op
             for i in start_index..end_index{
 
                 if i ==start_index{
-                    for j in 0..i{
-                        let pairs_to_be_removed = chunked_vectors[j];
-                        for pair in pairs_to_be_removed{
-                            graph.remove_edge(pair[0],pair[1]).unwrap();
+                    //for j in 0..i{
+                    //    let pairs_to_be_removed = chunked_vectors[j];
+                    //    for pair in pairs_to_be_removed{
+                    //        graph.remove_edge(pair[0],pair[1]).unwrap();
+                    //    }
+                //
+//
+                    //}
+                    for item in chunked_vectors.iter().take(i){
+                        for pair in *item{
+                            graph.remove_edge(pair[0], pair[1]).unwrap();
                         }
-                
-
                     }
+
                     let largest_connected_component = graph.connected_components()[0];
                     //println!("{}",largest_connected_component);
                     core_av_vec[i-start_index] += largest_connected_component as f64;
@@ -229,7 +235,7 @@ fn sim_ba(param: ConnectedComponentParams,json:Value,num_threads:Option<NonZeroU
         let mut core_av_vec:Vec<f64> = vec![0.;vec_length as usize];
         let mut core_var_vec = core_av_vec.clone();
         //println!("test");
-        let iter = (0..per_thread).into_iter();
+        let iter = 0..per_thread;
         iter.for_each(|_|{
             let new_graph_seed = rng.gen::<u64>();
             let opt = BarabasiOptions::from_connectedcomponent_param(&param,new_graph_seed);
@@ -244,33 +250,37 @@ fn sim_ba(param: ConnectedComponentParams,json:Value,num_threads:Option<NonZeroU
             for i in start_index..end_index{
 
                 if i ==start_index{
-                    for j in 0..i{
-                        let pairs_to_be_removed = chunked_vectors[j];
-                        for pair in pairs_to_be_removed{
-                            graph.remove_edge(pair[0],pair[1]).unwrap();
-                        }
-                
 
+                    //for j in 0..i{
+                    //    let pairs_to_be_removed = chunked_vectors[j];
+                    //    for pair in pairs_to_be_removed{
+                    //        graph.remove_edge(pair[0],pair[1]).unwrap();
+                    //    }
+                //
+//
+                    //}
+                    for item in chunked_vectors.iter().take(i){
+                        for pair in *item{
+                            graph.remove_edge(pair[0], pair[1]).unwrap();
+                        }
                     }
+
                     let largest_connected_component = graph.connected_components()[0];
                     //println!("{}",largest_connected_component);
                     core_av_vec[i-start_index] += largest_connected_component as f64;
                     core_var_vec[i-start_index] += largest_connected_component as f64 *largest_connected_component as f64;
                 }
-                else
-                {
-
-
-                let pairs_to_be_removed = chunked_vectors[i];
-                for pair in pairs_to_be_removed{
-                    graph.remove_edge(pair[0],pair[1]).unwrap();
-                }
-                //let num_edges = graph.edge_count();
-                //println!("{num_edges}");
-                let largest_connected_component = graph.connected_components()[0];
-                //println!("{}",largest_connected_component);
-                core_av_vec[i-start_index] += largest_connected_component as f64;
-                core_var_vec[i-start_index] += largest_connected_component as f64 *largest_connected_component as f64;
+                else{
+                    let pairs_to_be_removed = chunked_vectors[i];
+                    for pair in pairs_to_be_removed{
+                        graph.remove_edge(pair[0],pair[1]).unwrap();
+                    }
+                    //let num_edges = graph.edge_count();
+                    //println!("{num_edges}");
+                    let largest_connected_component = graph.connected_components()[0];
+                    //println!("{}",largest_connected_component);
+                    core_av_vec[i-start_index] += largest_connected_component as f64;
+                    core_var_vec[i-start_index] += largest_connected_component as f64 *largest_connected_component as f64;
                 }
     
             }

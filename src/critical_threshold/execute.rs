@@ -334,9 +334,14 @@ fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(u32,u32)>>) -> (Vec<Vec<u32>>,Ve
         let mut c_vec = Vec::with_capacity(num_cols);
         let mut m_vec = Vec::with_capacity(num_cols);
 
-        for j in 0..num_cols{
-            let col = &merged_vec[j];
-            let point = col[i];
+        //for j in 0..num_cols{
+        //    let col = &merged_vec[j];
+        //    let point = col[i];
+        //    c_vec.push(point.1 as u32);
+        //    m_vec.push(point.0 as u32);
+        //}
+        for item in merged_vec.iter().take(num_cols){
+            let point = item[i];
             c_vec.push(point.1 as u32);
             m_vec.push(point.0 as u32);
         }
@@ -347,7 +352,7 @@ fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(u32,u32)>>) -> (Vec<Vec<u32>>,Ve
     }   
     (m_matrix,c_matrix)        
 }
-fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVarianceInBoots>,n:usize,lambda:&Vec<f64>,energy:MeasureType){
+fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVarianceInBoots>,n:usize,lambda:&[f64],energy:MeasureType){
     let name = param.name("dat", num_threads,n,energy);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");
@@ -370,7 +375,7 @@ fn writing_with_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_t
     }
     
 }
-fn writing_with_no_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVariance>,n:usize,lambda:&Vec<f64>,energy:MeasureType){
+fn writing_with_no_boot_single_energy(param:&CriticalThreshParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVariance>,n:usize,lambda:&[f64],energy:MeasureType){
     let name = param.name("dat", num_threads,n,energy);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");
