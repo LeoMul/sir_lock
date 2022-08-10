@@ -153,7 +153,7 @@ fn sim_small_world_percent_instead_of_chunk_size(param: ConnectedComponentParams
         (core_av_vec,core_var_vec)
     }).collect();
     bar.finish();
-    println!("");
+    println!();
     for (averages,variances) in vector_of_core_vectors{
         for i in 0..averages.len(){
             avg_vec[i] += averages[i];

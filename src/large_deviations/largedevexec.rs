@@ -45,7 +45,7 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
     }
     
     
-    let boolean_res:bool = (param.change_energy_res).clone();
+    let boolean_res:bool = param.change_energy_res;
 
     let base_options = BarabasiOptions{
         graph_seed: param.graph_seed,
@@ -139,7 +139,7 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
             .unwrap();
     }
 
-    let boolean_res:bool = (param.change_energy_res).clone();
+    let boolean_res:bool = param.change_energy_res;
 
     let base_options = SWOptions{
         graph_seed: param.graph_seed,

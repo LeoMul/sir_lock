@@ -263,7 +263,7 @@ impl SimpleSampleSW{
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
 
         //wont need after change made
-        let mut post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
+        let post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
@@ -306,7 +306,7 @@ impl SimpleSampleSW{
             //    
             //}
 
-            self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
+            self.iterate_once_with_locks(post_locked_down_graph, lockdown_indicator);
             max_infected = max_infected.max(self.infected_list.len());
 
             if self.infected_list.is_empty(){
@@ -334,7 +334,7 @@ impl SimpleSampleSW{
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
 
         //wont need after change made
-        let mut post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
+        let post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
@@ -377,7 +377,7 @@ impl SimpleSampleSW{
             //    
             //}
 
-            self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
+            self.iterate_once_with_locks(post_locked_down_graph, lockdown_indicator);
             writer.write_current(self.ensemble().graph())
             .unwrap();
             max_infected = max_infected.max(self.infected_list.len());
@@ -394,11 +394,11 @@ impl SimpleSampleSW{
 
     }
 
-    pub fn propagate_until_completion_time_with_locks(&mut self,mut post_locked_down_graph:&mut SwSIR,lockparams:LockdownParameters) -> u32{
+    pub fn propagate_until_completion_time_with_locks(&mut self,post_locked_down_graph:&mut SwSIR,lockparams:LockdownParameters) -> u32{
         self.reset_simple_sample_sir_simulation();
         let max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
-        let mut post_locked_down_graph = self.transfer_sir_information(&mut post_locked_down_graph);
+        let post_locked_down_graph = self.transfer_sir_information(post_locked_down_graph);
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
@@ -417,7 +417,7 @@ impl SimpleSampleSW{
                 //println!("Releasing lockdown: edges {}",self.base_model.ensemble.graph().edge_count());
                 lockdown_indicator = false;
             }
-            self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
+            self.iterate_once_with_locks(post_locked_down_graph, lockdown_indicator);
             if self.infected_list.is_empty(){
                 return i
             }
@@ -705,7 +705,7 @@ impl SimpleSampleBarabasi{
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
 
         //wont need after change made
-        let mut post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
+        let post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
@@ -750,7 +750,7 @@ impl SimpleSampleBarabasi{
                 
             }
 
-            self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
+            self.iterate_once_with_locks(post_locked_down_graph, lockdown_indicator);
             max_infected = max_infected.max(self.infected_list.len());
 
             if self.infected_list.is_empty(){
@@ -778,7 +778,7 @@ impl SimpleSampleBarabasi{
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
 
         //wont need after change made
-        let mut post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
+        let post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
@@ -821,7 +821,7 @@ impl SimpleSampleBarabasi{
             //    
             //}
 
-            self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
+            self.iterate_once_with_locks(post_locked_down_graph, lockdown_indicator);
             writer.write_current(self.ensemble().graph())
             .unwrap();
             max_infected = max_infected.max(self.infected_list.len());
@@ -841,7 +841,7 @@ impl SimpleSampleBarabasi{
         self.reset_simple_sample_sir_simulation();
         let max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);
-        let mut post_locked_down_graph = self.transfer_sir_information(&mut post_locked_down_graph);
+        let post_locked_down_graph = self.transfer_sir_information(&mut post_locked_down_graph);
         let lockdown_threshold = lockparams.lock_threshold;
         //println!("{}",lockdown_threshold);
         let release_threshold = lockparams.release_threshold;
@@ -860,7 +860,7 @@ impl SimpleSampleBarabasi{
                 //println!("Releasing lockdown: edges {}",self.base_model.ensemble.graph().edge_count());
                 lockdown_indicator = false;
             }
-            self.iterate_once_with_locks(&mut post_locked_down_graph, lockdown_indicator);
+            self.iterate_once_with_locks(post_locked_down_graph, lockdown_indicator);
             if self.infected_list.is_empty(){
                 return i
             }

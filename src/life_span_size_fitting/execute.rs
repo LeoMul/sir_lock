@@ -170,7 +170,7 @@ fn transpose(matrix:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
     
 
 }
-fn decompose_thread_split_data(mut vecofmatrices:Vec<Vec<Vec<u32>>>) -> Vec<Vec<u32>>{
+#[allow(clippy::needless_range_loop)] fn decompose_thread_split_data(mut vecofmatrices:Vec<Vec<Vec<u32>>>) -> Vec<Vec<u32>>{
     //println!("{:?}",vecofmatrices[0]);
     //vecofmatrices.iter_mut().for_each(|item|{
     //    transpose(item);
@@ -179,6 +179,8 @@ fn decompose_thread_split_data(mut vecofmatrices:Vec<Vec<Vec<u32>>>) -> Vec<Vec<
     for j in 0..vecofmatrices.len(){
         vecofmatrices[j] = transpose(&vecofmatrices[j]);
     }
+
+    
 
     //println!("{:?}",vecofmatrices[0]);
     let num_lams = vecofmatrices[0].len();

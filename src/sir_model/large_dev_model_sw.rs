@@ -1000,7 +1000,7 @@ impl SWLargeDeviationWithLocks
         {
             let pzerovec = &self.ld_model.patient_zero_vec;
 
-            self.ld_model.base_model.infect_many_patients(&pzerovec);
+            self.ld_model.base_model.infect_many_patients(pzerovec);
             
         }
 

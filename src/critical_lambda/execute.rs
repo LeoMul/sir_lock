@@ -315,9 +315,9 @@ fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(u32,u32)>>) -> (Vec<Vec<u32>>,Ve
         let mut c_vec = Vec::with_capacity(num_cols);
         let mut m_vec = Vec::with_capacity(num_cols);
 
-        for j in 0..num_cols{
-            let col = &merged_vec[j];
-            let point = col[i];
+        
+        for item in merged_vec.iter().take(num_cols){
+            let point = item[i];
             c_vec.push(point.1 as u32);
             m_vec.push(point.0 as u32);
         }
@@ -328,25 +328,8 @@ fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(u32,u32)>>) -> (Vec<Vec<u32>>,Ve
     }   
     (m_matrix,c_matrix)        
 }
-fn _transpose_into_a_vec(merged_vec:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
-    let num_lam = merged_vec[0].len();
-    let num_cols = merged_vec.len();
-    let mut c_matrix:Vec<Vec<u32>> = Vec::with_capacity(num_lam);
 
-    for i in 0..num_lam{
-        let mut c_vec = Vec::with_capacity(num_cols);
-        for j in 0..num_cols{
-            let col = &merged_vec[j];
-            let point = col[i];
-            c_vec.push(point as u32);
-        }
-
-        c_matrix.push(c_vec);
-
-    }   
-    c_matrix        
-}
-fn writing_with_boot_single_energy(param:&CriticalLambdaParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVarianceInBoots>,n:usize,lambda:&Vec<f64>,energy:MeasureType){
+fn writing_with_boot_single_energy(param:&CriticalLambdaParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVarianceInBoots>,n:usize,lambda:&[f64],energy:MeasureType){
     let name = param.name("dat", num_threads,n,energy);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");
@@ -369,7 +352,7 @@ fn writing_with_boot_single_energy(param:&CriticalLambdaParams,json:&Value,num_t
     }
     
 }
-fn writing_with_no_boot_single_energy(param:&CriticalLambdaParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVariance>,n:usize,lambda:&Vec<f64>,energy:MeasureType){
+fn writing_with_no_boot_single_energy(param:&CriticalLambdaParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<MyVariance>,n:usize,lambda:&[f64],energy:MeasureType){
     let name = param.name("dat", num_threads,n,energy);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");

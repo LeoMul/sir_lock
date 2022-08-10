@@ -27,21 +27,21 @@ pub enum ReleaseType{
 impl ReleaseType{
     pub fn name(&self) -> String{
         match self{
-            ReleaseType::FracOfLock(factor) => format!("Fraction{factor}").to_owned(),
-            ReleaseType::Const(thresh) => format!("Const{thresh}").to_owned(),
-            ReleaseType::Disabled => "Disabled".to_owned() 
+            ReleaseType::FracOfLock(factor) => format!("Fraction{factor}"),
+            ReleaseType::Const(thresh) => format!("Const{thresh}"),
+            ReleaseType::Disabled => "Disabled".to_owned()
         }
     }
 }
 
 
 pub fn get_release_threshold(rtype:ReleaseType,lockthresh:f64) -> f64{
-    let releasethresh = match rtype{
-                            ReleaseType::FracOfLock(factor) => factor*lockthresh,
-                            ReleaseType::Const(thresh) => thresh,
-                            ReleaseType::Disabled => 0.0 
-                        };
-    releasethresh   
+    match rtype{
+        ReleaseType::FracOfLock(factor) => factor*lockthresh,
+        ReleaseType::Const(thresh) => thresh,
+        ReleaseType::Disabled => 0.0 
+    }
+
 }
 
 

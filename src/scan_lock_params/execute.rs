@@ -271,7 +271,7 @@ pub fn sim_ba(param:ScanLockParams,json:Value,num_threads:Option<NonZeroUsize>){
 
 }
 
-fn writing(param:&ScanLockParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<Measured>,severity:f64,thrsh:&Vec<f64>){
+fn writing(param:&ScanLockParams,json:&Value,num_threads: Option<NonZeroUsize>,data:&Vec<Measured>,severity:f64,thrsh:&[f64]){
     let name = param.name("dat", num_threads,severity);
     println!("creating: {name}");
     let file = File::create(name).expect("unable to create file");

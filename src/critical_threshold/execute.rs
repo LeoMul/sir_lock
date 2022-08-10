@@ -306,24 +306,6 @@ fn produce_measure_data_with_boots<R>(merged_vec:Vec<Vec<u32>>,mut rng1:&mut R,m
 
 }
 
-fn _transpose_into_a_vec(merged_vec:&Vec<Vec<u32>>) -> Vec<Vec<u32>>{
-    let num_lam = merged_vec[0].len();
-    let num_cols = merged_vec.len();
-    let mut c_matrix:Vec<Vec<u32>> = Vec::with_capacity(num_lam);
-    
-    for i in 0..num_lam{
-        let mut c_vec = Vec::with_capacity(num_cols);
-        for j in 0..num_cols{
-            let col = &merged_vec[j];
-            let point = col[i];
-            c_vec.push(point as u32);
-        }
-
-        c_matrix.push(c_vec);
-
-    }   
-    c_matrix        
-}
 fn transpose_into_two_vecs(merged_vec:&Vec<Vec<(u32,u32)>>) -> (Vec<Vec<u32>>,Vec<Vec<u32>>){
     let num_lam = merged_vec[0].len();
     let num_cols = merged_vec.len();

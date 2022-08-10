@@ -147,7 +147,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                 let inner = lock.deref_mut();
                 //let vaccine_rng = &mut inner.0;
                 let model = &mut inner.0;
-                let mut locked_down_graph = &mut inner.1;
+                let locked_down_graph = &mut inner.1;
                 //let vaccine_list_helper = &mut inner.2;
 
                 model.set_gamma(gamma);
@@ -162,7 +162,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                             }
                             else{
                             //let vaccine_list = vaccine_list_helper.get_vaccine_list(param.vaccine_doses, model.ensemble().graph());
-                            let res = model.propagate_until_completion_max_with_lockdown(&mut locked_down_graph,param.lockdown) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(locked_down_graph,param.lockdown) as u32;
                             //println!("locked down {}",locked_down_graph.edge_count());
                             if param.measure.is_c() 
                             {
@@ -244,7 +244,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                 let inner = lock.deref_mut();
                 //let vaccine_rng = &mut inner.0;
                 let model = &mut inner.0;
-                let mut locked_down_graph = &mut inner.1;
+                let locked_down_graph = &mut inner.1;
                 //let vaccine_list_helper = &mut inner.2;
 
                 model.set_lambda(gamma);
@@ -262,7 +262,7 @@ fn sim_small_world(param: ScanGammaParams, json: Value, num_threads:Option<NonZe
                                 (param.system_size.get() as f64/factor) as u32
                             }
                             else{
-                            let res = model.propagate_until_completion_max_with_lockdown(&mut locked_down_graph,param.lockdown) as u32;
+                            let res = model.propagate_until_completion_max_with_lockdown(locked_down_graph,param.lockdown) as u32;
                             if param.measure.is_c() 
                             {
                                 model.calculate_ever_infected() as u32
