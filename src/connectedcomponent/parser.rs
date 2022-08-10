@@ -39,7 +39,7 @@ pub struct ConnectedComponentParams{
     pub graph_type: GraphType,
     pub graph_seed: u64,
     pub num_networks: u64,
-    pub chunk_len: u64,
+    pub desired_percent_step: f64,
     pub percent_start:f64,
     pub percent_end:f64,
 
@@ -51,7 +51,7 @@ impl Default for ConnectedComponentParams{
         graph_type: GraphType::SmallWorld(0.1),
         graph_seed:DEFAULT_GRAPH_SEED,
         num_networks: 100000,
-        chunk_len: 10,
+        desired_percent_step: 0.01,
         percent_start:0.4,
         percent_end:0.6,
     }}
@@ -64,11 +64,13 @@ impl ConnectedComponentParams{
         };
         
         format!(
-            "ver{}ConnectedComponentSize{}NumNet{}chunk_len{}_GT{}_GS{}_THR{}.{}",
+            "ver{}ConnectedComponentSize{}NumNet{}desired_percent_step{}start{}end{}_GT{}_GS{}_THR{}.{}",
             crate::VERSION,
             self.system_size.get(),
             self.num_networks,
-            self.chunk_len,
+            self.desired_percent_step,
+            self.percent_start,
+            self.percent_end,
             self.graph_type.name(),
             self.graph_seed,
             k,

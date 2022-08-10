@@ -197,11 +197,6 @@ pub fn execute_sw(opt: LDOptsLD, instant: std::time::Instant,r:f64,param:LDLDpar
 
     println!("Start greedy build");
 
-    let name = "curve";
-
-    let mut writer = SirWriter::new(&name, 1);
-    writer.write_header(&[value.clone()]).unwrap();
-
     let energy = energy_function_returner_sw(param.energy,param.change_energy_res);
 
     let rewl = rewl_builder.greedy_build(energy);
