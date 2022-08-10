@@ -69,7 +69,7 @@ impl Default for CriticalThreshParams{
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             releasetype: ReleaseType::FracOfLock(0.125),
-            lockdowntype: LockdownType::Random(0.50),
+            lockdowntype: LockdownType::Random(0.5491),
             thresh_range,
             initial_infected: DEFAULT_INITIAL_INFECTED,
             bootbool: false,

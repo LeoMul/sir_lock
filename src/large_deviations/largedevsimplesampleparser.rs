@@ -120,9 +120,9 @@ impl Default for SimpleSampleldParam
                 zero_starting_conditions: false
             },
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(0.6),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
+                lock_style: LockdownType::Random(0.5491),
+                lock_threshold: 0.165,
+                release_threshold: 0.0206,
             },
             energy: MeasureType::C,
             samples: DEFAULT_SAMPLES_SIMPLE_SAMPLE,

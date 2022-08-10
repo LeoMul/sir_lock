@@ -71,11 +71,11 @@ impl Default for LifespanSizeFittingParams{
             graph_seed:DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(0.5541),
+                lock_style: LockdownType::Random(0.5491),
                 lock_threshold: 0.165,
                 release_threshold: 0.0206,
             },
-            lifespanpercent: 0.90,
+            lifespanpercent: 0.98,
             initial_infected: DEFAULT_INITIAL_INFECTED
         }
     }
