@@ -1,8 +1,0 @@
-set t pdf
-set output "compare_circuit_targeted_c_var.pdf"
-set key top right
-set xlabel "{/Symbol l}"
-set ylabel "var C"
-p "ver0.1.0LamScan_C_N200r0.14t0-1_300SamStep10000_Graphba210_GSeed875629289_SS1489264107025_THRk3_LOCKTargeted_LT0.1_RT0.05_COMPCircuitBreakertrue.dat" u 1:3 w lp t "Targeted", "" u 1:5 w lp t "Circuit Breaker"
-
-set output

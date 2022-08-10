@@ -1,8 +1,0 @@
-set t pdf
-set output "compare_random_targeted_c.pdf"
-set key bottom right
-set xlabel "{/Symbol l}"
-set ylabel "C"
-p "ver0.1.0LamScan_C_N200r0.14t0-1_250SamStep5000_Graphba210_GSeed875629289_SS1489264107025_THRk4_LOCKTargeted_LT0.1_RT0.05_COMPRandomtrue.dat" u 1:2 w lp t "Targeted", "" u 1:4 w lp t "Random 0.6"
-
-set output
