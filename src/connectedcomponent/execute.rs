@@ -65,7 +65,7 @@ fn sim_small_world_percent_instead_of_chunk_size(param: ConnectedComponentParams
     let vec_length = end_index - start_index;
     println!("Start percent {}, end percent {}, desired increment {}",param.percent_start, param.percent_end,param.desired_percent_step);
     println!("Actual increment {} with {} data points sampled over {} networks.",percent_removed_per_chunk,vec_length,param.num_networks);
-    
+    println!("Note: data points are normalised by systemsize");
 
     let mut rngs: Vec<_> = (0..k.get())
         .map(
@@ -126,10 +126,10 @@ fn sim_small_world_percent_instead_of_chunk_size(param: ConnectedComponentParams
                         }
                     }
 
-                    let largest_connected_component = graph.connected_components()[0];
+                    let largest_connected_component = graph.connected_components()[0] as f64/param.system_size.get() as f64;
                     //println!("{}",largest_connected_component);
-                    core_av_vec[i-start_index] += largest_connected_component as f64;
-                    core_var_vec[i-start_index] += largest_connected_component as f64 *largest_connected_component as f64;
+                    core_av_vec[i-start_index] += largest_connected_component ;
+                    core_var_vec[i-start_index] += largest_connected_component*largest_connected_component;
                 }
                 else
                 {
@@ -141,10 +141,10 @@ fn sim_small_world_percent_instead_of_chunk_size(param: ConnectedComponentParams
                 }
                 //let num_edges = graph.edge_count();
                 //println!("{num_edges}");
-                let largest_connected_component = graph.connected_components()[0];
-                //println!("{}",largest_connected_component);
-                core_av_vec[i-start_index] += largest_connected_component as f64;
-                core_var_vec[i-start_index] += largest_connected_component as f64 *largest_connected_component as f64;
+                let largest_connected_component = graph.connected_components()[0] as f64/param.system_size.get() as f64;
+                    //println!("{}",largest_connected_component);
+                    core_av_vec[i-start_index] += largest_connected_component ;
+                    core_var_vec[i-start_index] += largest_connected_component*largest_connected_component;
                 }
     
             }
