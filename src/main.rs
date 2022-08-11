@@ -9,7 +9,8 @@ use{
 pub mod sir_model;
 pub mod life_span_data_collection;
 pub mod grid;
-pub mod life_span_size_fitting;
+pub mod life_span_size_fitting_lambdascan;
+pub mod life_span_size_fitting_threshscan;
 //use crate::life_span_size_fitting::*;
 pub mod misc_types;
 use crate::misc_types::*;
@@ -43,6 +44,7 @@ fn main() {
         CmdOption::ScanThreshParams(o) => o.execute(),
         CmdOption::LifeSpanHist(o) => o.execute(),
         CmdOption::LifespanSizeFitting(o) => o.execute(),
+        CmdOption::LifespanSizeFittingThresh(o) => o.execute(),
         CmdOption::CriticalLambda(o) => o.execute(),
         CmdOption::CriticalThresh(o) => o.execute(),
         CmdOption::PropTest(o) => o.execute(),
@@ -81,7 +83,8 @@ pub enum CmdOption
     ScanLambdaGamma(scan_lambda_gamma::ScanLambdaGamma),
     ScanThreshParams(scan_lock_params::ScanLock),
     LifeSpanHist(lifespanhist::LifeSpan),
-    LifespanSizeFitting(life_span_size_fitting::LifespanSizeFitting),
+    LifespanSizeFitting(life_span_size_fitting_lambdascan::LifespanSizeFitting),
+    LifespanSizeFittingThresh(life_span_size_fitting_threshscan::LifespanSizeFittingThresh),
     CriticalLambda(critical_lambda::CriticalLambda),
     CriticalThresh(critical_threshold::CriticalThresh),
     PropTest(prop_test::PropTest),

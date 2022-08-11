@@ -838,6 +838,7 @@ impl SimpleSampleBarabasi{
 
     }
     pub fn propagate_until_completion_time_with_locks(&mut self,mut post_locked_down_graph:GenGraphSIR,lockparams:LockdownParameters) -> u32{
+        
         self.reset_simple_sample_sir_simulation();
         let max_infected = self.infected_list.len();
         debug_assert_eq!(max_infected,1);

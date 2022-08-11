@@ -96,11 +96,12 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                     let opt = SWOptions::from_critical_thresh_params(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
                     let small_world = opt.into();
                     let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
-                    let mut lockgraph = model.create_locked_down_network(lockparams);
 
                     //(c,m) for each lambda. 
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
+                        let mut lockgraph = model.create_locked_down_network(lockparams);
+
                         let rel = get_release_threshold(param.releasetype,*thresh);
                         lockparams.set_lock_thresh(*thresh);
                         lockparams.set_rel_thresh(rel);
@@ -202,11 +203,12 @@ fn sim_barabasi_both_m_and_c(param: CriticalThreshParams,json:Value,num_threads:
                     let opt = BarabasiOptions::from_critical_thresh_params(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
                     let world = opt.into();
                     let mut model = SimpleSampleBarabasi::from_base(world, param.sir_seed,param.initial_infected);
-                    let mut lockgraph = model.create_locked_down_network(lockparams);
 
                     //(c,m) for each lambda. 
                     let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
                         //model.set_lambda(*lambda);
+                        let mut lockgraph = model.create_locked_down_network(lockparams);
+
                         let rel = get_release_threshold(param.releasetype,*thresh);
                         lockparams.set_lock_thresh(*thresh);
                         lockparams.set_rel_thresh(rel);

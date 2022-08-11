@@ -6,7 +6,9 @@ use{
     crate::scan_lambda_gamma::*,
     //crate::time_graph::*,
     crate::lifespanhist::*,
-    crate::life_span_size_fitting::*,
+    crate::life_span_size_fitting_lambdascan::*,
+    crate::life_span_size_fitting_threshscan::*,
+
     crate::critical_lambda::*,
     crate::simple_sampling::*,
     crate::prop_test::*,
@@ -134,6 +136,20 @@ impl SWOptions{
             graph_seed: new_graph_seed,
             system_size: system_size_new,
             lambda: param.trans_prob_range.start,
+            gamma: param.recovery_prob
+        }
+
+    }
+    pub fn from_lifespan_size_fitting_thresh_param(param: &LifespanSizeFittingThreshParams,system_size_new:NonZeroUsize,new_graph_seed:u64) -> Self{
+        let rewire_prob = match param.graph_type {
+            GraphType::SmallWorld(rewire) => rewire,
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            rewire_prob,
+            graph_seed: new_graph_seed,
+            system_size: system_size_new,
+            lambda: param.trans_prob,
             gamma: param.recovery_prob
         }
 

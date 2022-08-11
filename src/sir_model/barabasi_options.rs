@@ -9,7 +9,9 @@ use{
     //crate::scan_lambda_gamma::*,
     //crate::time_graph::*,
     //crate::lifespanhist::*,
-    crate::life_span_size_fitting::*,
+    crate::life_span_size_fitting_lambdascan::*,
+    crate::life_span_size_fitting_threshscan::*,
+
     crate::prop_test::*,
     crate::scan_lambda_lock_thresh::*,
     crate::critical_lambda::*,
@@ -173,6 +175,21 @@ impl BarabasiOptions{
             graph_seed,
             system_size: system_size_new,
             lambda: param.trans_prob_range.start,
+            gamma: param.recovery_prob,
+            m,
+            source_n,
+        }
+
+    }
+    pub fn from_life_span_fiting_thresh_params(param: &LifespanSizeFittingThreshParams,system_size_new:NonZeroUsize,graph_seed:u64) -> Self{
+        let (m,source_n )= match param.graph_type {
+            GraphType::Barabasi(mm,source_nn) => (mm,source_nn),
+            _ => panic!("Invalid graph type")
+        };
+        Self{
+            graph_seed,
+            system_size: system_size_new,
+            lambda: param.trans_prob,
             gamma: param.recovery_prob,
             m,
             source_n,
