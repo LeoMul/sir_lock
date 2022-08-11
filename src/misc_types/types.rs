@@ -39,10 +39,23 @@ pub struct LargeDeviationParam
     pub time_steps: NonZeroUsize,
     pub markov_seed: u64,
     pub initial_infected: usize,
-    pub zero_starting_conditions:bool,
+    pub initial_bias:InitialEnergyBiasing,
 }
-
-
+#[derive(Clone, Serialize, Deserialize, Copy)]
+pub enum InitialEnergyBiasing{
+    None,
+    Low,
+    High
+}
+impl InitialEnergyBiasing{
+    pub fn name(&self) -> String{
+        match self{
+            InitialEnergyBiasing::None => "NoInitialEnergyBiasing".to_owned(),
+            InitialEnergyBiasing::Low => "LowInitialEnergyBiasing".to_owned(),
+            InitialEnergyBiasing::High => "HighInitialEnergyBiasing".to_owned(),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum GraphType{

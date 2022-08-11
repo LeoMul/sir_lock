@@ -72,7 +72,7 @@ pub struct SWLargeDeviation
     pub system_size: NonZeroUsize,
     /// counting how many nodes are currently infected
     currently_infected_count: u32,
-    zero_starting_conditions: bool,
+    initial_energy_bias: InitialEnergyBiasing,
     last_extinction_index: usize,
     pub patient_zero_vec: Vec<usize>,
     max_degree: usize,
@@ -107,7 +107,6 @@ impl SWLargeDeviation
         let mut markov_rng = Pcg64::seed_from_u64(param.markov_seed);
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph(),&mut markov_rng);
         
-        let zero_starting_conditions = param.zero_starting_conditions;
 
         #[cfg(feature = "ldprint")]   
         let printingvector = vec![5,6,7,8,9,10,55,56,57,58,59,60,61,62,63,64,65,66,95,96,97,98,99,100,195,196,197,198,199,200,295,296,297,298,299,300,395,396,397,398,399,400,495,496,497,498,499,500];
@@ -121,21 +120,32 @@ impl SWLargeDeviation
             .unwrap();
         let rng_vec_len = system_size.get() * param.time_steps.get();
 
-        let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
-        let mut transmission_rand_vec: Vec<_> = (0..rng_vec_len)
-            .map(|_| uniform.sample(&mut markov_rng))
-            .collect();
 
-        let mut recovery_rand_vec: Vec<_> = (0..rng_vec_len)
-            .map(|_| uniform.sample(&mut markov_rng))
-            .collect();
+        let energy_bias = param.initial_bias;
 
-        if zero_starting_conditions{
-            transmission_rand_vec.iter_mut().for_each(|item| *item = 0.0);
-            recovery_rand_vec.iter_mut().for_each(|item| *item = 0.0);
-
-        }
-        println!("{}",transmission_rand_vec[0]);
+        let (transmission_rand_vec,recovery_rand_vec):(Vec<_>,Vec<_>) = match energy_bias{
+            InitialEnergyBiasing::None => {
+                let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
+                (
+                    (0..rng_vec_len).map(|_| uniform.sample(&mut markov_rng)).collect(),
+                    (0..rng_vec_len).map(|_| uniform.sample(&mut markov_rng)).collect()
+                )
+            },
+            InitialEnergyBiasing::Low => {
+                (
+                    (0..rng_vec_len).map(|_| 0.0).collect(),
+                    (0..rng_vec_len).map(|_| 0.0).collect()
+                )
+            },
+            InitialEnergyBiasing::High => {
+                (
+                    (0..rng_vec_len).map(|_| 1.0).collect(),
+                    (0..rng_vec_len).map(|_| 1.0).collect()
+                )
+            },
+            
+        };
+        println!("{} {}",transmission_rand_vec[0],recovery_rand_vec[0]);
 
 
         let offset = Offset::new(param.time_steps.get(), system_size.get());
@@ -175,7 +185,7 @@ impl SWLargeDeviation
             energy: u32::MAX,
             old_energy: u32::MAX,
             transmission_rand_vec,
-            zero_starting_conditions,
+            initial_energy_bias:energy_bias,
             recovery_rand_vec,
             unfinished_simulations_counter: 0,
             total_simulations_counter: 0,
@@ -1252,7 +1262,7 @@ mod tests {
             time_steps: ONE,
             markov_seed: DEFAULT_MARKOV_SEED,
             initial_infected:DEFAULT_INITIAL_INFECTED,
-            zero_starting_conditions:false
+            initial_bias:InitialEnergyBiasing::None
         };
 
         let lockparams = LockdownParameters{

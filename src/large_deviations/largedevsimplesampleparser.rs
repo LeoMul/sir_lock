@@ -60,7 +60,7 @@ impl SimpleSampleldParam
         };
 
         format!(
-            "{}_LargeDevSimSamN{}_{rand}_trans{}_gamma{}_time{}S{}Energy{}Lock{}_order_rand_1_startzero{}.dat",
+            "{}_LargeDevSimSamN{}_{rand}_trans{}_gamma{}_time{}S{}Energy{}Lock{}_order_rand_1_{}.dat",
             crate::VERSION,
             self.system_size,
             self.lambda,
@@ -69,7 +69,7 @@ impl SimpleSampleldParam
             self.samples,
             self.energy.name(),
             lockdown_naming_string(self.lockdown.lock_style),
-            self.large_deviation_param.zero_starting_conditions
+            self.large_deviation_param.initial_bias.name()
 
         )
     }
@@ -117,7 +117,7 @@ impl Default for SimpleSampleldParam
                 time_steps: ONE,
                 markov_seed: DEFAULT_MARKOV_SEED,
                 initial_infected:DEFAULT_INITIAL_INFECTED,
-                zero_starting_conditions: false
+                initial_bias: InitialEnergyBiasing::None
             },
             lockdown: LockdownParameters{
                 lock_style: LockdownType::Random(0.5491),

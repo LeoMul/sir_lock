@@ -232,7 +232,7 @@ impl LDLDparam
         };
 
         format!(
-            "v{}_{}_LDHD_N{}r{}t{}_Energy{}HalfRes{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}.{end}",
+            "v{}_{}_LDHD_N{}r{}t{}_Energy{}HalfRes{}LockType{}rel{}lockth{}G{}GS{}SS{}_NI{num_intervals}_{interval_info}{interval}{times}MarkovStepSize{}{}.{end}",
             crate::VERSION,
             mode.name(),
             self.system_size,
@@ -246,7 +246,8 @@ impl LDLDparam
             self.graph_type.name(),
             self.graph_seed,
             self.step_size,
-            self.sir_seed
+            self.sir_seed,
+            self.large_deviation_param.initial_bias.name()
         )
     }
 
@@ -298,7 +299,7 @@ impl Default for LDLDparam
                 time_steps: ONE,
                 markov_seed: DEFAULT_MARKOV_SEED,
                 initial_infected: DEFAULT_INITIAL_INFECTED,
-                zero_starting_conditions: false,
+                initial_bias: InitialEnergyBiasing::None,
             },
             lockdownparams: LockdownParameters{
                 lock_style: LockdownType::Random(0.5491),
