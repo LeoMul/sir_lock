@@ -33,11 +33,6 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
     let world = opt.into();
     let mut model = SimpleSampleSW::from_base(world, param.sir_seed,param.initial_infected);
 
-    //let range_lam = param.lambda_range.get_range();
-    //let range_gam = param.gamma_range.get_range();
-    //let lambda_range:Vec<_> = range_lam.iter().collect();
-    //let gamma_range: Vec<_> = range_gam.iter().collect();
-
     let grid_2 = GridF64::new(
         param.lambda_range.get_range(),
         param.lockt_range.get_range(),   
