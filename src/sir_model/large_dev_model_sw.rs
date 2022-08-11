@@ -17,7 +17,6 @@ use rand::Rng;
 //might need but leaving it here.
 //use net_ensembles::Contained,
 const LOCKDOWN_CHANGE: f64 = 0.01;
-
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
 const PATIENT_MOVE: f64 = 0.05;
@@ -105,33 +104,24 @@ impl SWLargeDeviation
     {
 
 
-        //do I need the lockdown parameters here also? yes
-        //let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph());
         let mut markov_rng = Pcg64::seed_from_u64(param.markov_seed);
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph(),&mut markov_rng);
         
         let zero_starting_conditions = param.zero_starting_conditions;
-        //let name = "curvewritername";
-        //let mut writer = SirWriter::new(&name, 1);
+
         #[cfg(feature = "ldprint")]   
         let printingvector = vec![5,6,7,8,9,10,55,56,57,58,59,60,61,62,63,64,65,66,95,96,97,98,99,100,195,196,197,198,199,200,295,296,297,298,299,300,395,396,397,398,399,400,495,496,497,498,499,500];
+        
         let lock_graph =create_locked_down_network_from_pair_list(&pairs_struct, base_model.ensemble.graph());
-
         let not_lockdown_pairs = pairs_struct.to_be_removed;
         let lockdown_pairs = pairs_struct.to_be_kept;
-
         let lockdown_indicator = LockdownIndicator::NotLockdown;
+        
         let system_size = NonZeroUsize::new(base_model.ensemble.graph().vertex_count())
             .unwrap();
         let rng_vec_len = system_size.get() * param.time_steps.get();
 
         let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
-
-        
-        
-        
-            
-        
         let mut transmission_rand_vec: Vec<_> = (0..rng_vec_len)
             .map(|_| uniform.sample(&mut markov_rng))
             .collect();
