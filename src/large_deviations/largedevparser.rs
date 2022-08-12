@@ -516,9 +516,13 @@ pub fn calc_c_sw_no_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<
             
             model.ld_energy_m();
             let c = model.calculate_ever_infected() as u32;
+            model.old_energy = model.ld_model.energy;
+            
             //let cfrac = c as f64/ model.ld_model.system_size.get() as f64;
             #[cfg(feature = "ldprint")]{   
             let f = c as usize;
+            println!("old {} new {}", model.old_energy,model.ld_model.energy);
+
             if let Some(index) = model.printingvector.iter().position(|item| *item == f){
 
                 model.printingvector.swap_remove(index);
@@ -528,13 +532,10 @@ pub fn calc_c_sw_no_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<
                 let mut writer = SirWriter::new(&name, 1);
                 model.ld_energy_m_and_print(&mut writer);
             }}
-            model.old_energy = model.ld_model.energy;
 
-            //let old = model.old_energy;
-            //println!("old {old} new {c}");
+           
 
             model.ld_model.energy = c ;
-            //println!("{}",model.ld_model.energy);
             model.ld_model.energy})
 }
 pub fn calc_c_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Option<u32>
@@ -548,10 +549,12 @@ pub fn calc_c_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Optio
 
             model.ld_energy_m();
             let c = (model.calculate_ever_infected() as u32+1)/2;
+            model.old_energy = model.ld_model.energy;
             //let cfrac = c as f64/ model.ld_model.system_size.get() as f64;
             #[cfg(feature = "ldprint")]{   
             let f = c as usize;
-    
+            println!("old {} new {}", model.old_energy,c);
+
             if let Some(index) = model.printingvector.iter().position(|item| *item == f){
 
                 model.printingvector.swap_remove(index);
@@ -562,7 +565,7 @@ pub fn calc_c_sw_with_res_change(model: &mut SWLargeDeviationWithLocks) -> Optio
                 model.ld_energy_m_and_print(&mut writer);
             }}
             //let old = model.old_energy;
-            model.old_energy = model.ld_model.energy;
+            
 
             //println!("old {old} new {c}");
             //if c < 200{
@@ -674,6 +677,39 @@ where A:Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy 
     }
 
 }
+
+
+//pub fn energy_function_returner_sw(measure_type:MeasureType,change_res:bool,lockenum:TypeTBD) -> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
+//
+//
+//
+//    let fun = match measure_type{
+//        MeasureType::C => if !change_res{
+//            calc_c_sw_no_res_change
+//        }
+//        else{
+//            calc_c_sw_with_res_change
+//        },
+//        MeasureType::M => if !change_res{
+//            calc_m_sw_no_res_change
+//        }
+//        else{
+//            calc_m_sw_with_res_change
+//        }
+//    };
+//    
+//    move |model: &mut SWLargeDeviationWithLocks|
+//    {
+//        let (enenergy,lockenum) = fun(model);
+//        if lockenum{
+//            None
+//        }else {
+//            opt
+//        }
+//    }
+//    
+//
+//}
 pub fn energy_function_returner_sw(measure_type:MeasureType,change_res:bool) -> impl Fn(&mut SWLargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
 
 
@@ -695,7 +731,6 @@ pub fn energy_function_returner_sw(measure_type:MeasureType,change_res:bool) -> 
     
 
 }
-
 pub fn energy_function_returner_ba(measure_type:MeasureType,change_res:bool) -> impl Fn(&mut BALargeDeviationWithLocks) -> Option<u32>  + Sync + Send + Copy{
 
 
