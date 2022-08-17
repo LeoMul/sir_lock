@@ -4,7 +4,7 @@ use crate::life_span_data_collection::*;
 
 use{
     super::*,
-    crate::{GraphType, sir_model::*},
+    crate::{GraphType},
     serde_json::Value,
     std::{num::*, fs::File, io::BufWriter},
 };
@@ -20,14 +20,15 @@ pub fn run_simulation(param:LifeSpanParams, json: Value, num_threads: Option<Non
 }
 
 fn sim_small_world(param: LifeSpanParams, json: Value, num_threads:Option<NonZeroUsize>){
-    let opt = SWOptions::from_lifespan_param(&param);
-    let small_world = opt.into();
-    let model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
+    //let opt = SWOptions::from_lifespan_param(&param);
+    //let small_world = opt.into();
+    //let model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
-
+    let lockdown = param.lockdown;
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
-    
-    let data = acquire_sorted_data(model, k, param.sir_seed, param.samples);
+    let num_samples = param.samples;
+    let sir_seed = param.sir_seed;
+    let data = acquire_sorted_data(&param, k, sir_seed, num_samples,lockdown);
     let vector_data = convert_sorted_to_hist(&data);
     
     
@@ -36,8 +37,8 @@ fn sim_small_world(param: LifeSpanParams, json: Value, num_threads:Option<NonZer
     
     write_cumulative(&data, &param, &json, num_threads);
     write_histogram(&vector_data,&param,&json,num_threads);
-    let life95 = acquire_percent_life_span(&data,0.95);
-    println!{"{}",life95};
+    //let life95 = acquire_percent_life_span(&data,0.95);
+    //println!{"{}",life95};
 
 }
 

@@ -9,6 +9,7 @@ use{
     serde_json::Value,
    
     crate::misc_types::*,
+    crate::lockdown_methods::*,
 
 };
 
@@ -41,7 +42,9 @@ pub struct LifeSpanParams{
     pub fraction: bool,
     pub graph_seed: u64,
     pub sir_seed: u64,
-    pub initial_infected:usize
+    pub initial_infected:usize,
+    pub lockdown: LockdownParameters,
+    
 }
 
 impl Default for LifeSpanParams{
@@ -49,14 +52,18 @@ impl Default for LifeSpanParams{
         Self{
             system_size:DEFAULT_SYSTEM_SIZE,
             recovery_prob: 0.14,
-            trans_prob: 0.25,
+            trans_prob: 0.2,
             graph_type: GraphType::SmallWorld(0.1),
             samples: DEFAULT_SAMPLES_PER_STEP,
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            initial_infected: DEFAULT_INITIAL_INFECTED
-
+            initial_infected: DEFAULT_INITIAL_INFECTED,
+            lockdown: LockdownParameters{
+                lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
+                lock_threshold: DEFAULT_LOCKDOWN_THRESHOLD,
+                release_threshold: DEFAULT_RELEASE_THRESHOLD
+            }
         }
     }
 }

@@ -6,12 +6,16 @@ use{
     std::{num::*},
     rand_pcg::Pcg64,
     net_ensembles::rand::SeedableRng,
-    rayon::prelude::*
+    rayon::prelude::*,
+    crate::lockdown_methods::*,
+    crate::lifespanhist::parser::LifeSpanParams
+    
 };
+use indicatif::*;
 
 use net_ensembles::sampling::histogram::*;
 
-pub fn acquire_sorted_data(model:SimpleSampleSW,k:NonZeroUsize,sir_seed:u64,samples:u64)-> Vec<u32> {
+pub fn acquire_sorted_data(param: &LifeSpanParams,k:NonZeroUsize,sir_seed:u64,samples:u64,lockdown:LockdownParameters)-> Vec<u32> {
 
     
 
@@ -20,21 +24,24 @@ pub fn acquire_sorted_data(model:SimpleSampleSW,k:NonZeroUsize,sir_seed:u64,samp
     let mut container: Vec<_> = (0..k.get()).map(
         |_|
         {
-            let mut model = model.clone();
-            model.reseed_sir_rng(&mut rng);
-            model
+            Pcg64::from_rng(&mut rng).unwrap()
         }
     ).collect();
 
     let per_threads = samples/k.get() as u64;
 
-    
-    let mut data_chunked:Vec<Vec<u32>> = container.par_iter_mut().map(|model|{
-        let mut vec_per_thread:Vec<u32> = Vec::new();
-        for _i in 0..per_threads{
-            let time = model.propagate_until_completion_time();
-            vec_per_thread.push(time)
-        }
+    let bar = crate::indication_bar(samples);
+
+    let mut data_chunked:Vec<Vec<u32>> = container.par_iter_mut().map(|r|{
+
+        let vec_per_thread:Vec<_> = (0..per_threads).into_iter().map(|_|{
+            let opt = SWOptions::from_lifespan_param(&param);
+            let small_world = opt.into();
+            let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
+            model.reseed_sir_rng(r);
+            let mut lockgraph = model.create_locked_down_network(lockdown);
+           model.propagate_until_completion_time_with_locks(&mut lockgraph,lockdown)
+        }).progress_with(bar.clone()).collect();
         vec_per_thread
 
     }

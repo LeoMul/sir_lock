@@ -29,9 +29,9 @@ pub const DEFAULT_MARKOV_SEED: u64 = 782063498562509862;
 pub const DEFAULT_SWEEP_SIZE: NonZeroUsize = unsafe{NonZeroUsize::new_unchecked(2222)};
 pub const DEFAULT_MARKOV_STEP_SIZE: usize = 100;
 pub const DEFAULT_SAMPLES_SIMPLE_SAMPLE: usize = 10000;
-pub const DEFAULT_RANDOM_LOCKDOWN_SEED: u64 = 123131315;
-pub const DEFAULT_RANDOM_LOCKDOWN_FRAC: f64 = 0.6;
-
+pub const DEFAULT_RANDOM_LOCKDOWN_FRAC: f64 = 0.586;
+pub const DEFAULT_LOCKDOWN_THRESHOLD:f64 = 0.1682;
+pub const DEFAULT_RELEASE_THRESHOLD:f64 = 0.0210;
 //pub type GenGraphSIR = net_ensembles::GenericGraph<crate::sir_model::sir_states::InfectionState, net_ensembles::graph::NodeContainer<crate::sir_model::sir_states::InfectionState>>;
 #[derive(Clone, Serialize, Deserialize, Copy)]
 pub struct LargeDeviationParam

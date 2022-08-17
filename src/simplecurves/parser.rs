@@ -95,9 +95,9 @@ impl Default for SimpleCurvesParam
             system_size: DEFAULT_SYSTEM_SIZE,
             sir_seed: DEFAULT_SIR_SEED,
             lockdown: LockdownParameters{
-                lock_style: LockdownType::Random(0.6),
-                lock_threshold: 0.1,
-                release_threshold: 0.05,
+                lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
+                lock_threshold: DEFAULT_LOCKDOWN_THRESHOLD,
+                release_threshold: DEFAULT_RELEASE_THRESHOLD,
             },
             initial_infected: DEFAULT_INITIAL_INFECTED
         }

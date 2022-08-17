@@ -107,7 +107,7 @@ impl BALargeDeviation
         let mut markov_rng = Pcg64::seed_from_u64(param.markov_seed);
         let pairs_struct = create_lock_pairs_lists(lockdown, base_model.ensemble.graph(),&mut markov_rng);
         
-
+        
         #[cfg(feature = "ldprint")]   
         let printingvector = vec![5,6,7,8,9,10,55,56,57,58,59,60,61,62,63,64,65,66,95,96,97,98,99,100,195,196,197,198,199,200,295,296,297,298,299,300,395,396,397,398,399,400,495,496,497,498,499,500];
         
@@ -909,9 +909,69 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
             
         } 
         else {
+
+            let decision = uniform.sample(&mut self.markov_rng);
+            if decision < 0.01{
+                self.offset.set_time(0);
+
+                for index in self.patient_zero_vec.iter(){
+                    let index_to_changed = self.offset.lookup_index(*index);
+                    // Transmission 
+                    let old_val = std::mem::replace(
+                        &mut self.transmission_rand_vec[index_to_changed], 
+                        uniform.sample(&mut self.markov_rng)
+                    );
+                    steps.push(MarkovStep::Transmission(
+                        ExchangeInfo{
+                            index:index_to_changed,
+                            old_val
+                        }
+                    ));
+                    let old_val = std::mem::replace(
+                        &mut self.recovery_rand_vec[index_to_changed], 
+                        uniform.sample(&mut self.markov_rng)
+                    );
+                    steps.push(MarkovStep::Recovery(
+                        ExchangeInfo{
+                            index:index_to_changed,
+                            old_val
+                        }
+                    ));
+                    
+                    self.base_model.ensemble().graph().contained_iter_neighbors_with_index(*index).for_each(|(neighbour,_)|{
+
+                    //});
+                    //self.base_model.ensemble.graph().container(*index).neighbors_ba().for_each(
+                    //    |neighbour|{
+                            let index_to_changed = self.offset.lookup_index(neighbour);
+                            //println!("working");
+                            let old_val = std::mem::replace(
+                                &mut self.transmission_rand_vec[index_to_changed], 
+                                uniform.sample(&mut self.markov_rng)
+                            );
+                            steps.push(MarkovStep::Transmission(
+                                ExchangeInfo{
+                                    index:index_to_changed,
+                                    old_val
+                                }
+                            ));
+                            let old_val = std::mem::replace(
+                                &mut self.recovery_rand_vec[index_to_changed], 
+                                uniform.sample(&mut self.markov_rng)
+                            );
+                            steps.push(MarkovStep::Recovery(
+                                ExchangeInfo{
+                                    index:index_to_changed,
+                                    old_val
+                                }
+                            ));
+                        });
+
+                }
+            }
+            else{
             let amount = Binomial::new(count as u64, 0.5).unwrap().sample(&mut self.markov_rng);
             let index_uniform = Uniform::new(0, self.recovery_rand_vec.len());
-            
             steps.extend(
                 (0..amount)
                     .map(
@@ -951,9 +1011,10 @@ impl MarkovChain<MarkovStep, ()> for BALargeDeviation
                                 }
                             )
                         }
+
                     )
             );
-        }
+        }}
    
 }
 }
@@ -1247,7 +1308,6 @@ impl MarkovChain<MarkovStepWithLocks, ()> for BALargeDeviationWithLocks
 
     
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -937,6 +937,7 @@ impl MarkovChain<MarkovStep, ()> for SWLargeDeviation
                             old_val
                         }
                     ));
+                    //DO NOT USE THIS TO TRANSFER TO BARABASI. USE THE CONTAINER_ITER_NEIGHBORS INSTEAD
                     self.base_model.ensemble.graph().container(*index).neighbors_sw().for_each(
                         |neighbour|{
                             let index_to_changed = self.offset.lookup_index(*neighbour);

@@ -302,20 +302,18 @@ impl Default for LDLDparam
                 initial_bias: InitialEnergyBiasing::None,
             },
             lockdownparams: LockdownParameters{
-                lock_style: LockdownType::Random(0.5491),
-                lock_threshold: 0.165,
-                release_threshold: 0.0206
+                lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
+                lock_threshold: DEFAULT_LOCKDOWN_THRESHOLD,
+                release_threshold: DEFAULT_RELEASE_THRESHOLD
             },
-            histograms: HistogramCreator::Manual(vec![
-                Interval{
-                    start: 5,
-                    end_inlcusive: 133
-                },
-                Interval{
-                    start: 1472,
-                    end_inlcusive: 1600
+            histograms: HistogramCreator::Automatic(
+                Intervals{
+                    start: None,
+                    end_inlcusive: None,
+                    num_intervals: 2,
+                    overlap: None,
+                    greedy_search_steps: None
                 }
-            ]
             ),
             walkers_per_interval: ONE,
             step_size: DEFAULT_MARKOV_STEP_SIZE,

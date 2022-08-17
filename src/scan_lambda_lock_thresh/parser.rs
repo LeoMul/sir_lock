@@ -70,7 +70,7 @@ impl Default for ScanLambdaThreshParams{
             fraction: true,
             graph_seed: DEFAULT_GRAPH_SEED,
             sir_seed: DEFAULT_SIR_SEED,
-            lockdowntype:LockdownType::Random(0.5541),
+            lockdowntype:LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
             initial_infected: DEFAULT_INITIAL_INFECTED,
             releaseparams: ReleaseType::FracOfLock(0.125),
         }
