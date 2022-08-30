@@ -80,7 +80,8 @@ pub struct LDContinueOpts
     pub days: Option<NonZeroU64>,
     pub hours: Option<NonZeroU64>,
     pub change_step_size: Option<NonZeroUsize>,
-    pub rewltype: RewlType
+    pub rewltype: RewlType,
+    pub new_log_f: Option<f64>
 }
 impl Default for LDContinueOpts
 {
@@ -93,7 +94,8 @@ impl Default for LDContinueOpts
             hours: None,
             days: None,
             change_step_size: None,
-            rewltype: RewlType::None
+            rewltype: RewlType::None,
+            new_log_f: None
         }
     }
 }

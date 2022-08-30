@@ -520,9 +520,10 @@ pub fn load_small_world_rewl(opts: LDContinueOpts, instant: std::time::Instant, 
     let allowed_seconds = opts.seconds();
 
     let (mut rewl, mut json_string):(Rewl<SWLargeDeviationWithLocks, _, _, _, _, ()>, Vec<_>) = deserialize_from_file(&opts.file_name);
+    let new_log_f = opts.new_log_f;
 
-
-
+    
+    
 
     if let Some(step_size) = opts.change_step_size
     {
@@ -543,6 +544,12 @@ pub fn load_small_world_rewl(opts: LDContinueOpts, instant: std::time::Instant, 
     let mut old_opts: LDLDparam = serde_json::from_str(&json_string[0])
         .expect("Unable to deserialize old params");
     old_opts.times_plus_1();
+    
+    let _ = match new_log_f{
+        Some(new_f) => rewl.set_log_f_threshold(new_f),
+        None => rewl.set_log_f_threshold(old_opts.f_threshold),
+    };
+    
     let boolean_res = old_opts.change_energy_res;
 
     let mut jsons = vec![serde_json::to_value(old_opts.clone()).expect("unable to create json")];
@@ -592,7 +599,7 @@ pub fn load_barabasi_rewl(opts: LDContinueOpts, instant: std::time::Instant, no_
 
     let (mut rewl, mut json_string):(Rewl<BALargeDeviationWithLocks, _, _, _, _, ()>, Vec<_>) = deserialize_from_file(&opts.file_name);
 
-    
+    let new_log_f = opts.new_log_f;
 
 
     if let Some(step_size) = opts.change_step_size
@@ -614,6 +621,10 @@ pub fn load_barabasi_rewl(opts: LDContinueOpts, instant: std::time::Instant, no_
     let mut old_opts: LDLDparam = serde_json::from_str(&json_string[0])
         .expect("Unable to deserialize old params");
     old_opts.times_plus_1();
+    let _ = match new_log_f{
+        Some(new_f) => rewl.set_log_f_threshold(new_f),
+        None => rewl.set_log_f_threshold(old_opts.f_threshold),
+    };
 
     let mut jsons = vec![serde_json::to_value(old_opts.clone()).expect("unable to create json")];
 
