@@ -167,14 +167,14 @@ pub fn hist_to_file(hist: &HistU32Fast, file_name: String, json: &Value)
     serde_json::to_writer(&mut buf, json)
         .unwrap();
     writeln!(buf).unwrap();
-    writeln!(buf, "#bin log10_prob hits").unwrap();
+    writeln!(buf, "#bin log10_prob linearscale hits").unwrap();
 
     hist.bin_hits_iter()
         .zip(normed)
         .for_each(
             |((bin, hits), log_prob)|
             {
-                writeln!(buf, "{} {} {}", bin, log_prob, hits).unwrap()
+                writeln!(buf, "{} {} {} {}", bin, log_prob, 10_f64.powf(log_prob), hits).unwrap()
             }
         );
 }
@@ -197,14 +197,17 @@ pub fn norm_hist_log(hist: &HistU32Fast) -> Vec<f64>
 
 pub fn norm_hist(hist: &HistU32Fast) -> Vec<f64>
 {
-    let density: usize = hist.hist().iter().sum();
-    let density = density as f64;    
-    //subtract_max(density.as_mut_slice());
-    //let int = integrate_log(density.as_slice(), hist.hist().len());
-    //let sub = int.log10();
-    hist.hist().iter()
-        .map(|v| *v as f64 /density).collect()
-    
+    let mut density: Vec<_> = hist.hist()
+        .iter()
+        .map(|&hits| (hits as f64).log10())
+        .collect();
+
+    subtract_max(density.as_mut_slice());
+    let int = integrate_log(density.as_slice(), hist.hist().len());
+    let sub = int.log10();
+    density.iter_mut()
+        .for_each(|v| *v -= sub);
+    density
 }
 
 pub fn subtract_max(slice: &mut[f64])
