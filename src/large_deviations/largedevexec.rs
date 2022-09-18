@@ -69,8 +69,8 @@ pub fn execute_ba(opt: LDOptsLD, instant: std::time::Instant,m:usize,n:usize,par
         )}
     else{
         param.histograms.create(
-            (ld_model.patient_zero_vec.len() as u32-1)/2, 
-            (param.system_size.get() as u32-1)/2, 
+            (ld_model.patient_zero_vec.len() as u32+1)/2, 
+            (param.system_size.get() as u32+1)/2, 
             param.walkers_per_interval
             )
     };
