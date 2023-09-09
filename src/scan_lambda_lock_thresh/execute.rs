@@ -31,6 +31,11 @@ pub fn run_simulation(param:ScanLambdaThreshParams, json: Value, num_threads: Op
 pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
     let opt = SWOptions::from_lambda_thresh_param(&param);
     let world = opt.into();
+    let lockparams = LockdownParameters{
+        lock_style:param.lockdowntype,
+        release_threshold: 0.0,
+        lock_threshold:0.0,
+        };
     let mut model = SimpleSampleSW::from_base(world, param.sir_seed,param.initial_infected);
 
     let grid_2 = GridF64::new(
@@ -49,11 +54,7 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
     let k = num_threads.unwrap_or_else(|| NonZeroUsize::new(1).unwrap());
     rayon::ThreadPoolBuilder::new().num_threads(k.get()).build_global().unwrap();
     //let lockparams = param.lockdown;
-    let lockparams = LockdownParameters{
-        lock_style:param.lockdowntype,
-        release_threshold: 0.0,
-        lock_threshold:0.0,
-        };
+    
 
     let lock_graph  = &mut model.create_locked_down_network(lockparams);
 

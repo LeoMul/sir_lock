@@ -24,15 +24,16 @@ fn sim_barabasi(_param:PropTestParams, _json: Value, _num_threads: Option<NonZer
 fn sim_small_world(param:PropTestParams, _json: Value, _num_threads: Option<NonZeroUsize>){
     let opt = SWOptions::from_prop_test_param(&param);
     let barabasi_world = opt.into();
-    let mut model = SimpleSampleSW::from_base(barabasi_world, param.sir_seed,param.initial_infected);
-
     let lock = LockdownParameters{
         lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
-        lock_threshold: 0.1,
-        release_threshold: 0.05
+        lock_threshold: 0.0201,
+        release_threshold: 0.0025125
     };
-    let mut lock_graph = model.create_locked_down_network(lock);
-    let x = model.propagate_until_completion_max_with_lockdown(&mut lock_graph,lock);
+    let mut model = SimpleSampleSW::from_base(barabasi_world, param.sir_seed,param.initial_infected);
+
+    
+    //let mut lock_graph = model.create_locked_down_network(lock);
+    let x = model.propagate_until_completion_max_with_locks_new_lockgraph_for_each_lockdown(lock);
     println!("{}",x);
 
 }

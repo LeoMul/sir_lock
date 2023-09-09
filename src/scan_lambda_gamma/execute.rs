@@ -16,6 +16,7 @@ use{
     rayon::prelude::*,
     crate::stats_methods::MyVariance,
     crate::grid::*,
+    crate::lockdown_methods::*,
    
 };
 
@@ -33,6 +34,14 @@ pub fn run_simulation(param:ScanLambdaGammaParams, json: Value, num_threads: Opt
 fn sim_small_world(param: ScanLambdaGammaParams, json: Value, num_threads:Option<NonZeroUsize>){
     let opt = SWOptions::from_lambda_gamma_scan_param(&param);
     let small_world = opt.into();
+
+    let lock = LockdownParameters{
+        lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
+        lock_threshold: 1.1,
+        release_threshold: -0.1
+    };
+
+
     let model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
 
     //let range_lam = param.lambda_range.get_range();

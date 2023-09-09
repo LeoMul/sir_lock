@@ -21,7 +21,7 @@ use{
     rayon::prelude::*,
 };
 
-use crate:: sir_model::small_world_options::SWOptions;
+use crate::{ sir_model::small_world_options::SWOptions, lockdown_methods::LockdownParameters};
 
 pub fn run_simulation(param:LifespanSizeFittingThreshParams, json: Value, num_threads: Option<NonZeroUsize>){
     match param.graph_type{
@@ -140,13 +140,13 @@ fn sim_small_world(param: LifespanSizeFittingThreshParams, json: Value, num_thre
                 let new_graph_seed = graph_rng.gen::<u64>();
                 let opt = SWOptions::from_lifespan_size_fitting_thresh_param(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
                 let small_world = opt.into();
-                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
+                
                 let mut lockparams = crate::lockdown_methods::LockdownParameters{
                     lock_style: param.lockdowntype,
                     release_threshold: 0.0,
                     lock_threshold: 0.0
                 };
-
+                let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
                 let data_point_for_each_lambda:Vec<_> = thresh_vec.iter().map(|thresh|{
 
                     let rel = crate::lockdown_methods::get_release_threshold(param.releasetype,*thresh);

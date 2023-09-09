@@ -16,6 +16,7 @@ use{
     net_ensembles::rand::SeedableRng,
     crate::stats_methods::MyVariance,
     crate::lockdown_methods::*,
+    crate::misc_types::*,
 };
 
 //use serde_json::from_slice;
@@ -41,6 +42,14 @@ pub fn sim_small_world(param:ScanLockParams,json:Value,num_threads:Option<NonZer
 
     let opt = SWOptions::from_lock_scan_param(&param);
     let world = opt.into();
+
+    //band-aid-fix-for-now:
+    let lockparams = LockdownParameters{
+        lock_style: LockdownType::Random(DEFAULT_RANDOM_LOCKDOWN_FRAC),
+        lock_threshold: 1.1,
+        release_threshold: -0.1
+    };
+
     let model = SimpleSampleSW::from_base(world, param.sir_seed,param.initial_infected);
 
 
