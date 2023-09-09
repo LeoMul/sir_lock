@@ -5,3 +5,10 @@ This code is original but the idea serves as a continuation of the work publishe
 Yannick Feld should also be credited here, as he provided a lot of guidance in the development of the application.
 
 A paper publishing the results of this work is in progress as of 09.12.22.
+
+AS OF 9/09/23, the program is being updated such that the locked-down network is regenerated each time the system goes into lockdown. 
+The following checklist will show the progress:
+
+1. The simple-sampling functions ✓
+2. The programs measuring the simple-sampling (should be one line changes) 𐄂
+3. Large deviations 𐄂
