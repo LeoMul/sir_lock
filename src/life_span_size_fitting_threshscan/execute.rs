@@ -153,11 +153,11 @@ fn sim_small_world(param: LifespanSizeFittingThreshParams, json: Value, num_thre
                     lockparams.set_lock_thresh(*thresh);
                     lockparams.set_rel_thresh(rel);
 
-                    let mut lockgraph = model.create_locked_down_network(lockparams);
+                    //let mut lockgraph = model.create_locked_down_network(lockparams);
 
                     //model.set_lambda(*lambda);
                     model.reseed_sir_rng(rng);
-                    model.propagate_until_completion_time_with_locks(&mut lockgraph,lockparams)
+                    model.propagate_until_completion_time_with_locks_new_lockgraph_for_each_lockdown(lockparams)
                     }
                 ).collect(); 
                 data_point_for_each_lambda
