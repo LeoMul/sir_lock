@@ -16,7 +16,11 @@ use {
 use rand::Rng;
 //might need but leaving it here.
 //use net_ensembles::Contained,
-const LOCKDOWN_CHANGE: f64 = 0.01;
+
+// in response to the REFEREE recommended change, I have implemented this band-aid fix to remove the lockdown markov moves.
+//const LOCKDOWN_CHANGE: f64 = 0.00;
+// that being said, i have also removed the code which even uses this, so no harm really.
+
 const ROTATE_LEFT: f64 =  0.005;
 const ROTATE_RIGHT: f64 =  0.01;
 const PATIENT_MOVE: f64 = 0.05;
@@ -199,6 +203,18 @@ impl SWLargeDeviation
             hist_patient_zero: hist
         }
     }
+
+    pub fn lockdown_network_redraw(&mut self){
+        let pairs_struct = create_lock_pairs_lists(self.lockdownparams, self.base_model.ensemble.graph(),&mut self.markov_rng);
+        self.lock_graph =create_locked_down_network_from_pair_list(&pairs_struct, self.base_model.ensemble.graph());
+        self.not_lockdown_pairs = pairs_struct.to_be_removed;
+        self.lockdown_pairs = pairs_struct.to_be_kept;
+
+        //let deg = self.lock_graph.degree(usize::from(self.system_size) as usize /2);
+
+        //println!("redrawing network. degree at 1000 {}",deg.unwrap())
+    }
+
 
     pub fn hist_patient_zero(&self) -> &HistUsizeFast
     {
@@ -462,6 +478,10 @@ impl SWLargeDeviation
             if inf > lockdown_threshold && self.lockdown_indicator.is_not_in_lockdown(){
                 self.lockdown_indicator = LockdownIndicator::Lockdown;                
                 //println!("lock");
+
+                //IN RESPONSE TO THE REFEREE CHANGES, WE REDRAW THE NETWORK IN THE FOLLOWING LINE
+                self.lockdown_network_redraw();
+
                 self.create_dangerous_neighbours_trans_sir();
             }
             if inf < release_threshold && self.lockdown_indicator.is_in_lockdown(){
@@ -1253,25 +1273,29 @@ impl MarkovChain<MarkovStepWithLocks, ()> for SWLargeDeviationWithLocks
 
         match self.lockdown.lock_style{
             LockdownType::Random(_) => 
-            {
-                let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
-                let which = uniform.sample(&mut self.markov_rng);
-
-
-                if which <= LOCKDOWN_CHANGE
-                {   
-                    //println!("lockdown markov move");
-                    //let rng  = &mut self.markov_rng;
-                    let num_moves = self.markov_rng.gen_range(1..=15);
-                    for _ in 0..num_moves{
-                        let ld_step = self.find_lockdown_markovmove();
-                        self.change_edge(&ld_step);
-                        steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
-                    }
-                    
-                
-
-                } else {
+            { ////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //In response to the REFEREE i have removed the lockdowjn markov moves here.
+                ////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                /// 
+                //let uniform = Uniform::new_inclusive(0.0_f64, 1.0);
+                //let which = uniform.sample(&mut self.markov_rng);
+//
+//
+                //if which <= LOCKDOWN_CHANGE
+                //{   
+                //    //println!("lockdown markov move");
+                //    //let rng  = &mut self.markov_rng;
+                //    let num_moves = self.markov_rng.gen_range(1..=15);
+                //    for _ in 0..num_moves{
+                //        let ld_step = self.find_lockdown_markovmove();
+                //        self.change_edge(&ld_step);
+                //        steps.push(MarkovStepWithLocks::LockdownStep(ld_step));
+                //    }
+                //    
+                //
+//
+                //} else 
+                {
                     //println!("not lockdown markov move");
                     self.ld_model.m_steps(count, &mut self.markov_workaround);
                 

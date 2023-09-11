@@ -39,8 +39,8 @@ pub fn acquire_sorted_data(param: &LifeSpanParams,k:NonZeroUsize,sir_seed:u64,sa
             let small_world = opt.into();
             let mut model = SimpleSampleSW::from_base(small_world, param.sir_seed,param.initial_infected);
             model.reseed_sir_rng(r);
-            let mut lockgraph = model.create_locked_down_network(lockdown);
-           model.propagate_until_completion_time_with_locks(&mut lockgraph,lockdown)
+            //let mut lockgraph = model.create_locked_down_network(lockdown);
+           model.propagate_until_completion_time_with_locks_new_lockgraph_for_each_lockdown(lockdown)
         }).progress_with(bar.clone()).collect();
         vec_per_thread
 
