@@ -78,9 +78,11 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
         
         let bar = crate::indication_bar(param.num_networks);
         //This vector contains 4 vectors of length per_thread. These constituent vectors contain (c.m) spanned over lambda.
+        
         let intermediate_data_vecs: Vec<Vec<Vec<(u32,u32)>>> = rngs.par_iter_mut().map(
             |(r,graph_rng)|
-            {
+            {   
+                let mut j = 0;
                 //let mut new_vec:Vec<_> = Vec::with_capacity(per_thread as usize);
                 let iter = (0..per_thread).into_iter().map(|_|{});
                 iter.map(
@@ -91,7 +93,11 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                         release_threshold: 0.0,
                         lock_threshold: 0.0
                     };
+                    j = j + 1;
 
+                    if (10*j)%(per_thread) == 0{
+                        println!("{} percent done",(100*j)/per_thread )
+                    }
                     let new_graph_seed = graph_rng.gen::<u64>();
                     let opt = SWOptions::from_critical_thresh_params(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
                     let small_world = opt.into();
@@ -115,7 +121,9 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                         }).collect(); 
 
                     data_point_for_each_lambda
-                    }).progress_with(bar.clone()).collect()//this produces per_thread vectors of (c,m) for each lambda
+                    }
+                    
+                    ).progress_with(bar.clone()).collect()//this produces per_thread vectors of (c,m) for each lambda
             }
         ).collect();
         //goal: to convert this to two vectors 
