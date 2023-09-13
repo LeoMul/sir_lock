@@ -55,7 +55,7 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
     ,n_size,param.thresh_range.start,param.thresh_range.end,param.thresh_range.steps,param.num_networks,param.bootbool);
     let thresh_range = param.thresh_range.get_range();
     let thresh_vec:Vec<_> = thresh_range.iter().collect();
-
+    
     let mut sir_rng_2 = Pcg64::seed_from_u64(param.sir_seed);
     let mut graph_rng = Pcg64::seed_from_u64(param.graph_seed);
     for n in n_size{
@@ -75,7 +75,7 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
             )
         .collect();
         let per_thread = param.num_networks/k.get() as u64;
-        
+        let ten_percent_of_steps = per_thread/10;
         let bar = crate::indication_bar(param.num_networks);
         //This vector contains 4 vectors of length per_thread. These constituent vectors contain (c.m) spanned over lambda.
         
@@ -83,6 +83,7 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
             |(r,graph_rng)|
             {   
                 let mut j = 0;
+                let mut index = 1;
                 //let mut new_vec:Vec<_> = Vec::with_capacity(per_thread as usize);
                 let iter = (0..per_thread).into_iter().map(|_|{});
                 iter.map(
@@ -95,8 +96,9 @@ fn sim_small_world_both_m_and_c(param: CriticalThreshParams,json:Value,num_threa
                     };
                     j = j + 1;
 
-                    if (10*j)%(per_thread) == 0{
-                        println!("{} percent done",(100*j)/per_thread )
+                    if j == index*ten_percent_of_steps{
+                        println!("{} percent done {}",index*10,j);
+                        index = index + 1;
                     }
                     let new_graph_seed = graph_rng.gen::<u64>();
                     let opt = SWOptions::from_critical_thresh_params(&param,NonZeroUsize::new(n).unwrap(),new_graph_seed);
