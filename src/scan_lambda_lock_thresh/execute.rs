@@ -119,7 +119,7 @@ pub fn sim_small_world(param:ScanLambdaThreshParams, json: Value, num_threads: O
                   //  }
                 //else{
                // (model.propagate_until_completion_max_with_lockdown(lock_graph.clone(),lockparams) as f64,model.calculate_ever_infected() as f64)};
-               let (mut m,mut c) = (model.propagate_until_completion_max_with_lockdown(locked_down,lockparams) as f64,model.calculate_ever_infected() as f64);
+               let (mut m,mut c) = (model.propagate_until_completion_max_with_lockdown(lockparams) as f64,model.calculate_ever_infected() as f64);
                 
                
                 m/= system_size_fraction;

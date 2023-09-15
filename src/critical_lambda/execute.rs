@@ -97,7 +97,7 @@ fn sim_small_world_new(param: CriticalLambdaParams,json:Value,num_threads:Option
                     let data_point_for_each_lambda:Vec<_> = lambda_vec.iter().map(|lambda|{
                         model.set_lambda(*lambda);
                         model.reseed_sir_rng(r);
-                        let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams);
+                        let m = model.propagate_until_completion_max_with_lockdown(lockparams);
                         //let c = 
                         //println!("{},{},{},{},{}",c,m,lambda,model.ensemble.graph().edge_count(),new_graph_seed);
                         let c = model.calculate_ever_infected() as u32;

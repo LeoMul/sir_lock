@@ -113,7 +113,7 @@ pub fn sim_small_world(param:ScanLockParams,json:Value,num_threads:Option<NonZer
                 for _ in 0..per_thread{
 
                     let mut lockgraph = model.create_locked_down_network(lockparams);
-                    let m = model.propagate_until_completion_max_with_lockdown(&mut lockgraph,lockparams) as f64 /system_size_frac;
+                    let m = model.propagate_until_completion_max_with_lockdown(lockparams) as f64 /system_size_frac;
                     let c = model.calculate_ever_infected() as f64 /system_size_frac;
 
                     av_m += m;

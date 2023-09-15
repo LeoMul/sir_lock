@@ -51,7 +51,8 @@ pub struct SimpleSampleParam
 
     //pub vaccine_seed: u64,
     pub initial_infected: usize,
-    pub samples: usize
+    pub samples: usize,
+    pub redrawlockdown: bool
 }
 impl SimpleSampleParam
 {
@@ -72,7 +73,7 @@ impl SimpleSampleParam
             "".to_owned()
         };
         format!(
-            "v{}SimpleSampling_Lock{}{s}R{}L{}_Measure{}N{}Rec{}Trans{}InInf{}Sam{}Graph{}GS{}SS{}THR{}.dat",
+            "v{}SimpleSampling_Lock{}{s}R{}L{}_Measure{}N{}Rec{}Trans{}InInf{}Sam{}Graph{}GS{}SS{}THR{}Redraw{}.dat",
             crate::VERSION,
             lockdown_naming_string(self.lockdown.lock_style),
             self.lockdown.release_threshold,
@@ -86,6 +87,7 @@ impl SimpleSampleParam
             self.graph_type.name(),
             self.graph_seed,
             self.sir_seed,
+            self.redrawlockdown,
             j
         )
     
@@ -109,7 +111,8 @@ impl Default for SimpleSampleParam
                 lock_threshold: DEFAULT_LOCKDOWN_THRESHOLD,
                 release_threshold: DEFAULT_RELEASE_THRESHOLD,
             },
-            initial_infected: DEFAULT_INITIAL_INFECTED
+            initial_infected: DEFAULT_INITIAL_INFECTED,
+            redrawlockdown: true
         }
     }
 }

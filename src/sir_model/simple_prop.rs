@@ -274,7 +274,7 @@ impl SimpleSampleSW{
 
     
 
-    pub fn propagate_until_completion_max_with_lockdown(&mut self,post_locked_down_graph:&mut SwSIR,lockparams:LockdownParameters) -> usize{
+    pub fn propagate_until_completion_max_with_lockdown(&mut self,lockparams:LockdownParameters) -> usize{
         
         //this fn makes use of the iterate once function and is identical to the others. Its purpose is mostly so I can figure out how to do the large deviation one.
 
@@ -286,7 +286,10 @@ impl SimpleSampleSW{
 
         //NOTE: The act of cloning the graph, sets the SIR information to default in all of the nodes. It is necessary to update them.
         //wont need after change made
-        let post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
+        //let mut post_locked_down_graph = &mut self.create_locked_down_network(lockparams);
+        //let post_locked_down_graph = &mut self.transfer_sir_information(post_locked_down_graph);
+
+        self.create_new_locked_down_network(lockparams);
         //println!("Old edges {}" ,self.base_model.ensemble.graph().edge_count());
 
         let lockdown_threshold = lockparams.lock_threshold;
