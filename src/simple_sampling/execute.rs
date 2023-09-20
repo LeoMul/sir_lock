@@ -117,7 +117,7 @@ pub fn execute_sw(param: SimpleSampleParam,json: Value,num_threads: Option<NonZe
     let mut sir_rng_2 = Pcg64::seed_from_u64(param.sir_seed);
 
     let samples_per_thread = param.samples / j.get();
-
+    //let single_lock_graph = model.create_locked_down_network(param.lockdown);
     
 
     //use this in other programs.
@@ -152,6 +152,8 @@ pub fn execute_sw(param: SimpleSampleParam,json: Value,num_threads: Option<NonZe
                         m = model.propagate_until_completion_max_with_locks_new_lockgraph_for_each_lockdown(param.lockdown) as u32;
                     }
                     else{
+                        //this is for single lockdown graph per outbreak
+                        //m = model.propagate_until_completion_max_with_lockdown(param.lockdown) as u32;
                         m = model.propagate_until_completion_max_with_lockdown(param.lockdown) as u32;
                     }
                     
